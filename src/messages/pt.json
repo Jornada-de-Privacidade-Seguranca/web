@@ -1,0 +1,22 @@
+{
+  "common": {
+    "next": "Próximo",
+    "back": "Voltar",
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro. Tente novamente."
+  },
+  "nav": {
+    "home": "Início"
+  },
+  "jornada": {
+    "title": "Jornada de Privacidade/Segurança",
+    "description": "Preencha este formulário para avaliar suas práticas de segurança digital.",
+    "steps": {
+      "intro": "Introdução",
+      "assessment": "Avaliação",
+      "result": "Resultado"
+    }
+  }
+}

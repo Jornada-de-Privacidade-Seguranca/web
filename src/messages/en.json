@@ -1,0 +1,22 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "An error occurred. Please try again."
+  },
+  "nav": {
+    "home": "Home"
+  },
+  "jornada": {
+    "title": "Privacy/Security Journey",
+    "description": "Fill out this form to assess your digital security practices.",
+    "steps": {
+      "intro": "Introduction",
+      "assessment": "Assessment",
+      "result": "Result"
+    }
+  }
+}
