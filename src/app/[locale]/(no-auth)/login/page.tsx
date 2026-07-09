@@ -1,5 +1,5 @@
-const Login = () => {
-  return <p>Login</p>;
-};
+import { AuthView } from "@/features/auth";
 
-export default Login;
+export default function LoginPage() {
+  return <AuthView />;
+}

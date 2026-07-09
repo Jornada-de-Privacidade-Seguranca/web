@@ -10,6 +10,27 @@
   "nav": {
     "home": "Home"
   },
+  "auth": {
+    "login": {
+      "title": "Privacy Compass",
+      "description": "Assess your privacy and security knowledge",
+      "welcomeTitle": "Welcome back",
+      "welcomeDescription": "Sign in with your corporate account to continue",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "your.username",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Type your password",
+      "forgotPassword": "Forgot your password?",
+      "submit": "Sign in",
+      "signUpPrefix": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "privacyNotice": "By continuing you accept our privacy terms.",
+      "validation": {
+        "usernameRequired": "Username is required.",
+        "passwordRequired": "Password is required."
+      }
+    }
+  },
   "jornada": {
     "title": "Privacy/Security Journey",
     "description": "Fill out this form to assess your digital security practices.",

@@ -10,6 +10,27 @@
   "nav": {
     "home": "Início"
   },
+  "auth": {
+    "login": {
+      "title": "Privacy Compass",
+      "description": "Avalie seu conhecimento em privacidade e segurança",
+      "welcomeTitle": "Bem-vindo de volta",
+      "welcomeDescription": "Acesse sua conta corporativa para continuar",
+      "usernameLabel": "Usuário",
+      "usernamePlaceholder": "seu.usuario",
+      "passwordLabel": "Senha",
+      "passwordPlaceholder": "Digite sua senha",
+      "forgotPassword": "Esqueceu sua senha?",
+      "submit": "Entrar",
+      "signUpPrefix": "Não tem uma conta?",
+      "signUpLink": "Cadastre-se",
+      "privacyNotice": "Ao continuar você aceita nossos termos de privacidade.",
+      "validation": {
+        "usernameRequired": "O usuário é obrigatório.",
+        "passwordRequired": "A senha é obrigatória."
+      }
+    }
+  },
   "jornada": {
     "title": "Jornada de Privacidade/Segurança",
     "description": "Preencha este formulário para avaliar suas práticas de segurança digital.",

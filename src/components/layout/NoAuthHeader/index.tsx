@@ -13,7 +13,6 @@ const IdiomSwitch = () => {
       {locales.map((myLocale, index) => (
         <Button
           key={index}
-          className={cn(locale === myLocale && "border-transparent!")}
           variant={myLocale === locale ? "default" : "ghost"}
           onClick={() => changeLocale(myLocale)}
         >
