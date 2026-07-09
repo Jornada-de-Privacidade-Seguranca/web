@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { inter, manrope } from "@/shared/fonts";
-import { generateThemeVars } from "@/shared/theme";
 import { cn } from "@/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { routing } from "@/shared/i18n/routing";
@@ -13,15 +12,6 @@ export const metadata: Metadata = {
   description:
     "Jornada de Privacidade e Segurança é uma aplicação web para auxiliar o usuário a ver seus conhecimentos sobre privacidade e segurança digital. Responda perguntas, veja seu desempenho e aprenda com dicas e explicações.",
 };
-
-const darkVars = generateThemeVars("dark");
-const lightVars = generateThemeVars("light");
-
-function buildCssVars(vars: Record<string, string>): string {
-  return Object.entries(vars)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join("; ");
-}
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -51,12 +41,6 @@ export default async function RootLayout({
         "font-sans",
       )}
     >
-      <head>
-        <style>{`
-          :root { ${buildCssVars(darkVars)} }
-          .light { ${buildCssVars(lightVars)} }
-        `}</style>
-      </head>
       <body className="min-h-full flex flex-col bg-background">
         <NextIntlClientProvider messages={appMessages}>
           {children}
