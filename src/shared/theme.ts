@@ -195,6 +195,10 @@ export function generateThemeVars(theme: 'dark' | 'light'): Record<string, strin
 // Tema completo exportado — consumido pelo tailwind.config.ts
 // ---------------------------------------------------------------------------
 
+/**
+ * @deprecated Este arquivo está obsoleto e será removido eventualmente. Use o arquivo [`src/app/\[locale\]/globals.css`](../../src/app/[locale]/globals.css) para definir o tema da aplicação.
+ * 
+ */
 export const theme = {
   fonts,
   fontSizes,
