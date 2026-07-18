@@ -1,14 +1,14 @@
 "use client";
 
-import { ShieldCheck } from "@hugeicons/core-free-icons";
+import { AddCircleHalfDotIcon, ShieldCheck } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Message } from "@/components/ui";
 
 import { useAuthVM } from "./auth.viewmodel";
 
 export function AuthView() {
-  const { form, labels, handleSubmit } = useAuthVM();
+  const { form, labels, handleSubmit, serverMessage, onCloseMsg } = useAuthVM();
   const { register, formState } = form;
   const errors = formState.errors;
 
@@ -28,6 +28,18 @@ export function AuthView() {
           <p className="mt-2 max-w-[50ch] text-sm text-muted-foreground">
             {labels.description}
           </p>
+
+          {serverMessage && (
+            <div className="mt-6 w-full text-left">
+              <Message
+                title={serverMessage.title}
+                description={serverMessage.description}
+                icon={serverMessage.icon}
+                variant={serverMessage.variant}
+                onClose={onCloseMsg}
+              />
+            </div>
+          )}
 
           <form
             className="mt-9 w-full rounded-[2rem] border border-border bg-card/90 px-6 py-7 text-left shadow-xl backdrop-blur-xl"

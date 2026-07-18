@@ -1,4 +1,5 @@
 import type { UseFormReturn } from "react-hook-form";
+import type { ReactNode } from "react";
 
 export interface LoginFormValues {
   username: string;
@@ -26,8 +27,17 @@ export interface AuthLabels {
   privacyNotice: string;
 }
 
+export interface AuthServerMessage {
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  variant?: "default" | "info" | "success" | "warning" | "destructive";
+}
+
 export interface AuthViewModelReturn {
   form: UseFormReturn<LoginFormValues>;
+  serverMessage: AuthServerMessage | null;
+  onCloseMsg: () => void;
   handleSubmit: () => void;
   labels: AuthLabels;
 }

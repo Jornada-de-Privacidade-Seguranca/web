@@ -4,14 +4,14 @@ import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 
-import type {
-  AuthViewModelReturn,
-  LoginFormValues,
-} from "./auth.types";
+import type { AuthViewModelReturn, LoginFormValues } from "./auth.types";
 
 export function useAuthVM(): AuthViewModelReturn {
   const t = useTranslations("auth.login");
+  const [serverMessage, setServerMessage] =
+    useState<AuthViewModelReturn["serverMessage"]>(null);
   const validationMessages = {
     usernameRequired: t("validation.usernameRequired"),
     passwordRequired: t("validation.passwordRequired"),
@@ -33,12 +33,23 @@ export function useAuthVM(): AuthViewModelReturn {
   });
 
   const handleSubmit = form.handleSubmit((data) => {
+    // Test msg, remove when implementing actual server logic
+    setServerMessage({
+      title: "Erro de servidor",
+      description: "Usuário ou senha inválidos. Por favor, tente novamente.",
+      variant: "destructive",
+    });
+
     // Handle form submission logic here
     console.log("Form submitted with data:", data);
   });
 
+  const onCloseMsg = () => setServerMessage(null);
+
   return {
     form,
+    serverMessage,
+    onCloseMsg,
     handleSubmit,
     labels: {
       title: t("title"),
