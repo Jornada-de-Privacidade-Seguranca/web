@@ -32,7 +32,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="pt-BR"
+      lang={locale === "en" ? "en" : "pt-BR"}
       className={cn(
         "h-full",
         "antialiased",

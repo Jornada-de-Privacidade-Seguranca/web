@@ -3,6 +3,7 @@ import { useLang } from "@/hooks/useLang";
 import { useTheme } from "@/hooks/useTheme";
 import { Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { SwitchThemeButton } from "../SwitchThemeButton";
 
 const IdiomSwitch = () => {
   const { locale, changeLocale, locales } = useLang();
@@ -28,9 +29,7 @@ export const NoAuthHeader = () => {
   return (
     <header className="flex w-full items-center p-4 gap-2">
       <IdiomSwitch />
-      <Button size="icon" onClick={toggleTheme}>
-        <HugeiconsIcon icon={isDark ? Moon02Icon : Sun03Icon} />
-      </Button>
+      <SwitchThemeButton />
     </header>
   );
 };
