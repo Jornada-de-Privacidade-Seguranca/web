@@ -2,10 +2,10 @@ import { Inter, Manrope } from "next/font/google";
 
 export const inter = Inter({
 	subsets: ["latin"],
-	variable: "--font-inter",
+	variable: "--font-sans",
 });
 
 export const manrope = Manrope({
 	subsets: ["latin"],
-	variable: "--font-manrope",
+	variable: "--font-display",
 });

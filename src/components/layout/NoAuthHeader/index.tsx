@@ -1,0 +1,35 @@
+import { Button } from "@/components/ui/button";
+import { useLang } from "@/hooks/useLang";
+import { useTheme } from "@/hooks/useTheme";
+import { Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { SwitchThemeButton } from "../SwitchThemeButton";
+
+const IdiomSwitch = () => {
+  const { locale, changeLocale, locales } = useLang();
+
+  return (
+    <div className="flex gap-1 border bg-secondary rounded-full p-0.5 ml-auto">
+      {locales.map((myLocale, index) => (
+        <Button
+          key={index}
+          variant={myLocale === locale ? "default" : "ghost"}
+          onClick={() => changeLocale(myLocale)}
+        >
+          {myLocale.toUpperCase()}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
+export const NoAuthHeader = () => {
+  const { isDark, toggleTheme } = useTheme();
+
+  return (
+    <header className="flex w-full items-center p-4 gap-2">
+      <IdiomSwitch />
+      <SwitchThemeButton />
+    </header>
+  );
+};
