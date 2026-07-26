@@ -34,10 +34,19 @@ export interface AuthServerMessage {
   variant?: "default" | "info" | "success" | "warning" | "destructive";
 }
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  firstName: string;
+  email?: string;
+  token?: string;
+}
+
 export interface AuthViewModelReturn {
   form: UseFormReturn<LoginFormValues>;
   serverMessage: AuthServerMessage | null;
   onCloseMsg: () => void;
   handleSubmit: () => void;
   labels: AuthLabels;
+  user?: AuthUser | null;
 }

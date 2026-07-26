@@ -43,5 +43,26 @@
       "assessment": "Assessment",
       "result": "Result"
     }
+  },
+  "painel": {
+    "greetingSubtitle": "Ready for your next assessment?",
+    "pendingSectionTitle": "Featured assessment",
+    "completedSectionTitle": "Last completion",
+    "historySectionTitle": "Recent history",
+    "pendingEmpty": "No pending assessment at the moment.",
+    "completedEmpty": "You have no completed assessments yet.",
+    "historyEmpty": "No assessment history available.",
+    "badgePending": "PENDING ASSESSMENT",
+    "badgeInProgress": "IN PROGRESS",
+    "startAssessment": "Start assessment",
+    "continueAssessment": "Continue assessment",
+    "lastCompletionLabel": "LAST COMPLETION",
+    "scoreLabel": "SCORE",
+    "viewResult": "View result",
+    "questionsCount": "{count} questions",
+    "estimatedMinutesText": "{minutes} min",
+    "errorTitle": "Failed to load information",
+    "errorMessage": "Unable to load dashboard data.",
+    "retryButton": "Try again"
   }
 }
