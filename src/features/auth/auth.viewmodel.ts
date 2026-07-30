@@ -46,15 +46,7 @@ export function useAuthVM(): AuthViewModelReturn {
 
   const onCloseMsg = () => setServerMessage(null);
 
-  const user = {
-    id: "usr_1",
-    name: "Alex Silva",
-    firstName: "Alex",
-    email: "alex.silva@exemplo.com",
-  };
-
   return {
-    user,
     form,
     serverMessage,
     onCloseMsg,

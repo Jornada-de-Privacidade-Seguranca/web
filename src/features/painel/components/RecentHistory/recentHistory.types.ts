@@ -3,6 +3,7 @@ import type { HistoryItem } from "../../painel.types";
 export interface FormattedHistoryItem extends HistoryItem {
   formattedDate: string;
   progressPercent: number;
+  ariaLabel: string;
 }
 
 export interface RecentHistoryProps {

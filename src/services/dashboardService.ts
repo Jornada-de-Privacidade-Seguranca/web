@@ -6,6 +6,13 @@ import type {
   DashboardDataResponse,
 } from "@features/painel/painel.types";
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
 function getAuthHeaders(token?: string): HeadersInit {
   const headers: HeadersInit = {
     Accept: "application/json",
@@ -16,6 +23,40 @@ function getAuthHeaders(token?: string): HeadersInit {
   return headers;
 }
 
+async function handleApiResponse<T>(
+  response: Response,
+  defaultErrorMessage: string
+): Promise<T> {
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch {
+    json = null;
+  }
+
+  if (!response.ok) {
+    if (
+      json &&
+      typeof json === "object" &&
+      "message" in json &&
+      typeof (json as ApiResponse<unknown>).message === "string"
+    ) {
+      throw new Error((json as ApiResponse<unknown>).message);
+    }
+    throw new Error(defaultErrorMessage);
+  }
+
+  if (json && typeof json === "object" && "data" in json) {
+    const apiResponse = json as ApiResponse<T>;
+    if (apiResponse.success === false) {
+      throw new Error(apiResponse.message || defaultErrorMessage);
+    }
+    return apiResponse.data;
+  }
+
+  return json as T;
+}
+
 export async function getPendingAssessment(
   token?: string
 ): Promise<PendingAssessment | null> {
@@ -23,11 +64,10 @@ export async function getPendingAssessment(
     headers: getAuthHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error("Erro ao carregar a avaliação pendente.");
-  }
-
-  const data = await response.json();
+  const data = await handleApiResponse<PendingAssessment | null>(
+    response,
+    "Erro ao carregar a avaliação pendente."
+  );
   return data ?? null;
 }
 
@@ -38,11 +78,10 @@ export async function getLastCompletedAssessment(
     headers: getAuthHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error("Erro ao carregar a última avaliação concluída.");
-  }
-
-  const data = await response.json();
+  const data = await handleApiResponse<LastCompletedAssessment | null>(
+    response,
+    "Erro ao carregar a última avaliação concluída."
+  );
   return data ?? null;
 }
 
@@ -54,11 +93,10 @@ export async function getRecentHistory(
     headers: getAuthHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error("Erro ao carregar o histórico recente.");
-  }
-
-  const data = await response.json();
+  const data = await handleApiResponse<HistoryItem[] | null>(
+    response,
+    "Erro ao carregar o histórico recente."
+  );
   return Array.isArray(data) ? data : [];
 }
 

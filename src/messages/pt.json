@@ -64,6 +64,11 @@
     "estimatedMinutesText": "{minutes} min",
     "errorTitle": "Falha ao carregar informações",
     "errorMessage": "Não foi possível carregar os dados do painel.",
-    "retryButton": "Tentar novamente"
+    "retryButton": "Tentar novamente",
+    "loadingAriaLabel": "Carregando dados do painel",
+    "pendingSectionAriaLabel": "Avaliação pendente ou em andamento",
+    "completedSectionAriaLabel": "Última avaliação concluída",
+    "historySectionAriaLabel": "Histórico recente de avaliações",
+    "progressBarAriaLabel": "Pontuação de {title}"
   }
 }

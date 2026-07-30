@@ -1,4 +1,4 @@
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type {
   RecentHistoryProps,
   RecentHistoryViewModelReturn,
@@ -8,8 +8,14 @@ import type {
 export function useRecentHistoryVM(
   props: RecentHistoryProps
 ): RecentHistoryViewModelReturn {
-  const { history, emptyMessage, sectionTitle = "Histórico recente" } = props;
+  const t = useTranslations("painel");
   const format = useFormatter();
+
+  const {
+    history,
+    emptyMessage,
+    sectionTitle = t("historySectionTitle"),
+  } = props;
 
   const formattedItems: FormattedHistoryItem[] = history.map((item) => {
     let formattedDate = "";
@@ -27,11 +33,13 @@ export function useRecentHistoryVM(
     }
 
     const progressPercent = Math.min(100, Math.max(0, item.score));
+    const ariaLabel = t("progressBarAriaLabel", { title: item.title });
 
     return {
       ...item,
       formattedDate,
       progressPercent,
+      ariaLabel,
     };
   });
 

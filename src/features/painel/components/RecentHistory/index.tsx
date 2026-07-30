@@ -46,7 +46,7 @@ export function RecentHistory(props: RecentHistoryProps) {
               aria-valuenow={item.score}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`Pontuação de ${item.title}`}
+              aria-label={item.ariaLabel}
               className="h-2 w-full overflow-hidden rounded-full bg-muted"
             >
               <div

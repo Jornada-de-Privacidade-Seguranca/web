@@ -63,6 +63,11 @@
     "estimatedMinutesText": "{minutes} min",
     "errorTitle": "Failed to load information",
     "errorMessage": "Unable to load dashboard data.",
-    "retryButton": "Try again"
+    "retryButton": "Try again",
+    "loadingAriaLabel": "Loading dashboard data",
+    "pendingSectionAriaLabel": "Pending or in-progress assessment",
+    "completedSectionAriaLabel": "Last completed assessment",
+    "historySectionAriaLabel": "Recent assessment history",
+    "progressBarAriaLabel": "Score for {title}"
   }
 }

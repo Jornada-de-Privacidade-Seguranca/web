@@ -62,7 +62,7 @@ export function PainelView() {
       {isLoading ? (
         <div
           aria-busy="true"
-          aria-label="Carregando dados do painel"
+          aria-label={labels.loadingAriaLabel}
           className="space-y-8 animate-pulse"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -76,7 +76,7 @@ export function PainelView() {
         <div className="space-y-8">
           {/* Seções em Destaque: Avaliação Pendente & Última Concluída */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section aria-label="Avaliação pendente ou em andamento" className="flex flex-col">
+            <section aria-label={labels.pendingSectionAriaLabel} className="flex flex-col">
               <h2 className="sr-only">{labels.pendingSectionTitle}</h2>
               <PendingAssessmentCard
                 assessment={pendingAssessment}
@@ -84,7 +84,7 @@ export function PainelView() {
               />
             </section>
 
-            <section aria-label="Última avaliação concluída" className="flex flex-col">
+            <section aria-label={labels.completedSectionAriaLabel} className="flex flex-col">
               <h2 className="sr-only">{labels.completedSectionTitle}</h2>
               <LastCompletedCard
                 assessment={lastCompletedAssessment}
@@ -94,7 +94,7 @@ export function PainelView() {
           </div>
 
           {/* Histórico Recente */}
-          <section aria-label="Histórico recente de avaliações">
+          <section aria-label={labels.historySectionAriaLabel}>
             <RecentHistory
               history={history}
               emptyMessage={labels.historyEmpty}

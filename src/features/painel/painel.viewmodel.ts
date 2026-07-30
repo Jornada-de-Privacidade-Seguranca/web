@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { useAuthVM } from "@features/auth/auth.viewmodel";
+import { useAuthStore } from "@features/auth/auth.store";
 import { getDashboardData } from "@services/dashboardService";
 import { HISTORY_LIMIT } from "@shared/constants/dashboard";
 import type {
@@ -14,10 +14,10 @@ import type {
 
 export function usePainelVM(): PainelViewModelReturn {
   const t = useTranslations("painel");
-  const auth = useAuthVM();
+  const user = useAuthStore((state) => state.user);
+  const userToken = useAuthStore((state) => state.token) ?? undefined;
 
-  const userFirstName = auth.user?.firstName || auth.user?.name || "Usuário";
-  const userToken = auth.user?.token;
+  const userFirstName = user?.firstName || user?.name || "Usuário";
 
   const [pendingAssessment, setPendingAssessment] =
     useState<PendingAssessment | null>(null);
@@ -73,6 +73,10 @@ export function usePainelVM(): PainelViewModelReturn {
     errorTitle: t("errorTitle"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
+    loadingAriaLabel: t("loadingAriaLabel"),
+    pendingSectionAriaLabel: t("pendingSectionAriaLabel"),
+    completedSectionAriaLabel: t("completedSectionAriaLabel"),
+    historySectionAriaLabel: t("historySectionAriaLabel"),
   };
 
   return {

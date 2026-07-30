@@ -47,6 +47,10 @@ export interface PainelLabels {
   errorTitle: string;
   errorMessage: string;
   retryButton: string;
+  loadingAriaLabel: string;
+  pendingSectionAriaLabel: string;
+  completedSectionAriaLabel: string;
+  historySectionAriaLabel: string;
 }
 
 export interface PainelViewModelReturn {
