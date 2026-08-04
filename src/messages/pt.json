@@ -44,5 +44,31 @@
       "assessment": "Avaliação",
       "result": "Resultado"
     }
+  },
+  "painel": {
+    "greetingSubtitle": "Pronto para sua próxima avaliação?",
+    "pendingSectionTitle": "Avaliação em destaque",
+    "completedSectionTitle": "Última conclusão",
+    "historySectionTitle": "Histórico recente",
+    "pendingEmpty": "Nenhuma avaliação pendente no momento.",
+    "completedEmpty": "Você ainda não possui avaliações concluídas.",
+    "historyEmpty": "Nenhum histórico de avaliações disponível.",
+    "badgePending": "AVALIAÇÃO PENDENTE",
+    "badgeInProgress": "EM ANDAMENTO",
+    "startAssessment": "Iniciar avaliação",
+    "continueAssessment": "Continuar avaliação",
+    "lastCompletionLabel": "ÚLTIMA CONCLUSÃO",
+    "scoreLabel": "PONTUAÇÃO",
+    "viewResult": "Ver resultado",
+    "questionsCount": "{count} perguntas",
+    "estimatedMinutesText": "{minutes} min",
+    "errorTitle": "Falha ao carregar informações",
+    "errorMessage": "Não foi possível carregar os dados do painel.",
+    "retryButton": "Tentar novamente",
+    "loadingAriaLabel": "Carregando dados do painel",
+    "pendingSectionAriaLabel": "Avaliação pendente ou em andamento",
+    "completedSectionAriaLabel": "Última avaliação concluída",
+    "historySectionAriaLabel": "Histórico recente de avaliações",
+    "progressBarAriaLabel": "Pontuação de {title}"
   }
 }
