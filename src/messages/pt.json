@@ -7,11 +7,21 @@
     "loading": "Carregando...",
     "error": "Ocorreu um erro. Tente novamente."
   },
+    "app": {
+    "title": "Privacy Compass",
+    "description": "Privacidade & segurança"
+  },
+  "sidebar": {
+    "navigation": "Navegação",
+    "dashboard": "Painel",
+    "journeys": "Jornadas",
+    "profile": "Perfil",
+    "admin-panel": "Painel administrativo"
+  },
   "switchThemeButton": {
     "light": "Trocar para tema claro",
     "dark": "Trocar para tema escuro"
   },
-
   "nav": {
     "home": "Início"
   },

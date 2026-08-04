@@ -7,6 +7,7 @@ import { usePainelVM } from "./painel.viewmodel";
 import { PendingAssessmentCard } from "./components/PendingAssessmentCard";
 import { LastCompletedCard } from "./components/LastCompletedCard";
 import { RecentHistory } from "./components/RecentHistory";
+import { PageShell } from "@/components/layout/PageShell";
 
 export function PainelView() {
   const {
@@ -22,7 +23,8 @@ export function PainelView() {
   } = usePainelVM();
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] px-4 py-8 md:px-8 lg:px-12 max-w-7xl mx-auto space-y-8">
+    <PageShell title="Painel" subtitle="">
+      {/* <main className="min-h-[calc(100vh-4rem)] px-4 py-8 md:px-8 lg:px-12 max-w-7xl mx-auto space-y-8"> */}
       {/* Header com saudação */}
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
@@ -40,7 +42,11 @@ export function PainelView() {
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-destructive"
         >
           <div className="flex items-center gap-3">
-            <HugeiconsIcon icon={AlertCircleIcon} size={24} className="shrink-0" />
+            <HugeiconsIcon
+              icon={AlertCircleIcon}
+              size={24}
+              className="shrink-0"
+            />
             <div>
               <h2 className="font-semibold text-sm">{labels.errorTitle}</h2>
               <p className="text-xs opacity-90">{error}</p>
@@ -76,7 +82,10 @@ export function PainelView() {
         <div className="space-y-8">
           {/* Seções em Destaque: Avaliação Pendente & Última Concluída */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section aria-label={labels.pendingSectionAriaLabel} className="flex flex-col">
+            <section
+              aria-label={labels.pendingSectionAriaLabel}
+              className="flex flex-col"
+            >
               <h2 className="sr-only">{labels.pendingSectionTitle}</h2>
               <PendingAssessmentCard
                 assessment={pendingAssessment}
@@ -84,7 +93,10 @@ export function PainelView() {
               />
             </section>
 
-            <section aria-label={labels.completedSectionAriaLabel} className="flex flex-col">
+            <section
+              aria-label={labels.completedSectionAriaLabel}
+              className="flex flex-col"
+            >
               <h2 className="sr-only">{labels.completedSectionTitle}</h2>
               <LastCompletedCard
                 assessment={lastCompletedAssessment}
@@ -103,7 +115,7 @@ export function PainelView() {
           </section>
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }
 

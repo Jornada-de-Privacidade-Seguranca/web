@@ -7,6 +7,17 @@
     "loading": "Loading...",
     "error": "An error occurred. Please try again."
   },
+  "app": {
+    "title": "Privacy Compass",
+    "description": "Privacy & security"
+  },
+  "sidebar": {
+    "navigation": "Navigation",
+    "dashboard": "Dashboard",
+    "journeys": "Journeys",
+    "profile": "Profile",
+    "admin-panel": "Admin Panel"
+  },
   "switchThemeButton": {
     "light": "Switch to light mode",
     "dark": "Switch to dark mode"
