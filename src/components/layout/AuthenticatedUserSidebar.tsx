@@ -30,18 +30,21 @@ function useSidebarVM() {
       icon: Task01Icon,
       href: "/jornadas",
       active: false,
+      disabled: true,
     },
     {
       label: t("sidebar.profile"),
       icon: UserIcon,
       href: "/perfil",
       active: false,
+      disabled: true,
     },
     {
       label: t("sidebar.admin-panel"),
       icon: Shield01Icon,
       href: "/admin",
       active: false,
+      disabled: true,
     },
   ];
 
@@ -69,8 +72,8 @@ const SidebarWrapper = ({ children }: PropsWithChildren) => {
         "peer fixed inset-y-0 left-0 z-10 transition-[left,right,width] duration-300 ease-out",
         isExpanded ? "w-64" : "w-18",
       )}
-        data-state={isExpanded ? "expanded" : "collapsed"}
-        data-variant="inset"
+      data-state={isExpanded ? "expanded" : "collapsed"}
+      data-variant="inset"
     >
       {children}
     </div>
@@ -123,7 +126,8 @@ export const AuthenticatedUserSidebar = () => {
               return (
                 <li key={item.href}>
                   <a
-                    href={item.href}
+                    {...(!item.disabled && { href: item.href })}
+                    aria-disabled={item.disabled}
                     title={!isExpanded ? item.label : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-all",
@@ -131,6 +135,7 @@ export const AuthenticatedUserSidebar = () => {
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
                         : "text-sidebar-accent-foreground hover:bg-sidebar-accent",
                       "data-[state=collapsed]:gap-0 data-[state=collapsed]:w-max",
+                      item.disabled && "cursor-not-allowed opacity-50",
                     )}
                     data-state={isExpanded ? "expanded" : "collapsed"}
                   >
