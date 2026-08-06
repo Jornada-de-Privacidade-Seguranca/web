@@ -25,6 +25,34 @@
   "nav": {
     "home": "Home"
   },
+  "landing": {
+    "brand": "Privacy Compass",
+    "header": {
+      "howItWorks": "How it works",
+      "login": "Sign in"
+    },
+    "hero": {
+      "eyebrow": "Corporate privacy and security platform",
+      "title": "Discover your privacy and information security profile",
+      "description": "Smart assessments that map your team’s knowledge and reveal where to invest in development.",
+      "primaryAction": "Access platform",
+      "secondaryAction": "See how it works"
+    },
+    "steps": {
+      "title": "How it works",
+      "description": "Three simple steps to diagnose and evolve.",
+      "oneTitle": "Sign in",
+      "oneDescription": "Use your account and see the assessments assigned to you.",
+      "twoTitle": "Answer the assessment",
+      "twoDescription": "A concise questionnaire with questions adjusted for each profile.",
+      "threeTitle": "Receive your profile",
+      "threeDescription": "Area-by-area details and recommendations to strengthen what needs improvement."
+    },
+    "footer": {
+      "left": "Privacy Compass. All rights reserved.",
+      "right": "Built with privacy in mind."
+    }
+  },
   "auth": {
     "login": {
       "title": "Privacy Compass",
