@@ -72,6 +72,50 @@
         "usernameRequired": "O usuário é obrigatório.",
         "passwordRequired": "A senha é obrigatória."
       }
+    },
+    "register": {
+      "title": "Privacy Compass",
+      "description": "Avalie seu conhecimento em privacidade e segurança",
+      "cardTitle": "Criar sua conta",
+      "cardSubtitle": "Cadastre-se com seus dados corporativos para começar.",
+      "fullNameLabel": "NOME COMPLETO",
+      "fullNamePlaceholder": "Ex.: Maria Silva",
+      "employeeCodeLabel": "CÓDIGO DE FUNCIONÁRIO",
+      "employeeCodePlaceholder": "Ex.: 00123456",
+      "departmentLabel": "DEPARTAMENTO",
+      "departmentPlaceholder": "Ex.: Tecnologia",
+      "companyLabel": "EMPRESA",
+      "companyPlaceholder": "Ex.: ACME Corp",
+      "emailLabel": "E-MAIL INSTITUCIONAL",
+      "emailPlaceholder": "voce@empresa.com",
+      "passwordLabel": "SENHA",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "confirmPasswordLabel": "CONFIRMAR SENHA",
+      "confirmPasswordPlaceholder": "Repita sua senha",
+      "termsCheckbox": "Aceito os termos de uso e a política de privacidade",
+      "submit": "Criar conta",
+      "hasAccountText": "Já possui uma conta?",
+      "loginLink": "Entrar",
+      "validation": {
+        "fullNameRequired": "O nome completo é obrigatório.",
+        "employeeCodeRequired": "O código de funcionário/matrícula é obrigatório.",
+        "departmentRequired": "O departamento é obrigatório.",
+        "companyRequired": "A empresa é obrigatória.",
+        "emailRequired": "O e-mail institucional é obrigatório.",
+        "emailInvalid": "Informe um e-mail institucional válido.",
+        "passwordRequired": "A senha é obrigatória.",
+        "passwordMinLength": "A senha deve ter no mínimo 8 caracteres.",
+        "confirmPasswordRequired": "A confirmação de senha é obrigatória.",
+        "passwordsDoNotMatch": "As senhas não coincidem.",
+        "termsRequired": "Você deve aceitar os termos de uso e política de privacidade."
+      },
+      "serverError": {
+        "invalidFieldsTitle": "Campo inválido",
+        "alreadyRegisteredTitle": "Dados já cadastrados",
+        "alreadyRegisteredDescription": "E-mail ou código de funcionário já cadastrado neste departamento/empresa.",
+        "serverErrorTitle": "Erro de servidor",
+        "serverErrorDescription": "Ocorreu um erro interno. Por favor, tente novamente mais tarde."
+      }
     }
   },
   "jornada": {

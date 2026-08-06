@@ -48,7 +48,9 @@ export function usePainelVM(): PainelViewModelReturn {
   }, [userToken, t]);
 
   useEffect(() => {
-    fetchDashboard();
+    queueMicrotask(() => {
+      void fetchDashboard();
+    });
   }, [fetchDashboard]);
 
   const handleRetry = () => {
