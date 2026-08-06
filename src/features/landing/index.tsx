@@ -13,7 +13,8 @@ import { SwitchThemeButton } from "@/components/layout/SwitchThemeButton";
 import { useLandingVM } from "./landing.viewmodel";
 
 export function LandingView() {
-  const { labels, steps } = useLandingVM();
+  const { labels, steps, handleScrollToHowItWorks, handleScrollToTop } =
+    useLandingVM();
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_28%),linear-gradient(180deg,color-mix(in_oklab,var(--background)_92%,var(--primary)_8%),var(--background)_42%)] text-foreground">
@@ -28,7 +29,10 @@ export function LandingView() {
         // className="flex items-center gap-4 rounded-full border border-border/70 bg-background/70 px-4 py-3 shadow-sm backdrop-blur-xl"
         className='flex items-center gap-4 background-transparent'
         >
-          <div className="flex min-w-0 items-center gap-2">
+          <div
+            className="flex min-w-0 cursor-pointer items-center gap-2 transition-opacity hover:opacity-80"
+            onClick={handleScrollToTop}
+          >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/15">
               <HugeiconsIcon icon={Shield01Icon} size={16} />
             </div>
@@ -39,8 +43,9 @@ export function LandingView() {
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a
-              className="transition-colors hover:text-foreground"
+              className="cursor-pointer transition-colors hover:text-foreground"
               href="#como-funciona"
+              onClick={handleScrollToHowItWorks}
             >
               {labels.header.howItWorks}
             </a>
@@ -88,7 +93,12 @@ export function LandingView() {
                 size="lg"
                 className="rounded-full px-6 text-foreground/80"
               >
-                <a href="#como-funciona">{labels.hero.secondaryAction}</a>
+                <a
+                  href="#como-funciona"
+                  onClick={handleScrollToHowItWorks}
+                >
+                  {labels.hero.secondaryAction}
+                </a>
               </Button>
             </div>
           </div>

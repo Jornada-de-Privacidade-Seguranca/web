@@ -55,5 +55,16 @@ export function useLandingVM(): LandingViewModelReturn {
         description: t("steps.threeDescription"),
       },
     ],
+    handleScrollToHowItWorks: (e?: React.MouseEvent<HTMLElement>) => {
+      if (e) e.preventDefault();
+      const element = document.getElementById("como-funciona");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    },
+    handleScrollToTop: (e?: React.MouseEvent<HTMLElement>) => {
+      if (e) e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
   };
 }
