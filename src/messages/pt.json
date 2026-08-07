@@ -7,13 +7,51 @@
     "loading": "Carregando...",
     "error": "Ocorreu um erro. Tente novamente."
   },
+    "app": {
+    "title": "Privacy Compass",
+    "description": "Privacidade & segurança"
+  },
+  "sidebar": {
+    "navigation": "Navegação",
+    "dashboard": "Painel",
+    "journeys": "Jornadas",
+    "profile": "Perfil",
+    "admin-panel": "Painel administrativo"
+  },
   "switchThemeButton": {
     "light": "Trocar para tema claro",
     "dark": "Trocar para tema escuro"
   },
-
   "nav": {
     "home": "Início"
+  },
+  "landing": {
+    "brand": "Privacy Compass",
+    "header": {
+      "howItWorks": "Como funciona",
+      "login": "Entrar"
+    },
+    "hero": {
+      "eyebrow": "Plataforma corporativa de privacidade e segurança",
+      "title": "Descubra seu perfil em privacidade e segurança da informação",
+      "description": "Avaliações inteligentes que mapeiam o conhecimento da sua equipe e revelam onde investir em desenvolvimento.",
+      "primaryAction": "Acessar plataforma",
+      "secondaryAction": "Ver como funciona"
+    },
+    "steps": {
+      "title": "Como funciona",
+      "description": "Três passos simples para diagnosticar e evoluir.",
+      "oneTitle": "Faça login",
+      "oneDescription": "Acesse com sua conta e visualize as avaliações designadas para você.",
+      "twoTitle": "Responda a avaliação",
+      "twoDescription": "Questionário objetivo, com perguntas ajustadas para cada perfil tipo de perfil.",
+      "threeTitle": "Receba seu perfil",
+      "threeDescription": "Detalhamento por área e recomendações para fortalecer pontos a desenvolver."
+    },
+    "footer": {
+      "left": "Privacy Compass. Todos os direitos reservados.",
+      "right": "Feito com foco em privacidade."
+    }
   },
   "auth": {
     "login": {

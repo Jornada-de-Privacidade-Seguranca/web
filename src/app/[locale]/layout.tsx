@@ -33,6 +33,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale === "en" ? "en" : "pt-BR"}
+      data-scroll-behavior="smooth"
       className={cn(
         "h-full",
         "antialiased",

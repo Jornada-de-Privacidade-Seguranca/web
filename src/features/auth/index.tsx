@@ -1,6 +1,6 @@
 "use client";
 
-import { AddCircleHalfDotIcon, ShieldCheck } from "@hugeicons/core-free-icons";
+import { ShieldCheck } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button, Input, Message } from "@/components/ui";
