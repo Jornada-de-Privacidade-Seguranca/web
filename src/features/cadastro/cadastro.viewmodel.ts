@@ -13,18 +13,20 @@ import type {
   CadastroServerMessage,
   CadastroValidationMessages,
 } from "./cadastro.types";
+import { env } from "@/shared/config/env";
 
 interface UseCadastroVMProps {
   isGeneralSystem?: boolean;
 }
 
 export function useCadastroVM(
-  props?: UseCadastroVMProps
+  props?: UseCadastroVMProps,
 ): CadastroViewModelReturn {
   const isGeneralSystem = props?.isGeneralSystem ?? true;
   const t = useTranslations("auth.register");
 
-  const [serverMessage, setServerMessage] = useState<CadastroServerMessage | null>(null);
+  const [serverMessage, setServerMessage] =
+    useState<CadastroServerMessage | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const validationMessages: CadastroValidationMessages = {
@@ -43,7 +45,10 @@ export function useCadastroVM(
 
   const schema = z
     .object({
-      nomeCompleto: z.string().trim().min(1, validationMessages.fullNameRequired),
+      nomeCompleto: z
+        .string()
+        .trim()
+        .min(1, validationMessages.fullNameRequired),
       codigoFuncionario: z
         .string()
         .trim()
@@ -97,19 +102,25 @@ export function useCadastroVM(
   const handleSubmit = form.handleSubmit(async (values) => {
     setServerMessage(null);
     try {
-      // Mock test triggers for local frontend testing without backend:
-      if (values.email === "duplicado@empresa.com") {
-        throw new Error(t("serverError.alreadyRegisteredDescription"));
-      }
-      if (values.email === "invalido@empresa.com") {
-        throw new Error("Campo inválido: o e-mail informado não possui permissão.");
+      if (env.isDevelopment) {
+        // Mock test triggers for local frontend testing without backend:
+        if (values.email === "duplicado@empresa.com") {
+          throw new Error(t("serverError.alreadyRegisteredDescription"));
+        }
+        if (values.email === "invalido@empresa.com") {
+          throw new Error(
+            "Campo inválido: o e-mail informado não possui permissão.",
+          );
+        }
       }
 
       await registerUser({
         nomeCompleto: values.nomeCompleto,
         codigoFuncionario: values.codigoFuncionario,
         departamento: values.departamento,
-        ...(isGeneralSystem && values.empresa ? { empresa: values.empresa } : {}),
+        ...(isGeneralSystem && values.empresa
+          ? { empresa: values.empresa }
+          : {}),
         email: values.email,
         senha: values.senha,
       });
@@ -122,7 +133,9 @@ export function useCadastroVM(
       });
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : t("serverError.serverErrorDescription");
+        err instanceof Error
+          ? err.message
+          : t("serverError.serverErrorDescription");
 
       // Categorize server response errors according to task requirements
       if (
@@ -132,7 +145,8 @@ export function useCadastroVM(
       ) {
         setServerMessage({
           title: t("serverError.alreadyRegisteredTitle"),
-          description: errorMsg || t("serverError.alreadyRegisteredDescription"),
+          description:
+            errorMsg || t("serverError.alreadyRegisteredDescription"),
           variant: "destructive",
         });
       } else if (
