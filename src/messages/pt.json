@@ -115,6 +115,10 @@
         "alreadyRegisteredDescription": "E-mail ou código de funcionário já cadastrado neste departamento/empresa.",
         "serverErrorTitle": "Erro de servidor",
         "serverErrorDescription": "Ocorreu um erro interno. Por favor, tente novamente mais tarde."
+      },
+      "serverSuccess": {
+        "title": "Conta criada com sucesso!",
+        "description": "Conta criada com sucesso! Você já pode fazer login."
       }
     }
   },

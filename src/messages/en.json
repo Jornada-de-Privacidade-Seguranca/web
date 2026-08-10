@@ -115,6 +115,10 @@
         "alreadyRegisteredDescription": "Email or employee code already registered for this department/company.",
         "serverErrorTitle": "Server error",
         "serverErrorDescription": "An internal server error occurred. Please try again later."
+      },
+      "serverSuccess": {
+        "title": "Account created successfully!",
+        "description": "Account created successfully! You can now log in."
       }
     }
   },

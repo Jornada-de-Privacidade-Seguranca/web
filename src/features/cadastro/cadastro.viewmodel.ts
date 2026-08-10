@@ -94,6 +94,9 @@ export function useCadastroVM(
     },
   });
 
+  // Access formState.errors to ensure React Hook Form proxy tracks error state
+  void form.formState.errors;
+
   const handleSubmit = form.handleSubmit(async (values) => {
     setServerMessage(null);
     try {
@@ -116,8 +119,8 @@ export function useCadastroVM(
 
       setIsSuccess(true);
       setServerMessage({
-        title: t("cardTitle"),
-        description: "Conta criada com sucesso! Você já pode fazer login.",
+        title: t("serverSuccess.title"),
+        description: t("serverSuccess.description"),
         variant: "success",
       });
     } catch (err: unknown) {
