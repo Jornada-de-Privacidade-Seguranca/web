@@ -99,10 +99,13 @@ export function useCadastroVM(
     },
   });
 
+  // Access formState.errors to ensure React Hook Form proxy tracks error state
+  void form.formState.errors;
+
   const handleSubmit = form.handleSubmit(async (values) => {
     setServerMessage(null);
     try {
-      if (env.isDevelopment) {
+      if (env.isDev) {
         // Mock test triggers for local frontend testing without backend:
         if (values.email === "duplicado@empresa.com") {
           throw new Error(t("serverError.alreadyRegisteredDescription"));
@@ -127,8 +130,8 @@ export function useCadastroVM(
 
       setIsSuccess(true);
       setServerMessage({
-        title: t("cardTitle"),
-        description: "Conta criada com sucesso! Você já pode fazer login.",
+        title: t("serverSuccess.title"),
+        description: t("serverSuccess.description"),
         variant: "success",
       });
     } catch (err: unknown) {
