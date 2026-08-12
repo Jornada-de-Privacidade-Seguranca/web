@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { inter, manrope } from "@/shared/fonts";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { routing } from "@/shared/i18n/routing";
 import { notFound } from "next/navigation";
 import { getMessages } from "next-intl/server";
+import { AppProviders } from "@/shared/providers";
+import { ThemeScript } from "@/shared/theme-script";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Jornada de Privacidade/Segurança",
@@ -23,6 +26,8 @@ export default async function RootLayout({
   params,
 }: RootLayoutProps) {
   const { locale } = await params;
+  const cookieStore = await cookies();
+  const theme = cookieStore.get('theme')?.value ?? "dark";
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -39,12 +44,17 @@ export default async function RootLayout({
         inter.variable,
         manrope.variable,
         "font-sans",
+        theme,
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background">
-        <NextIntlClientProvider messages={appMessages}>
-          {children}
-        </NextIntlClientProvider>
+        <AppProviders>
+          <ThemeScript />
+          <NextIntlClientProvider messages={appMessages}>
+            {children}
+          </NextIntlClientProvider>
+        </AppProviders>
       </body>
     </html>
   );

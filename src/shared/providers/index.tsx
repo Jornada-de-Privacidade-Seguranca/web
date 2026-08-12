@@ -1,13 +1,7 @@
-import { NextIntlClientProvider, useMessages } from "next-intl";
+"use client";
+
+import { ThemeProvider } from "@/shared/providers/theme";
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => {
-  const appMessages = useMessages();
-
-  return (
-    <>
-      <NextIntlClientProvider messages={appMessages}>
-        {children}
-      </NextIntlClientProvider>
-    </>
-  );
+  return <ThemeProvider>{children}</ThemeProvider>;
 };

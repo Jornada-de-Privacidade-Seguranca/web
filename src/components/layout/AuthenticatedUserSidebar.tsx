@@ -8,7 +8,7 @@ import {
   UserIcon,
   Shield01Icon,
 } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useTranslations } from "next-intl";
 import { PropsWithChildren } from "react";
