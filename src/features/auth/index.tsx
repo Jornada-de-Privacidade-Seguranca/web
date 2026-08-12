@@ -4,6 +4,7 @@ import { ShieldCheck } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button, Input, Message } from "@/components/ui";
+import { Link } from "@/shared/i18n/navigation";
 
 import { useAuthVM } from "./auth.viewmodel";
 
@@ -123,11 +124,12 @@ export function AuthView() {
             <p className="mt-6 text-center text-sm text-muted-foreground">
               <span>{labels.signUpPrefix} </span>
               <Button
+                asChild
                 type="button"
                 variant="link"
                 className="h-auto px-0 text-sm font-medium text-primary hover:no-underline"
               >
-                {labels.signUpLink}
+                <Link href="/cadastro">{labels.signUpLink}</Link>
               </Button>
             </p>
 
