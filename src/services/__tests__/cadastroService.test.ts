@@ -79,4 +79,19 @@ describe("cadastroService", () => {
       "Erro ao realizar cadastro do usuário."
     );
   });
+
+  it("should throw the envelope message when response.ok is true but success is false", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: false,
+        message: "Cadastro rejeitado pelas regras de negócio.",
+        data: null,
+      }),
+    } as unknown as Response);
+
+    await expect(registerUser(mockPayload)).rejects.toThrow(
+      "Cadastro rejeitado pelas regras de negócio."
+    );
+  });
 });

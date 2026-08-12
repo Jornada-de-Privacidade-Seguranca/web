@@ -2,11 +2,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import * as cadastroService from "@services/cadastroService";
+import { env } from "@/shared/config/env";
 import { useCadastroVM } from "../cadastro.viewmodel";
 
-// Mock next-intl hook
+// Mock next-intl hook. Keys resolve to themselves, except the one used as the
+// thrown error message by the dev-only mock trigger, which needs realistic
+// content (matching pt.json) for the server-error categorization to match it.
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) =>
+    key === "serverError.alreadyRegisteredDescription"
+      ? "E-mail ou código de funcionário já cadastrado neste departamento/empresa."
+      : key,
 }));
 
 describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
@@ -251,5 +257,75 @@ describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
     });
 
     expect(result.current.serverMessage).toBeNull();
+  });
+
+  it("não deve interceptar o e-mail de teste quando env.isDev é false", async () => {
+    const originalIsDev = env.isDev;
+    (env as { isDev: boolean }).isDev = false;
+
+    const spy = vi.spyOn(cadastroService, "registerUser").mockResolvedValueOnce({
+      id: "usr_200",
+      nomeCompleto: "Maria Silva",
+      email: "duplicado@empresa.com",
+      codigoFuncionario: "00123456",
+      departamento: "Tecnologia",
+      empresa: "ACME Corp",
+    });
+
+    const { result } = renderHook(() => useCadastroVM());
+    const formData = { ...validFormData, email: "duplicado@empresa.com" };
+
+    try {
+      await act(async () => {
+        Object.entries(formData).forEach(([key, value]) => {
+          result.current.form.setValue(
+            key as keyof typeof validFormData,
+            value
+          );
+        });
+      });
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ email: "duplicado@empresa.com" })
+      );
+      expect(result.current.isSuccess).toBe(true);
+    } finally {
+      (env as { isDev: boolean }).isDev = originalIsDev;
+    }
+  });
+
+  it("deve interceptar o e-mail de teste com erro simulado apenas quando env.isDev é true", async () => {
+    const originalIsDev = env.isDev;
+    (env as { isDev: boolean }).isDev = true;
+
+    const spy = vi.spyOn(cadastroService, "registerUser");
+    const { result } = renderHook(() => useCadastroVM());
+    const formData = { ...validFormData, email: "duplicado@empresa.com" };
+
+    try {
+      await act(async () => {
+        Object.entries(formData).forEach(([key, value]) => {
+          result.current.form.setValue(
+            key as keyof typeof validFormData,
+            value
+          );
+        });
+      });
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(spy).not.toHaveBeenCalled();
+      expect(result.current.serverMessage?.title).toBe(
+        "serverError.alreadyRegisteredTitle"
+      );
+    } finally {
+      (env as { isDev: boolean }).isDev = originalIsDev;
+    }
   });
 });
