@@ -2,12 +2,13 @@ import type { UseFormReturn } from "react-hook-form";
 import type { ReactNode } from "react";
 
 export interface LoginFormValues {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface AuthValidationMessages {
-  usernameRequired: string;
+  emailRequired: string;
+  emailInvalid: string;
   passwordRequired: string;
 }
 
@@ -16,8 +17,8 @@ export interface AuthLabels {
   description: string;
   welcomeTitle: string;
   welcomeDescription: string;
-  usernameLabel: string;
-  usernamePlaceholder: string;
+  emailLabel: string;
+  emailPlaceholder: string;
   passwordLabel: string;
   passwordPlaceholder: string;
   forgotPassword: string;
@@ -34,12 +35,29 @@ export interface AuthServerMessage {
   variant?: "default" | "info" | "success" | "warning" | "destructive";
 }
 
-export interface AuthUser {
-  id: string;
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export type AuthenticatedUserRole = "common_user" | "administrator";
+
+export interface AuthenticatedUserProfile {
+  role: AuthenticatedUserRole;
+  label: string;
+  user_type_id: number | null;
+  profile_type_id: number | null;
+  profile_type_name: string | null;
+}
+
+/** Formato do usuário autenticado retornado por /auth/login, /auth/register e /me. */
+export interface AuthenticatedUser {
+  id: number;
   name: string;
-  firstName: string;
-  email?: string;
-  token?: string;
+  email: string;
+  role: AuthenticatedUserRole;
+  profile: AuthenticatedUserProfile;
+  active_status: number;
 }
 
 export interface AuthViewModelReturn {
@@ -48,5 +66,5 @@ export interface AuthViewModelReturn {
   onCloseMsg: () => void;
   handleSubmit: () => void;
   labels: AuthLabels;
-  user?: AuthUser | null;
+  user?: AuthenticatedUser | null;
 }

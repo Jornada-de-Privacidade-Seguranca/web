@@ -59,8 +59,8 @@
       "description": "Assess your privacy and security knowledge",
       "welcomeTitle": "Welcome back",
       "welcomeDescription": "Sign in with your corporate account to continue",
-      "usernameLabel": "Username",
-      "usernamePlaceholder": "your.username",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your.email@company.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Type your password",
       "forgotPassword": "Forgot your password?",
@@ -69,8 +69,13 @@
       "signUpLink": "Sign up",
       "privacyNotice": "By continuing you accept our privacy terms.",
       "validation": {
-        "usernameRequired": "Username is required.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Enter a valid email address.",
         "passwordRequired": "Password is required."
+      },
+      "serverError": {
+        "title": "Unable to sign in",
+        "genericDescription": "Something went wrong while signing in. Please try again later."
       }
     },
     "register": {

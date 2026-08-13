@@ -1,6 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AxiosError, type AxiosResponse } from "axios";
 import { registerUser } from "../cadastroService";
+import { axiosInstance } from "../httpClient";
 import type { CadastroPayload } from "@features/cadastro/cadastro.types";
+
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  };
+}
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    "Request failed",
+    "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      data,
+      status,
+      statusText: "",
+      headers: {},
+      config: {} as AxiosResponse["config"],
+    } as AxiosResponse
+  );
+}
 
 describe("cadastroService", () => {
   beforeEach(() => {
@@ -30,23 +58,18 @@ describe("cadastroService", () => {
       },
     };
 
-    const globalFetch = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiResponse,
-    } as unknown as Response);
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(mockResponse(mockApiResponse));
 
     const result = await registerUser(mockPayload);
 
-    expect(globalFetch).toHaveBeenCalledTimes(1);
-    expect(globalFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/auth/register"),
+    expect(requestSpy).toHaveBeenCalledTimes(1);
+    expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(mockPayload),
+        method: "post",
+        url: "/auth/register",
+        data: mockPayload,
       })
     );
     expect(result.id).toBe("usr_123");
@@ -54,26 +77,20 @@ describe("cadastroService", () => {
   });
 
   it("should throw error message from server when response is not ok", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: false,
-      status: 409,
-      json: async () => ({
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(409, {
         success: false,
         message: "E-mail já cadastrado.",
-      }),
-    } as unknown as Response);
+      })
+    );
 
     await expect(registerUser(mockPayload)).rejects.toThrow("E-mail já cadastrado.");
   });
 
-  it("should throw fallback error message when response body is not json or missing message", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => {
-        throw new Error("Invalid JSON");
-      },
-    } as unknown as Response);
+  it("should throw fallback error message when response body has no message", async () => {
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(500, null)
+    );
 
     await expect(registerUser(mockPayload)).rejects.toThrow(
       "Erro ao realizar cadastro do usuário."
@@ -81,14 +98,13 @@ describe("cadastroService", () => {
   });
 
   it("should throw the envelope message when response.ok is true but success is false", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
         success: false,
         message: "Cadastro rejeitado pelas regras de negócio.",
         data: null,
-      }),
-    } as unknown as Response);
+      })
+    );
 
     await expect(registerUser(mockPayload)).rejects.toThrow(
       "Cadastro rejeitado pelas regras de negócio."
