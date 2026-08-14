@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthenticatedUserSidebar } from "@/components/layout/AuthenticatedUserSidebar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { PropsWithChildren } from "react";
 
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
