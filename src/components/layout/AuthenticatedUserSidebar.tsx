@@ -10,12 +10,21 @@ import {
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/shared/lib/utils";
 import { useSidebarStore } from "@/store/sidebar.store";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { PropsWithChildren } from "react";
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function useSidebarVM() {
   const isExpanded = useSidebarStore((state) => state.isExpanded);
   const toggle = useSidebarStore((state) => state.toggle);
+  const { user: authUser } = useAuth();
   const t = useTranslations();
 
   const navItems = [
@@ -48,7 +57,11 @@ function useSidebarVM() {
     },
   ];
 
-  const user = { name: "Alex Pereira", role: "Colaborador", initials: "AP" };
+  const user = {
+    name: authUser?.name ?? "Usuário",
+    role: authUser?.profile.label ?? "",
+    initials: authUser?.name ? getInitials(authUser.name) : "",
+  };
 
   return {
     isExpanded,
