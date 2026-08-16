@@ -16,7 +16,11 @@
     "dashboard": "Dashboard",
     "journeys": "Journeys",
     "profile": "Profile",
-    "admin-panel": "Admin Panel"
+    "admin-panel": "Admin Panel",
+    "userMenu": {
+      "profile": "My profile",
+      "logout": "Log out"
+    }
   },
   "switchThemeButton": {
     "light": "Switch to light mode",

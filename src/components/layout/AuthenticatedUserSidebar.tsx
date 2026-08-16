@@ -7,7 +7,9 @@ import {
   Task01Icon,
   UserIcon,
   Shield01Icon,
+  Logout03Icon,
 } from "@hugeicons/core-free-icons";
+import { Popover } from "radix-ui";
 import { cn } from "@/shared/lib/utils";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,8 +26,12 @@ function getInitials(name: string): string {
 function useSidebarVM() {
   const isExpanded = useSidebarStore((state) => state.isExpanded);
   const toggle = useSidebarStore((state) => state.toggle);
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const t = useTranslations();
+
+  async function handleLogout() {
+    await logout();
+  }
 
   const navItems = [
     {
@@ -68,10 +74,13 @@ function useSidebarVM() {
     toggle,
     navItems,
     user,
+    handleLogout,
     labels: {
       title: t("app.title"),
       description: t("app.description"),
       navTitle: t("sidebar.navigation"),
+      profile: t("sidebar.userMenu.profile"),
+      logout: t("sidebar.userMenu.logout"),
     },
   };
 }
@@ -94,7 +103,8 @@ const SidebarWrapper = ({ children }: PropsWithChildren) => {
 };
 
 export const AuthenticatedUserSidebar = () => {
-  const { isExpanded, navItems, user, labels } = useSidebarVM();
+  const { isExpanded, navItems, user, labels, handleLogout } =
+    useSidebarVM();
 
   return (
     <SidebarWrapper>
@@ -175,23 +185,62 @@ export const AuthenticatedUserSidebar = () => {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3 border-t border-sidebar-border px-4 py-4">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-shadow-sidebar-accent-foreground">
-            {user.initials}
-          </div>
-          <div
-            className={cn(
-              "min-w-0 transition-all duration-200",
-              isExpanded ? "opacity-100 w-auto" : "w-0 opacity-0",
-            )}
-          >
-            <p className="whitespace-nowrap text-sm font-medium text-foreground">
-              {user.name}
-            </p>
-            <p className="whitespace-nowrap text-xs text-muted-foreground">
-              {user.role}
-            </p>
-          </div>
+        <div className="border-t border-sidebar-border px-4 py-4">
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-shadow-sidebar-accent-foreground">
+                  {user.initials}
+                </div>
+                <div
+                  className={cn(
+                    "min-w-0 transition-all duration-200",
+                    isExpanded ? "opacity-100 w-auto" : "w-0 opacity-0",
+                  )}
+                >
+                  <p className="whitespace-nowrap text-sm font-medium text-foreground">
+                    {user.name}
+                  </p>
+                  <p className="whitespace-nowrap text-xs text-muted-foreground">
+                    {user.role}
+                  </p>
+                </div>
+              </button>
+            </Popover.Trigger>
+
+            <Popover.Portal>
+              <Popover.Content
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="z-50 w-56 rounded-xl border border-sidebar-border bg-popover p-1.5 text-popover-foreground shadow-lg outline-none"
+              >
+                <button
+                  type="button"
+                  disabled
+                  className="flex w-full cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-popover-foreground opacity-50"
+                >
+                  <HugeiconsIcon icon={UserIcon} size={18} strokeWidth={1.5} />
+                  {labels.profile}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <HugeiconsIcon
+                    icon={Logout03Icon}
+                    size={18}
+                    strokeWidth={1.5}
+                  />
+                  {labels.logout}
+                </button>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         </div>
       </div>
     </SidebarWrapper>

@@ -16,7 +16,11 @@
     "dashboard": "Painel",
     "journeys": "Jornadas",
     "profile": "Perfil",
-    "admin-panel": "Painel administrativo"
+    "admin-panel": "Painel administrativo",
+    "userMenu": {
+      "profile": "Meu perfil",
+      "logout": "Sair"
+    }
   },
   "switchThemeButton": {
     "light": "Trocar para tema claro",

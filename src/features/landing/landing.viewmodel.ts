@@ -7,12 +7,15 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useTranslations } from "next-intl";
 
+import { useRequireGuest } from "@/hooks/useAuthGuard";
 import type { LandingViewModelReturn } from "./landing.types";
 
 export function useLandingVM(): LandingViewModelReturn {
   const t = useTranslations("landing");
+  const { isLoading, isAuthenticated } = useRequireGuest();
 
   return {
+    isReady: !isLoading && !isAuthenticated,
     labels: {
       brand: t("brand"),
       header: {

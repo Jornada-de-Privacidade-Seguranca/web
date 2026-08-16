@@ -31,6 +31,7 @@ export interface LandingViewModelReturn {
     };
   };
   steps: LandingStep[];
+  isReady: boolean;
   handleScrollToHowItWorks: (e?: React.MouseEvent<HTMLElement>) => void;
   handleScrollToTop: (e?: React.MouseEvent<HTMLElement>) => void;
 }
