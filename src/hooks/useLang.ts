@@ -10,7 +10,7 @@ export function useLang() {
   const pathname = usePathname()
   const params = useParams()
 
-  const currentLocale = (params.locale as Locale) ?? routing.defaultLocale
+  const currentLocale = (params?.locale as Locale) ?? routing.defaultLocale
 
   function changeLocale(locale: Locale) {
     router.replace(pathname, { locale })

@@ -156,5 +156,33 @@
     "completedSectionAriaLabel": "Última avaliação concluída",
     "historySectionAriaLabel": "Histórico recente de avaliações",
     "progressBarAriaLabel": "Pontuação de {title}"
+  },
+  "assessments": {
+    "title": "Jornadas de Aprendizado",
+    "subtitle": "Acesse suas trilhas de conhecimento e avaliações de privacidade e segurança.",
+    "pendingSectionTitle": "Jornadas pendentes",
+    "pendingSectionSubtitle": "Jornadas disponíveis para você responder.",
+    "pendingEmpty": "Você não possui jornadas pendentes no momento.",
+    "catalogSectionTitle": "Todas as jornadas",
+    "catalogSectionSubtitle": "Escolha qualquer jornada disponível para responder.",
+    "catalogSearchPlaceholder": "Buscar jornada pelo nome...",
+    "catalogEmpty": "Nenhuma jornada encontrada para o termo buscado.",
+    "statusCompleted": "Concluída",
+    "statusInProgress": "Em andamento",
+    "statusNotStarted": "Não iniciada",
+    "actionStart": "Iniciar avaliação",
+    "actionContinue": "Continuar avaliação",
+    "actionRetake": "Refazer jornada",
+    "questionsCount": "{count} perguntas",
+    "estimatedMinutes": "{minutes} min",
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próximo",
+      "pageOf": "Página {current} de {total}"
+    },
+    "errorTitle": "Erro ao carregar jornadas",
+    "errorMessage": "Não foi possível carregar as jornadas de avaliação.",
+    "retryButton": "Tentar novamente",
+    "loadingAriaLabel": "Carregando listagem de jornadas"
   }
 }

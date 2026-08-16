@@ -13,24 +13,27 @@ import { useSidebarStore } from "@/store/sidebar.store";
 import { useTranslations } from "next-intl";
 import { PropsWithChildren } from "react";
 
+import { usePathname } from "@/shared/i18n/navigation";
+
 function useSidebarVM() {
   const isExpanded = useSidebarStore((state) => state.isExpanded);
   const toggle = useSidebarStore((state) => state.toggle);
   const t = useTranslations();
+  const pathname = usePathname();
 
   const navItems = [
     {
       label: t("sidebar.dashboard"),
       icon: DashboardSquare01Icon,
       href: "/painel",
-      active: true,
+      active: pathname.startsWith("/painel"),
     },
     {
       label: t("sidebar.journeys"),
       icon: Task01Icon,
-      href: "/jornadas",
-      active: false,
-      disabled: true,
+      href: "/assessments",
+      active: pathname.startsWith("/assessments"),
+      disabled: false,
     },
     {
       label: t("sidebar.profile"),
