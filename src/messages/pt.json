@@ -15,6 +15,7 @@
     "navigation": "Navegação",
     "dashboard": "Painel",
     "journeys": "Jornadas",
+    "results": "Resultados",
     "profile": "Perfil",
     "admin-panel": "Painel administrativo"
   },
@@ -184,5 +185,28 @@
     "errorMessage": "Não foi possível carregar as jornadas de avaliação.",
     "retryButton": "Tentar novamente",
     "loadingAriaLabel": "Carregando listagem de jornadas"
+  },
+  "results": {
+    "title": "Resultados",
+    "subtitle": "Todas as jornadas que você já concluiu.",
+    "kpiTotalCompleted": "JORNADAS CONCLUÍDAS",
+    "kpiAverageScore": "MÉDIA DAS NOTAS",
+    "sectionTitle": "Jornadas concluídas",
+    "sectionSubtitle": "Revise os resultados das jornadas que você já finalizou.",
+    "searchPlaceholder": "Buscar jornada pelo nome...",
+    "searchEmpty": "Nenhum resultado encontrado para o termo buscado.",
+    "userEmpty": "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui.",
+    "completedAt": "Concluída em {date}",
+    "questionsCount": "{count} perguntas",
+    "viewResult": "Ver resultado",
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próximo",
+      "pageOf": "Página {current} de {total}"
+    },
+    "errorTitle": "Erro ao carregar resultados",
+    "errorMessage": "Não foi possível carregar os resultados das avaliações.",
+    "retryButton": "Tentar novamente",
+    "loadingAriaLabel": "Carregando resultados de avaliações"
   }
 }

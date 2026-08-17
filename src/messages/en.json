@@ -15,6 +15,7 @@
     "navigation": "Navigation",
     "dashboard": "Dashboard",
     "journeys": "Journeys",
+    "results": "Results",
     "profile": "Profile",
     "admin-panel": "Admin Panel"
   },
@@ -184,5 +185,28 @@
     "errorMessage": "Unable to load assessment journeys.",
     "retryButton": "Try again",
     "loadingAriaLabel": "Loading journeys list"
+  },
+  "results": {
+    "title": "Results",
+    "subtitle": "All journeys you have completed.",
+    "kpiTotalCompleted": "COMPLETED JOURNEYS",
+    "kpiAverageScore": "AVERAGE SCORE",
+    "sectionTitle": "Completed journeys",
+    "sectionSubtitle": "Review the results of journeys you have completed.",
+    "searchPlaceholder": "Search journey by name...",
+    "searchEmpty": "No results found for the search term.",
+    "userEmpty": "You have not completed any journey yet. Your results will appear here.",
+    "completedAt": "Completed on {date}",
+    "questionsCount": "{count} questions",
+    "viewResult": "View result",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {current} of {total}"
+    },
+    "errorTitle": "Error loading results",
+    "errorMessage": "Unable to load evaluation results.",
+    "retryButton": "Try again",
+    "loadingAriaLabel": "Loading evaluation results"
   }
 }

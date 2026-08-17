@@ -5,6 +5,7 @@ import {
   ShieldIcon,
   DashboardSquare01Icon,
   Task01Icon,
+  CheckListIcon,
   UserIcon,
   Shield01Icon,
 } from "@hugeicons/core-free-icons";
@@ -33,6 +34,13 @@ function useSidebarVM() {
       icon: Task01Icon,
       href: "/assessments",
       active: pathname.startsWith("/assessments") || pathname.startsWith("/avaliacoes"),
+      disabled: false,
+    },
+    {
+      label: t("sidebar.results"),
+      icon: CheckListIcon,
+      href: "/results",
+      active: pathname.startsWith("/results") || pathname.startsWith("/resultados"),
       disabled: false,
     },
     {
