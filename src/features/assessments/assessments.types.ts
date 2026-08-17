@@ -56,6 +56,7 @@ export interface AssessmentsViewModelReturn {
   pendingPage: number;
   pendingTotalPages: number;
   isPendingLoading: boolean;
+  isPendingSectionVisible: boolean;
   handlePendingPageChange: (page: number) => void;
 
   catalogJourneys: Journey[];

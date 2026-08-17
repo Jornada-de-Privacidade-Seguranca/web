@@ -12,8 +12,11 @@ export function Accordion(props: AccordionProps) {
     <div data-testid="pending-accordion" className="space-y-4">
       <button
         type="button"
+        id="pending-accordion-header"
         onClick={toggle}
+        role="button"
         aria-expanded={isOpen}
+        aria-controls="pending-accordion-content"
         data-testid="accordion-trigger"
         className="flex w-full items-center justify-between gap-4 text-left font-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 transition-colors hover:bg-muted/30"
       >
@@ -42,7 +45,15 @@ export function Accordion(props: AccordionProps) {
         </div>
       </button>
 
-      {isOpen && <div>{children}</div>}
+      {isOpen && (
+        <div
+          id="pending-accordion-content"
+          role="region"
+          aria-labelledby="pending-accordion-header"
+        >
+          {children}
+        </div>
+      )}
     </div>
   );
 }

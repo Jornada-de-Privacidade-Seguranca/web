@@ -86,7 +86,30 @@ describe("useAssessmentsVM", () => {
     expect(result.current.pendingJourneys).toHaveLength(1);
     expect(result.current.pendingJourneys[0].title).toBe("Segurança na Nuvem");
     expect(result.current.catalogJourneys).toHaveLength(2);
+    expect(result.current.isPendingSectionVisible).toBe(true);
     expect(result.current.error).toBeNull();
+  });
+
+  it("deve definir isPendingSectionVisible como false quando não houver jornadas pendentes", async () => {
+    vi.spyOn(AssessmentsService, "getPendingAssessments").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 6,
+      totalPages: 0,
+    });
+    vi.spyOn(AssessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
+    );
+
+    const { result } = renderHook(() => useAssessmentsVM());
+
+    await waitFor(() => {
+      expect(result.current.isPendingLoading).toBe(false);
+    });
+
+    expect(result.current.pendingJourneys).toHaveLength(0);
+    expect(result.current.isPendingSectionVisible).toBe(false);
   });
 
   it("deve atualizar o termo de busca no catálogo e chamar o serviço com o termo filtrado", async () => {

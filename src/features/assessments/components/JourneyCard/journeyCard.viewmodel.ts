@@ -5,6 +5,7 @@ export function useJourneyCardVM(props: JourneyCardProps) {
 
   const isCompleted = journey.status === "completed";
   const isInProgress = journey.status === "in_progress";
+  const isNotStarted = journey.status === "not_started";
 
   const actionHref = `/jornada/${journey.id}`;
 
@@ -19,15 +20,25 @@ export function useJourneyCardVM(props: JourneyCardProps) {
   const questionsText = labels.questionsCount(journey.totalQuestions);
   const timeText = labels.estimatedMinutes(journey.estimatedMinutes);
 
+  const badgeText = isCompleted
+    ? labels.statusCompleted
+    : isInProgress
+    ? labels.statusInProgress
+    : labels.statusNotStarted;
+
+  const ctaAriaLabel = `${buttonText} — ${journey.title}`;
+
   return {
     journey,
     isCompleted,
     isInProgress,
+    isNotStarted,
     actionHref,
     buttonText,
     buttonVariant,
+    badgeText,
     questionsText,
     timeText,
-    completedTagText: labels.statusCompleted,
+    ctaAriaLabel,
   };
 }

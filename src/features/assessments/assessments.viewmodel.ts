@@ -178,12 +178,14 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   };
 
   const isLoading = isPendingLoading && isCatalogLoading;
+  const isPendingSectionVisible = isPendingLoading || pendingJourneys.length > 0;
 
   return {
     pendingJourneys,
     pendingPage,
     pendingTotalPages,
     isPendingLoading,
+    isPendingSectionVisible,
     handlePendingPageChange,
 
     catalogJourneys,

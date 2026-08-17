@@ -32,6 +32,8 @@ export function Pagination(props: PaginationProps) {
           size="sm"
           onClick={handlePrevious}
           disabled={!canGoPrevious}
+          aria-disabled={!canGoPrevious}
+          aria-label="Página anterior"
           className="h-8 px-2.5 rounded-lg text-xs hover:bg-muted/60 disabled:opacity-40"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} size={14} className="mr-1" />
@@ -44,6 +46,7 @@ export function Pagination(props: PaginationProps) {
               key={page}
               type="button"
               onClick={() => handlePageSelect(page)}
+              aria-current={page === currentPage ? "page" : undefined}
               className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-medium transition-colors ${
                 page === currentPage
                   ? "bg-primary text-primary-foreground font-semibold shadow-sm"
@@ -60,6 +63,8 @@ export function Pagination(props: PaginationProps) {
           size="sm"
           onClick={handleNext}
           disabled={!canGoNext}
+          aria-disabled={!canGoNext}
+          aria-label="Próxima página"
           className="h-8 px-2.5 rounded-lg text-xs hover:bg-muted/60 disabled:opacity-40"
         >
           {labelNext}

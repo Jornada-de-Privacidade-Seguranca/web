@@ -21,6 +21,7 @@ export function AssessmentsView() {
     pendingPage,
     pendingTotalPages,
     isPendingLoading,
+    isPendingSectionVisible,
     handlePendingPageChange,
 
     catalogJourneys,
@@ -94,44 +95,46 @@ export function AssessmentsView() {
         ) : null}
 
         {/* Seção 1: Jornadas Pendentes (Accordion aberto por padrão) */}
-        <section aria-label={labels.pendingSectionTitle}>
-          <Accordion
-            title={labels.pendingSectionTitle}
-            subtitle={labels.pendingSectionSubtitle}
-            count={pendingJourneys.length}
-            defaultOpen={true}
-          >
-            {isPendingLoading ? (
-              <JourneySkeleton count={3} />
-            ) : pendingJourneys.length === 0 ? (
-              <EmptyState message={labels.pendingEmpty} />
-            ) : (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pendingJourneys.map((journey) => (
-                    <JourneyCard
-                      key={journey.id}
-                      journey={journey}
-                      labels={labels}
+        {isPendingSectionVisible && (
+          <>
+            <section aria-label={labels.pendingSectionTitle}>
+              <Accordion
+                title={labels.pendingSectionTitle}
+                subtitle={labels.pendingSectionSubtitle}
+                count={pendingJourneys.length}
+                defaultOpen={true}
+              >
+                {isPendingLoading ? (
+                  <JourneySkeleton count={3} />
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {pendingJourneys.map((journey) => (
+                        <JourneyCard
+                          key={journey.id}
+                          journey={journey}
+                          labels={labels}
+                        />
+                      ))}
+                    </div>
+
+                    <Pagination
+                      currentPage={pendingPage}
+                      totalPages={pendingTotalPages}
+                      onPageChange={handlePendingPageChange}
+                      previousText={labels.paginationPrevious}
+                      nextText={labels.paginationNext}
+                      pageOfText={labels.paginationPageOf}
                     />
-                  ))}
-                </div>
+                  </div>
+                )}
+              </Accordion>
+            </section>
 
-                <Pagination
-                  currentPage={pendingPage}
-                  totalPages={pendingTotalPages}
-                  onPageChange={handlePendingPageChange}
-                  previousText={labels.paginationPrevious}
-                  nextText={labels.paginationNext}
-                  pageOfText={labels.paginationPageOf}
-                />
-              </div>
-            )}
-          </Accordion>
-        </section>
-
-        {/* Divisória sutil */}
-        <hr className="my-8 border-border/60" />
+            {/* Divisória sutil */}
+            <hr className="my-8 border-border/60" />
+          </>
+        )}
 
         {/* Seção 2: Todas as Jornadas (Catálogo) */}
         <section aria-label={labels.catalogSectionTitle} className="space-y-6">

@@ -99,6 +99,7 @@ describe("AssessmentsView Component", () => {
       pendingPage: 1,
       pendingTotalPages: 1,
       isPendingLoading: false,
+      isPendingSectionVisible: true,
       handlePendingPageChange: vi.fn(),
 
       catalogJourneys: [
@@ -140,6 +141,19 @@ describe("AssessmentsView Component", () => {
 
     const accordionTrigger = screen.getByTestId("accordion-trigger");
     expect(accordionTrigger.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("deve ocultar a seção de pendentes quando isPendingSectionVisible for false", () => {
+    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
+      createMockVMReturn({
+        isPendingSectionVisible: false,
+        pendingJourneys: [],
+      })
+    );
+
+    render(<AssessmentsView />);
+
+    expect(screen.queryByText("Jornadas pendentes")).toBeNull();
   });
 
   it("deve renderizar a lista do catálogo e o input de busca pelo nome", () => {
