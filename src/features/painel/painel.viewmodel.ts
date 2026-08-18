@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { useAuthStore } from "@features/auth/auth.store";
+import { useAuth } from "@hooks/useAuth";
 import { getDashboardData } from "@services/dashboardService";
 import { HISTORY_LIMIT } from "@shared/constants/dashboard";
 import type {
@@ -14,10 +14,9 @@ import type {
 
 export function usePainelVM(): PainelViewModelReturn {
   const t = useTranslations("painel");
-  const user = useAuthStore((state) => state.user);
-  const userToken = useAuthStore((state) => state.token) ?? undefined;
+  const { user } = useAuth();
 
-  const userFirstName = user?.firstName || user?.name || "Usuário";
+  const userFirstName = user?.name?.split(" ")[0] || "Usuário";
 
   const [pendingAssessment, setPendingAssessment] =
     useState<PendingAssessment | null>(null);
@@ -32,7 +31,7 @@ export function usePainelVM(): PainelViewModelReturn {
     setError(null);
 
     try {
-      const data = await getDashboardData(HISTORY_LIMIT, userToken);
+      const data = await getDashboardData(HISTORY_LIMIT);
       setPendingAssessment(data.pending);
       setLastCompletedAssessment(data.lastCompleted);
       setHistory(data.history);
@@ -45,7 +44,7 @@ export function usePainelVM(): PainelViewModelReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [userToken, t]);
+  }, [t]);
 
   useEffect(() => {
     queueMicrotask(() => {

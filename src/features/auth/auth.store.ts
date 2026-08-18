@@ -1,19 +1,23 @@
 import { create } from "zustand";
-import type { AuthUser } from "./auth.types";
+import type { AuthenticatedUser } from "./auth.types";
 
 export interface AuthState {
-  user: AuthUser | null;
-  token: string | null;
+  user: AuthenticatedUser | null;
   isAuthenticated: boolean;
-  setAuth: (user: AuthUser, token: string) => void;
+  /** true enquanto a sessão atual (cookie httpOnly) ainda não foi conferida via /me. */
+  isLoading: boolean;
+  setAuth: (user: AuthenticatedUser) => void;
   clearAuth: () => void;
+  setLoading: (isLoading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: null,
   isAuthenticated: false,
-  setAuth: (user: AuthUser, token: string) =>
-    set({ user, token, isAuthenticated: true }),
-  clearAuth: () => set({ user: null, token: null, isAuthenticated: false }),
+  isLoading: true,
+  setAuth: (user: AuthenticatedUser) =>
+    set({ user, isAuthenticated: true, isLoading: false }),
+  clearAuth: () =>
+    set({ user: null, isAuthenticated: false, isLoading: false }),
+  setLoading: (isLoading: boolean) => set({ isLoading }),
 }));
