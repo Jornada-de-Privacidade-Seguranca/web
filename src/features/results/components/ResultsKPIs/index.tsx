@@ -16,6 +16,7 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
     labelTotalCompleted,
     labelAverageScore,
     retryButtonText,
+    errorMessage,
   } = useResultsKPIsVM(props);
 
   if (isLoading) {
@@ -32,7 +33,7 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
       <div className="rounded-[2rem] border border-destructive/30 bg-destructive/10 p-6 text-destructive flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <HugeiconsIcon icon={AlertCircleIcon} size={24} className="shrink-0" />
-          <p className="text-sm font-medium">Erro ao carregar estatísticas de resultados.</p>
+          <p className="text-sm font-medium">{errorMessage}</p>
         </div>
         {onRetry && (
           <Button

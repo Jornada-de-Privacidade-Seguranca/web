@@ -26,13 +26,13 @@ export function ResultsView() {
     totalPages,
     isResultsLoading,
     isResultsError,
+    resultsErrorMessage,
     emptyState,
 
     searchTerm,
     handleSearchChange,
     handlePageChange,
 
-    error,
     serverMessage,
     onCloseMsg,
     handleRetry,
@@ -109,7 +109,7 @@ export function ResultsView() {
             <ResultsSkeleton count={6} />
           ) : isResultsError ? (
             <div className="flex flex-col items-center justify-center rounded-[2rem] border border-destructive/30 bg-destructive/5 p-8 text-center">
-              <p className="text-sm font-medium text-destructive mb-3">{error}</p>
+              <p className="text-sm font-medium text-destructive mb-3">{resultsErrorMessage}</p>
               <Button onClick={handleRetry} variant="outline" size="sm">
                 <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
                 {labels.retryButton}

@@ -4,6 +4,7 @@ import type {
   ResultsMetrics,
   PaginatedResponse,
 } from "@features/results/results.types";
+import { env } from "@/shared/config/env";
 
 export interface GetResultsListParams {
   page?: number;
@@ -63,7 +64,7 @@ export async function getMetrics(): Promise<ResultsMetrics> {
       "Erro ao carregar as métricas de resultados."
     );
   } catch (err: unknown) {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDev) {
       return MOCK_METRICS;
     }
     throw err;
@@ -81,7 +82,7 @@ export async function getResultsList(
       "Erro ao carregar os resultados das avaliações."
     );
   } catch (err: unknown) {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDev) {
       const filtered = search
         ? MOCK_RESULTS.filter((item) =>
             item.title.toLowerCase().includes(search.toLowerCase())

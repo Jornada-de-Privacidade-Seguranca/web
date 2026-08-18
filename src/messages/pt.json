@@ -220,6 +220,7 @@
     "errorMetricsMessage": "Erro ao carregar estatísticas de resultados.",
     "errorMessage": "Não foi possível carregar os resultados das avaliações.",
     "retryButton": "Tentar novamente",
-    "loadingAriaLabel": "Carregando resultados de avaliações"
+    "loadingAriaLabel": "Carregando resultados de avaliações",
+    "scoreAriaLabel": "Nota: {score}"
   }
 }

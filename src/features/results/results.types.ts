@@ -48,9 +48,11 @@ export interface ResultsLabels {
   paginationNext: string;
   paginationPageOf: (current: number, total: number) => string;
   errorTitle: string;
+  errorMetricsMessage: string;
   errorMessage: string;
   retryButton: string;
   loadingAriaLabel: string;
+  scoreAriaLabel: (score: number) => string;
 }
 
 export interface ResultsViewModelReturn {
@@ -63,6 +65,7 @@ export interface ResultsViewModelReturn {
   totalPages: number;
   isResultsLoading: boolean;
   isResultsError: boolean;
+  resultsErrorMessage: string | null;
   emptyState: ResultsEmptyStateMode;
 
   searchTerm: string;

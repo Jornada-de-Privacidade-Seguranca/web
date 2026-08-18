@@ -85,9 +85,11 @@ describe("ResultsView Component", () => {
     paginationPageOf: (current: number, total: number) =>
       `Página ${current} de ${total}`,
     errorTitle: "Erro ao carregar resultados",
+    errorMetricsMessage: "Erro ao carregar estatísticas de resultados.",
     errorMessage: "Não foi possível carregar os resultados das avaliações.",
     retryButton: "Tentar novamente",
     loadingAriaLabel: "Carregando resultados de avaliações",
+    scoreAriaLabel: (score: number) => `Nota: ${score}`,
   };
 
   function createMockVMReturn(
@@ -113,6 +115,7 @@ describe("ResultsView Component", () => {
       totalPages: 1,
       isResultsLoading: false,
       isResultsError: false,
+      resultsErrorMessage: null,
       emptyState: "none",
 
       searchTerm: "",
@@ -190,6 +193,51 @@ describe("ResultsView Component", () => {
 
     const skeletons = screen.getByTestId("results-skeleton");
     expect(skeletons).toBeDefined();
+  });
+
+  it("deve exibir erro pontual e retry nos cards de KPI quando isMetricsError for true", () => {
+    const handleRetryMock = vi.fn();
+    vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
+      createMockVMReturn({
+        isMetricsError: true,
+        metrics: null,
+        handleRetry: handleRetryMock,
+      })
+    );
+
+    renderView();
+
+    expect(
+      screen.getByText("Erro ao carregar estatísticas de resultados.")
+    ).toBeDefined();
+    expect(screen.queryByText("JORNADAS CONCLUÍDAS")).toBeNull();
+
+    fireEvent.click(screen.getAllByText("Tentar novamente")[0]);
+    expect(handleRetryMock).toHaveBeenCalled();
+  });
+
+  it("deve exibir a mensagem de erro especifica da listagem (nao a de metricas) quando isResultsError for true", () => {
+    vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
+      createMockVMReturn({
+        isResultsError: true,
+        resultsErrorMessage: "Falha ao carregar a listagem de resultados.",
+        results: [],
+        serverMessage: {
+          title: "Erro ao carregar resultados",
+          description: "Falha ao carregar as estatisticas de resultados.",
+          variant: "destructive",
+        },
+      })
+    );
+
+    renderView();
+
+    expect(
+      screen.getByText("Falha ao carregar a listagem de resultados.")
+    ).toBeDefined();
+    expect(
+      screen.getByText("Falha ao carregar as estatisticas de resultados.")
+    ).toBeDefined();
   });
 
   it("deve renderizar o ResultsEmptyState com o botao CTA levando a /jornadas quando emptyState = 'no-results'", () => {

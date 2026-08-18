@@ -13,7 +13,7 @@ export function useResultCardVM(props: ResultCardProps) {
   const completedAtText = labels.completedAt(result.completedAt);
   const buttonText = labels.viewResult;
   const ctaAriaLabel = `${buttonText} — ${result.title}`;
-  const badgeAriaLabel = `Nota: ${score}`;
+  const badgeAriaLabel = labels.scoreAriaLabel(score);
 
   return {
     result,

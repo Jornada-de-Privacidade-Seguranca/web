@@ -15,5 +15,6 @@ export function useResultsKPIsVM(props: ResultsKPIsProps) {
     labelTotalCompleted: labels.kpiTotalCompleted,
     labelAverageScore: labels.kpiAverageScore,
     retryButtonText: labels.retryButton,
+    errorMessage: labels.errorMetricsMessage,
   };
 }

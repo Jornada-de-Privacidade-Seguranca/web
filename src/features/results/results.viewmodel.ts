@@ -159,9 +159,11 @@ export function useResultsVM(): ResultsViewModelReturn {
     paginationPageOf: (current: number, total: number) =>
       t("pagination.pageOf", { current, total }),
     errorTitle: t("errorTitle"),
+    errorMetricsMessage: t("errorMetricsMessage"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
     loadingAriaLabel: t("loadingAriaLabel"),
+    scoreAriaLabel: (score: number) => t("scoreAriaLabel", { score }),
   };
 
   const isLoading = isMetricsLoading || isResultsLoading;
@@ -193,6 +195,7 @@ export function useResultsVM(): ResultsViewModelReturn {
     totalPages,
     isResultsLoading,
     isResultsError,
+    resultsErrorMessage: resultsError,
     emptyState,
 
     searchTerm,

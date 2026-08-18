@@ -220,6 +220,7 @@
     "errorMetricsMessage": "Error loading results statistics.",
     "errorMessage": "Unable to load evaluation results.",
     "retryButton": "Try again",
-    "loadingAriaLabel": "Loading evaluation results"
+    "loadingAriaLabel": "Loading evaluation results",
+    "scoreAriaLabel": "Score: {score}"
   }
 }
