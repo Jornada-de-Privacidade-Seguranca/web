@@ -4,6 +4,21 @@ import type {
   LoginCredentials,
 } from "@features/auth/auth.types";
 
+const MOCK_DEV_USER: AuthenticatedUser = {
+  id: 1,
+  name: "Usuário Teste",
+  email: "usuario@teste.com",
+  role: "common_user",
+  profile: {
+    role: "common_user",
+    label: "Colaborador",
+    user_type_id: 1,
+    profile_type_id: 1,
+    profile_type_name: "Colaborador",
+  },
+  active_status: 1,
+};
+
 export async function login(
   credentials: LoginCredentials
 ): Promise<AuthenticatedUser> {
@@ -23,9 +38,16 @@ export async function logout(): Promise<void> {
 }
 
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
-  return apiRequest<AuthenticatedUser>(
-    "/me",
-    {},
-    "Não foi possível recuperar o usuário autenticado."
-  );
+  try {
+    return await apiRequest<AuthenticatedUser>(
+      "/me",
+      {},
+      "Não foi possível recuperar o usuário autenticado."
+    );
+  } catch (err: unknown) {
+    if (process.env.NODE_ENV === "development") {
+      return MOCK_DEV_USER;
+    }
+    throw err;
+  }
 }

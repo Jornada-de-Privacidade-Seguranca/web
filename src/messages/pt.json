@@ -203,8 +203,11 @@
     "sectionTitle": "Jornadas concluídas",
     "sectionSubtitle": "Revise os resultados das jornadas que você já finalizou.",
     "searchPlaceholder": "Buscar jornada pelo nome...",
-    "searchEmpty": "Nenhum resultado encontrado para o termo buscado.",
-    "userEmpty": "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui.",
+    "searchEmptyTitle": "Nenhum resultado encontrado",
+    "searchEmpty": "Tente buscar por outro termo.",
+    "userEmptyTitle": "Nenhuma jornada concluída ainda",
+    "userEmpty": "Complete uma jornada para ver seus resultados aqui.",
+    "availableJourneysCta": "Ver jornadas disponíveis",
     "completedAt": "Concluída em {date}",
     "questionsCount": "{count} perguntas",
     "viewResult": "Ver resultado",
@@ -214,6 +217,7 @@
       "pageOf": "Página {current} de {total}"
     },
     "errorTitle": "Erro ao carregar resultados",
+    "errorMetricsMessage": "Erro ao carregar estatísticas de resultados.",
     "errorMessage": "Não foi possível carregar os resultados das avaliações.",
     "retryButton": "Tentar novamente",
     "loadingAriaLabel": "Carregando resultados de avaliações"

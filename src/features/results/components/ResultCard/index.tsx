@@ -1,13 +1,12 @@
 "use client";
 
 import {
-  CheckListIcon,
   ArrowRight01Icon,
   CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { useResultCardVM } from "./resultCard.viewmodel";
 import type { ResultCardProps } from "./resultCard.types";
 
@@ -19,9 +18,9 @@ export function ResultCard(props: ResultCardProps) {
     isMediumScore,
     actionHref,
     completedAtText,
-    questionsText,
     buttonText,
     ctaAriaLabel,
+    badgeAriaLabel,
   } = useResultCardVM(props);
 
   return (
@@ -32,9 +31,10 @@ export function ResultCard(props: ResultCardProps) {
             {result.title}
           </h3>
 
-          {/* Badge de Nota Condicional */}
+          {/* Badge de Nota Condicional com Acessibilidade */}
           <span
             data-testid="result-score-tag"
+            aria-label={badgeAriaLabel}
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold shrink-0 ${
               isHighScore
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20"
@@ -48,20 +48,8 @@ export function ResultCard(props: ResultCardProps) {
           </span>
         </div>
 
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">
-          {result.description}
-        </p>
-
-        <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
           <span>{completedAtText}</span>
-          <div className="flex items-center gap-1">
-            <HugeiconsIcon
-              icon={CheckListIcon}
-              size={14}
-              className="text-primary shrink-0"
-            />
-            <span>{questionsText}</span>
-          </div>
         </div>
       </div>
 

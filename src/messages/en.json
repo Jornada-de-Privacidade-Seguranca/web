@@ -203,8 +203,11 @@
     "sectionTitle": "Completed journeys",
     "sectionSubtitle": "Review the results of journeys you have completed.",
     "searchPlaceholder": "Search journey by name...",
-    "searchEmpty": "No results found for the search term.",
-    "userEmpty": "You have not completed any journey yet. Your results will appear here.",
+    "searchEmptyTitle": "No results found",
+    "searchEmpty": "Try searching for another term.",
+    "userEmptyTitle": "No journeys completed yet",
+    "userEmpty": "Complete a journey to see your results here.",
+    "availableJourneysCta": "View available journeys",
     "completedAt": "Completed on {date}",
     "questionsCount": "{count} questions",
     "viewResult": "View result",
@@ -214,6 +217,7 @@
       "pageOf": "Page {current} of {total}"
     },
     "errorTitle": "Error loading results",
+    "errorMetricsMessage": "Error loading results statistics.",
     "errorMessage": "Unable to load evaluation results.",
     "retryButton": "Try again",
     "loadingAriaLabel": "Loading evaluation results"

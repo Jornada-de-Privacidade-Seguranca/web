@@ -10,6 +10,7 @@ import { AppProviders } from "@/shared/providers";
 // Mock next-intl
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => "pt",
 }));
 
 // Mock next/navigation
@@ -71,8 +72,11 @@ describe("ResultsView Component", () => {
     sectionTitle: "Jornadas concluídas",
     sectionSubtitle: "Revise os resultados das jornadas que você já finalizou.",
     searchPlaceholder: "Buscar jornada pelo nome...",
+    searchEmptyTitle: "Nenhum resultado encontrado",
     searchEmpty: "Nenhum resultado encontrado para o termo buscado.",
+    userEmptyTitle: "Nenhuma jornada concluída",
     userEmpty: "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui.",
+    availableJourneysCta: "Ver jornadas disponíveis",
     completedAt: (dateStr: string) => `Concluída em ${dateStr}`,
     questionsCount: (count: number) => `${count} perguntas`,
     viewResult: "Ver resultado",
@@ -95,20 +99,22 @@ describe("ResultsView Component", () => {
         averageScore: 76,
       },
       isMetricsLoading: false,
+      isMetricsError: false,
 
       results: [
         {
           id: "r1",
           title: "Fundamentos de LGPD",
-          description: "Avalie seu domínio sobre princípios de proteção de dados",
           score: 78,
           completedAt: "2026-05-20",
-          questionsCount: 5,
         },
       ],
       page: 1,
       totalPages: 1,
       isResultsLoading: false,
+      isResultsError: false,
+      emptyState: "none",
+
       searchTerm: "",
       handleSearchChange: vi.fn(),
       handlePageChange: vi.fn(),
@@ -139,27 +145,36 @@ describe("ResultsView Component", () => {
     expect(screen.getByText("Fundamentos de LGPD")).toBeDefined();
   });
 
-  it("deve exibir a cor/status condicional da nota no ResultCard", () => {
+  it("deve exibir a cor/status condicional e aria-label da nota no ResultCard conforme limites (75, 74, 60, 59)", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn({
         results: [
-          {
-            id: "r1",
-            title: "Fundamentos de LGPD",
-            description: "Descrição",
-            score: 78,
-            completedAt: "2026-05-20",
-            questionsCount: 5,
-          },
+          { id: "r1", title: "Alta", score: 75, completedAt: "2026-05-20" },
+          { id: "r2", title: "Media", score: 74, completedAt: "2026-05-20" },
+          { id: "r3", title: "Baixa", score: 59, completedAt: "2026-05-20" },
         ],
       })
     );
 
     renderView();
 
-    const scoreTag = screen.getByTestId("result-score-tag");
-    expect(scoreTag).toBeDefined();
-    expect(scoreTag.textContent).toContain("78");
+    const scoreTags = screen.getAllByTestId("result-score-tag");
+    expect(scoreTags).toHaveLength(3);
+
+    // Score 75 (Alto -> emerald)
+    expect(scoreTags[0].getAttribute("aria-label")).toBe("Nota: 75");
+    expect(scoreTags[0].className).toContain("emerald");
+
+    // Score 74 (Medio -> amber)
+    expect(scoreTags[1].getAttribute("aria-label")).toBe("Nota: 74");
+    expect(scoreTags[1].className).toContain("amber");
+
+    // Score 59 (Baixo -> destructive)
+    expect(scoreTags[2].getAttribute("aria-label")).toBe("Nota: 59");
+    expect(scoreTags[2].className).toContain("destructive");
+
+    // Garantir que não exibe descrição nem contagem de perguntas
+    expect(screen.queryByText(/perguntas/i)).toBeNull();
   });
 
   it("deve exibir Skeletons durante o carregamento dos dados", () => {
@@ -177,20 +192,26 @@ describe("ResultsView Component", () => {
     expect(skeletons).toBeDefined();
   });
 
-  it("deve renderizar o EmptyState quando a lista de resultados estiver vazia", () => {
+  it("deve renderizar o ResultsEmptyState com o botao CTA levando a /jornadas quando emptyState = 'no-results'", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn({
         results: [],
+        emptyState: "no-results",
       })
     );
 
     renderView();
 
+    expect(screen.getByText("Nenhuma jornada concluída")).toBeDefined();
     expect(
       screen.getByText(
         "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui."
       )
     ).toBeDefined();
+
+    const ctaButton = screen.getByText("Ver jornadas disponíveis").closest("a");
+    expect(ctaButton).toBeDefined();
+    expect(ctaButton?.getAttribute("href")).toBe("/jornadas");
   });
 
   it("deve acionar handleSearchChange ao digitar no input de busca", () => {

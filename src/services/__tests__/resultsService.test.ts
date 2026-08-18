@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { getMetrics, getResultsList } from "../ResultsService";
+import { getMetrics, getResultsList } from "../resultsService";
 import { axiosInstance } from "../httpClient";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {

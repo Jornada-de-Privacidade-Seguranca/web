@@ -1,10 +1,10 @@
 export interface ResultItem {
   id: string;
   title: string;
-  description: string;
   score: number;
   completedAt: string;
-  questionsCount: number;
+  description?: string;
+  questionsCount?: number;
 }
 
 export interface ResultsMetrics {
@@ -26,6 +26,8 @@ export interface ServerMessage {
   variant: "destructive" | "success";
 }
 
+export type ResultsEmptyStateMode = "none" | "no-results" | "no-search-matches";
+
 export interface ResultsLabels {
   title: string;
   subtitle: string;
@@ -34,8 +36,11 @@ export interface ResultsLabels {
   sectionTitle: string;
   sectionSubtitle: string;
   searchPlaceholder: string;
+  searchEmptyTitle: string;
   searchEmpty: string;
+  userEmptyTitle: string;
   userEmpty: string;
+  availableJourneysCta: string;
   completedAt: (dateString: string) => string;
   questionsCount: (count: number) => string;
   viewResult: string;
@@ -51,11 +56,15 @@ export interface ResultsLabels {
 export interface ResultsViewModelReturn {
   metrics: ResultsMetrics | null;
   isMetricsLoading: boolean;
+  isMetricsError: boolean;
 
   results: ResultItem[];
   page: number;
   totalPages: number;
   isResultsLoading: boolean;
+  isResultsError: boolean;
+  emptyState: ResultsEmptyStateMode;
+
   searchTerm: string;
   handleSearchChange: (term: string) => void;
   handlePageChange: (page: number) => void;
