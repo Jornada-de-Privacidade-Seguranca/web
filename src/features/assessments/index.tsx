@@ -35,69 +35,17 @@ export function AssessmentsView() {
     handleSearchChange,
     handleCatalogPageChange,
     handleRetryCatalog,
+    catalogPageError,
+    dismissCatalogPageError,
 
-    error,
-    serverMessage,
-    onCloseMsg,
-    handleRetry,
+    pendingPageError,
+    dismissPendingPageError,
     labels,
   } = useAssessmentsVM();
 
   return (
     <PageShell title={labels.title} subtitle={labels.subtitle}>
       <div className="space-y-8">
-        {/* Banner / Alerta do Servidor (se houver erro ou serverMessage) */}
-        {serverMessage ? (
-          <section role="alert" className="space-y-3">
-            <Message
-              title={serverMessage.title}
-              description={serverMessage.description}
-              variant={serverMessage.variant}
-              onClose={onCloseMsg}
-              icon={
-                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
-              }
-            />
-            <div className="flex justify-end">
-              <Button
-                onClick={handleRetry}
-                variant="outline"
-                size="sm"
-                className="text-xs shrink-0"
-              >
-                <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
-                {labels.retryButton}
-              </Button>
-            </div>
-          </section>
-        ) : error ? (
-          <section
-            role="alert"
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-destructive"
-          >
-            <div className="flex items-center gap-3">
-              <HugeiconsIcon
-                icon={AlertCircleIcon}
-                size={24}
-                className="shrink-0"
-              />
-              <div>
-                <h2 className="font-semibold text-sm">{labels.errorTitle}</h2>
-                <p className="text-xs opacity-90">{error}</p>
-              </div>
-            </div>
-            <Button
-              onClick={handleRetry}
-              variant="outline"
-              size="sm"
-              className="border-destructive/30 text-destructive hover:bg-destructive/20 shrink-0 text-xs"
-            >
-              <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
-              {labels.retryButton}
-            </Button>
-          </section>
-        ) : null}
-
         {/* Seção 1: Jornadas Pendentes (Accordion aberto por padrão) */}
         {isPendingSectionVisible && (
           <>
@@ -233,6 +181,34 @@ export function AssessmentsView() {
           )}
         </section>
       </div>
+
+      {/* Toasts pontuais: falha ao trocar de página mantendo os dados anteriores na tela */}
+      {(pendingPageError || catalogPageError) && (
+        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+          {pendingPageError && (
+            <Message
+              title={labels.errorTitle}
+              description={pendingPageError}
+              variant="destructive"
+              onClose={dismissPendingPageError}
+              icon={
+                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
+              }
+            />
+          )}
+          {catalogPageError && (
+            <Message
+              title={labels.errorTitle}
+              description={catalogPageError}
+              variant="destructive"
+              onClose={dismissCatalogPageError}
+              icon={
+                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
+              }
+            />
+          )}
+        </div>
+      )}
     </PageShell>
   );
 }

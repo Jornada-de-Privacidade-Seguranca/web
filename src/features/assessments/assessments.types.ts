@@ -19,12 +19,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface ServerMessage {
-  title: string;
-  description: string;
-  variant: "destructive" | "success";
-}
-
 export interface AssessmentsLabels {
   title: string;
   subtitle: string;
@@ -61,6 +55,9 @@ export interface AssessmentsViewModelReturn {
   isPendingSectionVisible: boolean;
   handlePendingPageChange: (page: number) => void;
   handleRetryPending: () => void;
+  /** Erro pontual ao trocar de página (dados anteriores continuam exibidos). */
+  pendingPageError: string | null;
+  dismissPendingPageError: () => void;
 
   catalogJourneys: Journey[];
   catalogPage: number;
@@ -71,11 +68,9 @@ export interface AssessmentsViewModelReturn {
   handleSearchChange: (term: string) => void;
   handleCatalogPageChange: (page: number) => void;
   handleRetryCatalog: () => void;
+  /** Erro pontual ao trocar de página (dados anteriores continuam exibidos). */
+  catalogPageError: string | null;
+  dismissCatalogPageError: () => void;
 
-  isLoading: boolean;
-  error: string | null;
-  serverMessage: ServerMessage | null;
-  onCloseMsg: () => void;
-  handleRetry: () => void;
   labels: AssessmentsLabels;
 }

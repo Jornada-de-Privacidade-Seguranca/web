@@ -112,6 +112,8 @@ describe("AssessmentsView Component", () => {
       isPendingSectionVisible: true,
       handlePendingPageChange: vi.fn(),
       handleRetryPending: vi.fn(),
+      pendingPageError: null,
+      dismissPendingPageError: vi.fn(),
 
       catalogJourneys: [
         {
@@ -131,12 +133,9 @@ describe("AssessmentsView Component", () => {
       handleSearchChange: vi.fn(),
       handleCatalogPageChange: vi.fn(),
       handleRetryCatalog: vi.fn(),
+      catalogPageError: null,
+      dismissCatalogPageError: vi.fn(),
 
-      isLoading: false,
-      error: null,
-      serverMessage: null,
-      onCloseMsg: vi.fn(),
-      handleRetry: vi.fn(),
       labels: mockLabels,
       ...overrides,
     };
@@ -223,6 +222,24 @@ describe("AssessmentsView Component", () => {
 
     fireEvent.change(searchInput, { target: { value: "LGPD" } });
     expect(handleSearchChangeMock).toHaveBeenCalledWith("LGPD");
+  });
+
+  it("deve exibir um toast pontual de erro ao trocar de página sem ocultar os cards já carregados", () => {
+    const dismissPendingPageErrorMock = vi.fn();
+    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
+      createMockVMReturn({
+        pendingPageError: "Falha ao trocar de página",
+        dismissPendingPageError: dismissPendingPageErrorMock,
+      })
+    );
+
+    renderView();
+
+    // Os cards da página atual continuam visíveis
+    expect(screen.getByText("Segurança Digital Básica")).toBeDefined();
+    // E o toast pontual aparece separadamente do estado de erro da seção
+    expect(screen.getByText("Falha ao trocar de página")).toBeDefined();
+    expect(screen.queryByTestId("pending-error-state")).toBeNull();
   });
 
   it("deve exibir o Skeleton de loading quando a lista estiver carregando", () => {

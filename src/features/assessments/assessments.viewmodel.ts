@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   getPendingAssessments,
   getCatalogAssessments,
@@ -10,8 +10,11 @@ import {
 import type {
   AssessmentsViewModelReturn,
   AssessmentsLabels,
-  ServerMessage,
+  Journey,
+  PaginatedResponse,
 } from "./assessments.types";
+
+const PAGE_ERROR_TOAST_DURATION = 4000;
 
 function formatErrorMessage(err: unknown, defaultMsg: string): string {
   if (err instanceof Error) {
@@ -35,9 +38,6 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const [catalogPage, setCatalogPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
-
-  // Dismissable banner message override
-  const [dismissedBanner, setDismissedBanner] = useState<boolean>(false);
 
   // Debounce effect for search term (300ms)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +66,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     queryKey: ["assessments", "pending", pendingPage],
     queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }),
     retry: false,
+    placeholderData: keepPreviousData,
   });
 
   // TanStack Query - Catalog Journeys
@@ -77,22 +78,93 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
         limit: 6,
         search: debouncedSearchTerm,
       }),
+    placeholderData: keepPreviousData,
     retry: false,
   });
 
-  const pendingJourneys = pendingQuery.data?.items ?? [];
-  const pendingTotalPages = pendingQuery.data?.totalPages ?? 1;
-  const isPendingLoading = pendingQuery.isLoading;
-  const pendingError = pendingQuery.error
-    ? formatErrorMessage(pendingQuery.error, t("errorMessage") || "Erro ao carregar jornadas pendentes.")
-    : null;
+  // `placeholderData: keepPreviousData` já resolve o "meio do caminho": ao
+  // trocar de página, a query mostra os dados da página anterior enquanto
+  // busca a nova (sem cair para `isLoading`). Só que isso não sobrevive a um
+  // erro — se a busca da nova página falhar, `data` volta a `undefined`. Por
+  // isso ainda guardamos o último resultado bem-sucedido de cada seção, só
+  // para esse caso: manter os cards visíveis quando a troca de página falha.
+  const [pendingLastSuccess, setPendingLastSuccess] =
+    useState<PaginatedResponse<Journey> | null>(null);
+  const [catalogLastSuccess, setCatalogLastSuccess] =
+    useState<PaginatedResponse<Journey> | null>(null);
 
-  const catalogJourneys = catalogQuery.data?.items ?? [];
-  const catalogTotalPages = catalogQuery.data?.totalPages ?? 1;
+  useEffect(() => {
+    if (pendingQuery.data) setPendingLastSuccess(pendingQuery.data);
+  }, [pendingQuery.data]);
+
+  useEffect(() => {
+    if (catalogQuery.data) setCatalogLastSuccess(catalogQuery.data);
+  }, [catalogQuery.data]);
+
+  const pendingData = pendingQuery.data ?? pendingLastSuccess;
+  const catalogData = catalogQuery.data ?? catalogLastSuccess;
+
+  const pendingJourneys = pendingData?.items ?? [];
+  const pendingTotalPages = pendingData?.totalPages ?? 1;
+  const isPendingLoading = pendingQuery.isLoading;
+  const pendingError =
+    pendingQuery.isError && !pendingLastSuccess
+      ? formatErrorMessage(pendingQuery.error, t("errorMessage"))
+      : null;
+
+  const catalogJourneys = catalogData?.items ?? [];
+  const catalogTotalPages = catalogData?.totalPages ?? 1;
   const isCatalogLoading = catalogQuery.isLoading;
-  const catalogError = catalogQuery.error
-    ? formatErrorMessage(catalogQuery.error, t("errorMessage") || "Erro ao carregar catálogo de jornadas.")
-    : null;
+  const catalogError =
+    catalogQuery.isError && !catalogLastSuccess
+      ? formatErrorMessage(catalogQuery.error, t("errorMessage"))
+      : null;
+
+  // Toast pontual: falha ao trocar de página quando já havia dados na tela.
+  const [pendingPageError, setPendingPageError] = useState<string | null>(null);
+  const pendingToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dismissPendingPageError = useCallback(() => {
+    setPendingPageError(null);
+    if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (pendingQuery.isError && pendingLastSuccess) {
+      setPendingPageError(formatErrorMessage(pendingQuery.error, t("errorMessage")));
+      if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
+      pendingToastTimerRef.current = setTimeout(
+        () => setPendingPageError(null),
+        PAGE_ERROR_TOAST_DURATION
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery.isError, pendingQuery.error]);
+
+  const [catalogPageError, setCatalogPageError] = useState<string | null>(null);
+  const catalogToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dismissCatalogPageError = useCallback(() => {
+    setCatalogPageError(null);
+    if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (catalogQuery.isError && catalogLastSuccess) {
+      setCatalogPageError(formatErrorMessage(catalogQuery.error, t("errorMessage")));
+      if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
+      catalogToastTimerRef.current = setTimeout(
+        () => setCatalogPageError(null),
+        PAGE_ERROR_TOAST_DURATION
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogQuery.isError, catalogQuery.error]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
+      if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
+    };
+  }, []);
 
   // Pending section is visible if loading, has journeys, or failed with an error
   const isPendingSectionVisible =
@@ -113,16 +185,6 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   const handleRetryCatalog = () => {
     void catalogQuery.refetch();
-  };
-
-  const handleRetry = () => {
-    setDismissedBanner(false);
-    void pendingQuery.refetch();
-    void catalogQuery.refetch();
-  };
-
-  const onCloseMsg = () => {
-    setDismissedBanner(true);
   };
 
   const labels: AssessmentsLabels = {
@@ -153,16 +215,6 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     loadingAriaLabel: t("loadingAriaLabel"),
   };
 
-  const isLoading = isPendingLoading && isCatalogLoading;
-  const globalError = !dismissedBanner ? (pendingError || catalogError) : null;
-  const serverMessage: ServerMessage | null = globalError
-    ? {
-        title: labels.errorTitle,
-        description: globalError,
-        variant: "destructive",
-      }
-    : null;
-
   return {
     pendingJourneys,
     pendingPage,
@@ -172,6 +224,8 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     isPendingSectionVisible,
     handlePendingPageChange,
     handleRetryPending,
+    pendingPageError,
+    dismissPendingPageError,
 
     catalogJourneys,
     catalogPage,
@@ -182,12 +236,9 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     handleSearchChange,
     handleCatalogPageChange,
     handleRetryCatalog,
+    catalogPageError,
+    dismissCatalogPageError,
 
-    isLoading,
-    error: globalError,
-    serverMessage,
-    onCloseMsg,
-    handleRetry,
     labels,
   };
 }

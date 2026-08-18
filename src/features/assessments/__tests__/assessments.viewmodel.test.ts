@@ -117,7 +117,8 @@ describe("useAssessmentsVM", () => {
     expect(result.current.pendingJourneys[0].title).toBe("Segurança na Nuvem");
     expect(result.current.catalogJourneys).toHaveLength(2);
     expect(result.current.isPendingSectionVisible).toBe(true);
-    expect(result.current.error).toBeNull();
+    expect(result.current.pendingError).toBeNull();
+    expect(result.current.catalogPageError).toBeNull();
   });
 
   it("deve definir isPendingSectionVisible como false apenas quando não houver jornadas pendentes e sem erro", async () => {
@@ -236,30 +237,36 @@ describe("useAssessmentsVM", () => {
     });
   });
 
-  it("deve tratar erro 500 do backend populando o estado de erro, variante destructive em serverMessage e fechamento via onCloseMsg", async () => {
-    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
-      new Error("Erro 500 do Servidor")
-    );
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockRejectedValue(
-      new Error("Erro 500 do Servidor")
+  it("deve manter os dados da página anterior e expor pendingPageError pontual quando a troca de página falhar", async () => {
+    const pendingSpy = vi.spyOn(assessmentsService, "getPendingAssessments");
+    pendingSpy.mockResolvedValueOnce(mockPendingJourneys);
+    pendingSpy.mockRejectedValueOnce(new Error("Falha ao trocar de página"));
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
     );
 
     const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.isPendingLoading).toBe(false);
-      expect(result.current.isCatalogLoading).toBe(false);
+      expect(result.current.pendingJourneys).toHaveLength(1);
     });
-
-    expect(result.current.error).toBe("Erro 500 do Servidor");
-    expect(result.current.serverMessage?.variant).toBe("destructive");
-    expect(result.current.serverMessage?.description).toBe("Erro 500 do Servidor");
 
     act(() => {
-      result.current.onCloseMsg();
+      result.current.handlePendingPageChange(2);
     });
 
-    expect(result.current.serverMessage).toBeNull();
-    expect(result.current.error).toBeNull();
+    await waitFor(() => {
+      expect(result.current.pendingPageError).toBe("Falha ao trocar de página");
+    });
+
+    // Os cards da página anterior continuam disponíveis; não vira erro de seção.
+    expect(result.current.pendingJourneys).toHaveLength(1);
+    expect(result.current.pendingError).toBeNull();
+
+    act(() => {
+      result.current.dismissPendingPageError();
+    });
+
+    expect(result.current.pendingPageError).toBeNull();
   });
 });
