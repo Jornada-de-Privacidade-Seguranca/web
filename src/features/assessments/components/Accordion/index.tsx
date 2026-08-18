@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { ChevronDownIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAccordionVM } from "./accordion.viewmodel";
@@ -7,16 +8,19 @@ import type { AccordionProps } from "./accordion.types";
 
 export function Accordion(props: AccordionProps) {
   const { title, subtitle, count, isOpen, toggle, children } = useAccordionVM(props);
+  const baseId = useId();
+  const headerId = `accordion-header-${baseId}`;
+  const contentId = `accordion-content-${baseId}`;
 
   return (
     <div data-testid="pending-accordion" className="space-y-4">
       <button
         type="button"
-        id="pending-accordion-header"
+        id={headerId}
         onClick={toggle}
         role="button"
         aria-expanded={isOpen}
-        aria-controls="pending-accordion-content"
+        aria-controls={contentId}
         data-testid="accordion-trigger"
         className="flex w-full items-center justify-between gap-4 text-left font-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 transition-colors hover:bg-muted/30"
       >
@@ -47,9 +51,9 @@ export function Accordion(props: AccordionProps) {
 
       {isOpen && (
         <div
-          id="pending-accordion-content"
+          id={contentId}
           role="region"
-          aria-labelledby="pending-accordion-header"
+          aria-labelledby={headerId}
         >
           {children}
         </div>

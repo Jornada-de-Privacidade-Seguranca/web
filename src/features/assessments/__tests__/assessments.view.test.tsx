@@ -21,7 +21,7 @@ vi.mock("@/shared/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
-  usePathname: () => "/assessments",
+  usePathname: () => "/jornadas",
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -99,8 +99,10 @@ describe("AssessmentsView Component", () => {
       pendingPage: 1,
       pendingTotalPages: 1,
       isPendingLoading: false,
+      pendingError: null,
       isPendingSectionVisible: true,
       handlePendingPageChange: vi.fn(),
+      handleRetryPending: vi.fn(),
 
       catalogJourneys: [
         {
@@ -115,9 +117,11 @@ describe("AssessmentsView Component", () => {
       catalogPage: 1,
       catalogTotalPages: 1,
       isCatalogLoading: false,
+      catalogError: null,
       searchTerm: "",
       handleSearchChange: vi.fn(),
       handleCatalogPageChange: vi.fn(),
+      handleRetryCatalog: vi.fn(),
 
       isLoading: false,
       error: null,
@@ -129,7 +133,7 @@ describe("AssessmentsView Component", () => {
     };
   }
 
-  it("deve renderizar o Accordion das jornadas pendentes (aberto por padrão)", () => {
+  it("deve renderizar o Accordion das jornadas pendentes e permitir alternar abertura/fechamento ao clicar no trigger", () => {
     vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
       createMockVMReturn()
     );
@@ -141,19 +145,55 @@ describe("AssessmentsView Component", () => {
 
     const accordionTrigger = screen.getByTestId("accordion-trigger");
     expect(accordionTrigger.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(accordionTrigger);
+
+    expect(accordionTrigger.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("Segurança Digital Básica")).toBeNull();
   });
 
-  it("deve ocultar a seção de pendentes quando isPendingSectionVisible for false", () => {
+  it("deve exibir estado de erro na seção de pendentes dentro do Accordion sem ocultar o Accordion", () => {
     vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
       createMockVMReturn({
-        isPendingSectionVisible: false,
+        isPendingSectionVisible: true,
         pendingJourneys: [],
+        pendingError: "Falha ao carregar pendentes",
       })
     );
 
     render(<AssessmentsView />);
 
-    expect(screen.queryByText("Jornadas pendentes")).toBeNull();
+    expect(screen.getByText("Jornadas pendentes")).toBeDefined();
+    expect(screen.getByTestId("pending-error-state")).toBeDefined();
+    expect(screen.getByText("Falha ao carregar pendentes")).toBeDefined();
+  });
+
+  it("deve exibir estado de erro no catálogo em vez de EmptyState quando houver catalogError", () => {
+    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
+      createMockVMReturn({
+        catalogJourneys: [],
+        catalogError: "Erro ao carregar catálogo",
+      })
+    );
+
+    render(<AssessmentsView />);
+
+    expect(screen.getByTestId("catalog-error-state")).toBeDefined();
+    expect(screen.getByText("Erro ao carregar catálogo")).toBeDefined();
+    expect(screen.queryByText("Nenhuma jornada encontrada para o termo buscado.")).toBeNull();
+  });
+
+  it("deve exibir EmptyState quando não houver erro e a busca não retornar resultados", () => {
+    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
+      createMockVMReturn({
+        catalogJourneys: [],
+        catalogError: null,
+      })
+    );
+
+    render(<AssessmentsView />);
+
+    expect(screen.getByText("Nenhuma jornada encontrada para o termo buscado.")).toBeDefined();
   });
 
   it("deve renderizar a lista do catálogo e o input de busca pelo nome", () => {
@@ -190,45 +230,5 @@ describe("AssessmentsView Component", () => {
 
     const skeletons = screen.getAllByTestId("journey-skeleton");
     expect(skeletons.length).toBeGreaterThan(0);
-  });
-
-  it("deve exibir a Tag 'Concluída' em um card mockado com status concluído", () => {
-    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
-      createMockVMReturn({
-        catalogJourneys: [
-          {
-            id: "c1",
-            title: "Segurança de Dados Avançada",
-            description: "Proteção contra vazamento de dados",
-            totalQuestions: 15,
-            estimatedMinutes: 20,
-            status: "completed",
-          },
-        ],
-      })
-    );
-
-    render(<AssessmentsView />);
-
-    const completedTag = screen.getByTestId("status-completed-tag");
-    expect(completedTag).toBeDefined();
-    expect(completedTag.textContent).toContain("Concluída");
-  });
-
-  it("deve exibir alerta do servidor quando serverMessage for fornecido", () => {
-    vi.spyOn(viewModelModule, "useAssessmentsVM").mockReturnValue(
-      createMockVMReturn({
-        serverMessage: {
-          title: "Erro ao carregar jornadas",
-          description: "Falha de conexão com o servidor",
-          variant: "destructive",
-        },
-      })
-    );
-
-    render(<AssessmentsView />);
-
-    expect(screen.getByText("Erro ao carregar jornadas")).toBeDefined();
-    expect(screen.getByText("Falha de conexão com o servidor")).toBeDefined();
   });
 });

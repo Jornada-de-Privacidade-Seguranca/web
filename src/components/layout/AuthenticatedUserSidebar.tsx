@@ -31,8 +31,8 @@ function useSidebarVM() {
     {
       label: t("sidebar.journeys"),
       icon: Task01Icon,
-      href: "/assessments",
-      active: pathname.startsWith("/assessments") || pathname.startsWith("/avaliacoes"),
+      href: "/jornadas",
+      active: pathname.startsWith("/jornadas") || pathname.startsWith("/assessments") || pathname.startsWith("/avaliacoes"),
       disabled: false,
     },
     {

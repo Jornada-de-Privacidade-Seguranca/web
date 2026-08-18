@@ -33,7 +33,7 @@ export function Pagination(props: PaginationProps) {
           onClick={handlePrevious}
           disabled={!canGoPrevious}
           aria-disabled={!canGoPrevious}
-          aria-label="Página anterior"
+          aria-label={labelPrevious}
           className="h-8 px-2.5 rounded-lg text-xs hover:bg-muted/60 disabled:opacity-40"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} size={14} className="mr-1" />
@@ -64,7 +64,7 @@ export function Pagination(props: PaginationProps) {
           onClick={handleNext}
           disabled={!canGoNext}
           aria-disabled={!canGoNext}
-          aria-label="Próxima página"
+          aria-label={labelNext}
           className="h-8 px-2.5 rounded-lg text-xs hover:bg-muted/60 disabled:opacity-40"
         >
           {labelNext}

@@ -21,16 +21,20 @@ export function AssessmentsView() {
     pendingPage,
     pendingTotalPages,
     isPendingLoading,
+    pendingError,
     isPendingSectionVisible,
     handlePendingPageChange,
+    handleRetryPending,
 
     catalogJourneys,
     catalogPage,
     catalogTotalPages,
     isCatalogLoading,
+    catalogError,
     searchTerm,
     handleSearchChange,
     handleCatalogPageChange,
+    handleRetryCatalog,
 
     error,
     serverMessage,
@@ -106,6 +110,23 @@ export function AssessmentsView() {
               >
                 {isPendingLoading ? (
                   <JourneySkeleton count={3} />
+                ) : pendingError ? (
+                  <div
+                    data-testid="pending-error-state"
+                    className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
+                  >
+                    <HugeiconsIcon icon={AlertCircleIcon} size={28} />
+                    <p className="text-sm font-medium">{pendingError}</p>
+                    <Button
+                      onClick={handleRetryPending}
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+                    >
+                      <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+                      {labels.retryButton}
+                    </Button>
+                  </div>
                 ) : (
                   <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,6 +190,23 @@ export function AssessmentsView() {
           {/* Lista de Jornadas do Catálogo */}
           {isCatalogLoading ? (
             <JourneySkeleton count={6} />
+          ) : catalogError ? (
+            <div
+              data-testid="catalog-error-state"
+              className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
+            >
+              <HugeiconsIcon icon={AlertCircleIcon} size={28} />
+              <p className="text-sm font-medium">{catalogError}</p>
+              <Button
+                onClick={handleRetryCatalog}
+                variant="outline"
+                size="sm"
+                className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+              >
+                <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+                {labels.retryButton}
+              </Button>
+            </div>
           ) : catalogJourneys.length === 0 ? (
             <EmptyState message={labels.catalogEmpty} />
           ) : (

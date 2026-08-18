@@ -7,6 +7,8 @@ import { routing } from "@/shared/i18n/routing";
 import { notFound } from "next/navigation";
 import { getMessages } from "next-intl/server";
 
+import { QueryProvider } from "@/shared/providers/queryProvider";
+
 export const metadata: Metadata = {
   title: "Jornada de Privacidade/Segurança",
   description:
@@ -44,7 +46,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background">
         <NextIntlClientProvider messages={appMessages}>
-          {children}
+          <QueryProvider>{children}</QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

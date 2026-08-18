@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import * as AssessmentsService from "@services/AssessmentsService";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as assessmentsService from "@services/assessmentsService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useAssessmentsVM } from "../assessments.viewmodel";
 
@@ -12,9 +14,25 @@ vi.mock("next-intl", () => ({
     if (key === "estimatedMinutes") return `${params?.minutes} min`;
     if (key === "pagination.pageOf")
       return `Página ${params?.current} de ${params?.total}`;
+    if (key === "errorMessage") return "Erro ao carregar dados do servidor.";
     return key;
   },
 }));
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
+  function TestQueryProvider({ children }: { children: React.ReactNode }) {
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+  }
+  return TestQueryProvider;
+}
 
 describe("useAssessmentsVM", () => {
   const mockPendingJourneys = {
@@ -69,14 +87,14 @@ describe("useAssessmentsVM", () => {
   });
 
   it("deve carregar inicialmente as listas de jornadas pendentes e catálogo paginados", async () => {
-    vi.spyOn(AssessmentsService, "getPendingAssessments").mockResolvedValue(
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
       mockPendingJourneys
     );
-    vi.spyOn(AssessmentsService, "getCatalogAssessments").mockResolvedValue(
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
       mockCatalogJourneys
     );
 
-    const { result } = renderHook(() => useAssessmentsVM());
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isPendingLoading).toBe(false);
@@ -90,19 +108,19 @@ describe("useAssessmentsVM", () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("deve definir isPendingSectionVisible como false quando não houver jornadas pendentes", async () => {
-    vi.spyOn(AssessmentsService, "getPendingAssessments").mockResolvedValue({
+  it("deve definir isPendingSectionVisible como false apenas quando não houver jornadas pendentes e sem erro", async () => {
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue({
       items: [],
       total: 0,
       page: 1,
       limit: 6,
       totalPages: 0,
     });
-    vi.spyOn(AssessmentsService, "getCatalogAssessments").mockResolvedValue(
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
       mockCatalogJourneys
     );
 
-    const { result } = renderHook(() => useAssessmentsVM());
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isPendingLoading).toBe(false);
@@ -112,15 +130,50 @@ describe("useAssessmentsVM", () => {
     expect(result.current.isPendingSectionVisible).toBe(false);
   });
 
+  it("deve manter a seção de pendentes visível e exibir pendingError quando o fetch de pendentes falhar", async () => {
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
+      new Error("Falha ao carregar pendentes")
+    );
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
+    );
+
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isPendingLoading).toBe(false);
+    });
+
+    expect(result.current.isPendingSectionVisible).toBe(true);
+    expect(result.current.pendingError).toBe("Falha ao carregar pendentes");
+  });
+
+  it("deve converter mensagens genéricas de Failed to fetch para a string de erro traduzida", async () => {
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
+      new TypeError("Failed to fetch")
+    );
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
+    );
+
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isPendingLoading).toBe(false);
+    });
+
+    expect(result.current.pendingError).toBe("Erro ao carregar dados do servidor.");
+  });
+
   it("deve atualizar o termo de busca no catálogo e chamar o serviço com o termo filtrado", async () => {
-    vi.spyOn(AssessmentsService, "getPendingAssessments").mockResolvedValue(
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
       mockPendingJourneys
     );
     const catalogSpy = vi
-      .spyOn(AssessmentsService, "getCatalogAssessments")
+      .spyOn(assessmentsService, "getCatalogAssessments")
       .mockResolvedValue(mockCatalogJourneys);
 
-    const { result } = renderHook(() => useAssessmentsVM());
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isCatalogLoading).toBe(false);
@@ -145,13 +198,13 @@ describe("useAssessmentsVM", () => {
 
   it("deve atualizar a página de pendentes e do catálogo chamando o serviço com a nova página", async () => {
     const pendingSpy = vi
-      .spyOn(AssessmentsService, "getPendingAssessments")
+      .spyOn(assessmentsService, "getPendingAssessments")
       .mockResolvedValue(mockPendingJourneys);
     const catalogSpy = vi
-      .spyOn(AssessmentsService, "getCatalogAssessments")
+      .spyOn(assessmentsService, "getCatalogAssessments")
       .mockResolvedValue(mockCatalogJourneys);
 
-    const { result } = renderHook(() => useAssessmentsVM());
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isPendingLoading).toBe(false);
@@ -181,14 +234,14 @@ describe("useAssessmentsVM", () => {
   });
 
   it("deve tratar erro 500 do backend populando o estado de erro, variante destructive em serverMessage e fechamento via onCloseMsg", async () => {
-    vi.spyOn(AssessmentsService, "getPendingAssessments").mockRejectedValue(
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
       new Error("Erro 500 do Servidor")
     );
-    vi.spyOn(AssessmentsService, "getCatalogAssessments").mockRejectedValue(
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockRejectedValue(
       new Error("Erro 500 do Servidor")
     );
 
-    const { result } = renderHook(() => useAssessmentsVM());
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isPendingLoading).toBe(false);
