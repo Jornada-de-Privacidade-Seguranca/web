@@ -13,8 +13,12 @@ import { SwitchThemeButton } from "@/components/layout/SwitchThemeButton";
 import { useLandingVM } from "./landing.viewmodel";
 
 export function LandingView() {
-  const { labels, steps, handleScrollToHowItWorks, handleScrollToTop } =
+  const { labels, steps, isReady, handleScrollToHowItWorks, handleScrollToTop } =
     useLandingVM();
+
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_28%),linear-gradient(180deg,color-mix(in_oklab,var(--background)_92%,var(--primary)_8%),var(--background)_42%)] text-foreground">

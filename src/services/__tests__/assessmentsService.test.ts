@@ -1,48 +1,70 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AxiosError, type AxiosResponse } from "axios";
 import {
   getPendingAssessments,
   getCatalogAssessments,
 } from "../assessmentsService";
+import { axiosInstance } from "../httpClient";
 
-describe("AssessmentsService", () => {
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  };
+}
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    "Request failed",
+    "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      data,
+      status,
+      statusText: "",
+      headers: {},
+      config: {} as AxiosResponse["config"],
+    } as AxiosResponse
+  );
+}
+
+describe("assessmentsService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
   it("deve buscar jornadas pendentes desembrulhando a propriedade 'data'", async () => {
-    const mockApiResponse = {
-      success: true,
-      data: {
-        items: [
-          {
-            id: "j1",
-            title: "Segurança Digital Básica",
-            description: "Aprenda conceitos fundamentais",
-            totalQuestions: 10,
-            estimatedMinutes: 15,
-            status: "not_started",
-          },
-        ],
-        total: 1,
-        page: 1,
-        limit: 6,
-        totalPages: 1,
-      },
+    const mockData = {
+      items: [
+        {
+          id: "j1",
+          title: "Segurança Digital Básica",
+          description: "Aprenda conceitos fundamentais",
+          totalQuestions: 10,
+          estimatedMinutes: 15,
+          status: "not_started" as const,
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 6,
+      totalPages: 1,
     };
 
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiResponse,
-    } as Response);
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
 
-    const result = await getPendingAssessments({ page: 1, limit: 6 }, "fake-token");
+    const result = await getPendingAssessments({ page: 1, limit: 6 });
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/assessments/pending?page=1&limit=6"),
+    expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer fake-token",
-        }),
+        url: "/assessments/pending",
+        params: { page: 1, limit: 6 },
       })
     );
     expect(result.items).toHaveLength(1);
@@ -50,54 +72,48 @@ describe("AssessmentsService", () => {
   });
 
   it("deve buscar o catálogo de jornadas aplicando o filtro de busca", async () => {
-    const mockApiResponse = {
-      success: true,
-      data: {
-        items: [
-          {
-            id: "j2",
-            title: "LGPD na Prática",
-            description: "Entenda a lei geral de proteção de dados",
-            totalQuestions: 8,
-            estimatedMinutes: 12,
-            status: "completed",
-          },
-        ],
-        total: 1,
-        page: 1,
-        limit: 6,
-        totalPages: 1,
-      },
+    const mockData = {
+      items: [
+        {
+          id: "j2",
+          title: "LGPD na Prática",
+          description: "Entenda a lei geral de proteção de dados",
+          totalQuestions: 8,
+          estimatedMinutes: 12,
+          status: "completed" as const,
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 6,
+      totalPages: 1,
     };
 
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiResponse,
-    } as Response);
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
 
-    const result = await getCatalogAssessments(
-      { page: 1, limit: 6, search: "LGPD" },
-      "fake-token"
-    );
+    const result = await getCatalogAssessments({
+      page: 1,
+      limit: 6,
+      search: "LGPD",
+    });
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/assessments?page=1&limit=6&search=LGPD"),
+    expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer fake-token",
-        }),
+        url: "/assessments",
+        params: { page: 1, limit: 6, search: "LGPD" },
       })
     );
     expect(result.items[0].title).toBe("LGPD na Prática");
   });
 
   it("deve lançar erro quando a resposta HTTP for status de erro (ex: 500)", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ message: "Erro interno no servidor" }),
-    } as Response);
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(500, { message: "Erro interno no servidor" })
+    );
 
-    await expect(getPendingAssessments({}, "token")).rejects.toThrow(
+    await expect(getPendingAssessments({})).rejects.toThrow(
       "Erro interno no servidor"
     );
   });

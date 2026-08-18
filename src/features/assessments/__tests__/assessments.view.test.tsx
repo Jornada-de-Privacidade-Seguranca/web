@@ -5,6 +5,7 @@ import React from "react";
 import { AssessmentsView } from "../index";
 import * as viewModelModule from "../assessments.viewmodel";
 import type { AssessmentsViewModelReturn, AssessmentsLabels } from "../assessments.types";
+import { AppProviders } from "@/shared/providers";
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
@@ -53,6 +54,14 @@ describe("AssessmentsView Component", () => {
       disconnect() {}
     };
   });
+
+  function renderView() {
+    return render(
+      <AppProviders>
+        <AssessmentsView />
+      </AppProviders>
+    );
+  }
 
   const mockLabels: AssessmentsLabels = {
     title: "Jornadas de Aprendizado",
@@ -138,7 +147,7 @@ describe("AssessmentsView Component", () => {
       createMockVMReturn()
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Jornadas pendentes")).toBeDefined();
     expect(screen.getByText("Segurança Digital Básica")).toBeDefined();
@@ -161,7 +170,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Jornadas pendentes")).toBeDefined();
     expect(screen.getByTestId("pending-error-state")).toBeDefined();
@@ -176,7 +185,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByTestId("catalog-error-state")).toBeDefined();
     expect(screen.getByText("Erro ao carregar catálogo")).toBeDefined();
@@ -191,7 +200,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Nenhuma jornada encontrada para o termo buscado.")).toBeDefined();
   });
@@ -202,7 +211,7 @@ describe("AssessmentsView Component", () => {
       createMockVMReturn({ handleSearchChange: handleSearchChangeMock })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Todas as jornadas")).toBeDefined();
     expect(screen.getByText("LGPD para Desenvolvedores")).toBeDefined();
@@ -226,7 +235,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     const skeletons = screen.getAllByTestId("journey-skeleton");
     expect(skeletons.length).toBeGreaterThan(0);

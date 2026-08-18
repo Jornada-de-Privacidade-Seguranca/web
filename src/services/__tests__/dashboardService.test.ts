@@ -1,10 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AxiosError, type AxiosResponse } from "axios";
 import {
   getPendingAssessment,
   getLastCompletedAssessment,
   getRecentHistory,
   getDashboardData,
 } from "../dashboardService";
+import { axiosInstance } from "../httpClient";
+
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  };
+}
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    "Request failed",
+    "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      data,
+      status,
+      statusText: "",
+      headers: {},
+      config: {} as AxiosResponse["config"],
+    } as AxiosResponse
+  );
+}
 
 describe("dashboardService", () => {
   beforeEach(() => {
@@ -22,50 +50,35 @@ describe("dashboardService", () => {
         estimatedMinutes: 10,
       };
 
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: mockPending,
-        }),
-      } as Response);
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: mockPending }));
 
-      const result = await getPendingAssessment("mock-token");
+      const result = await getPendingAssessment();
       expect(result).toEqual(mockPending);
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/dashboard/pending"),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: "Bearer mock-token",
-          }),
-        })
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/dashboard/pending" })
       );
     });
 
     it("should return null when response data is null", async () => {
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: null,
-        }),
-      } as Response);
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: null })
+      );
 
       const result = await getPendingAssessment();
       expect(result).toBeNull();
     });
 
     it("should throw error with API message when success is false or HTTP fails", async () => {
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: async () => ({
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        mockAxiosError(401, {
           success: false,
           message: "Sessão expirada. Faça login novamente.",
-        }),
-      } as Response);
+        })
+      );
 
-      await expect(getPendingAssessment("invalid-token")).rejects.toThrow(
+      await expect(getPendingAssessment()).rejects.toThrow(
         "Sessão expirada. Faça login novamente."
       );
     });
@@ -80,28 +93,20 @@ describe("dashboardService", () => {
         score: 85,
       };
 
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: mockCompleted,
-        }),
-      } as Response);
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: mockCompleted })
+      );
 
-      const result = await getLastCompletedAssessment("token");
+      const result = await getLastCompletedAssessment();
       expect(result).toEqual(mockCompleted);
     });
 
     it("should handle error status 500", async () => {
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        json: async () => ({
-          message: "Erro interno no servidor.",
-        }),
-      } as Response);
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        mockAxiosError(500, { message: "Erro interno no servidor." })
+      );
 
-      await expect(getLastCompletedAssessment("token")).rejects.toThrow(
+      await expect(getLastCompletedAssessment()).rejects.toThrow(
         "Erro interno no servidor."
       );
     });
@@ -118,28 +123,26 @@ describe("dashboardService", () => {
         },
       ];
 
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: mockHistory,
-        }),
-      } as Response);
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: mockHistory }));
 
-      const result = await getRecentHistory(5, "token");
+      const result = await getRecentHistory(5);
       expect(result).toEqual(mockHistory);
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/dashboard/history",
+          params: { limit: 5 },
+        })
+      );
     });
 
     it("should return empty array if data is empty or empty array", async () => {
-      vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: [],
-        }),
-      } as Response);
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: [] })
+      );
 
-      const result = await getRecentHistory(5, "token");
+      const result = await getRecentHistory(5);
       expect(result).toEqual([]);
     });
   });
@@ -155,27 +158,19 @@ describe("dashboardService", () => {
         estimatedMinutes: 5,
       };
 
-      vi.spyOn(globalThis, "fetch")
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ success: true, data: mockPending }),
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ success: true, data: null }),
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ success: true, data: [] }),
-        } as Response);
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: mockPending }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: null }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: [] }));
 
-      const dashboard = await getDashboardData(5, "token");
+      const dashboard = await getDashboardData(5);
       expect(dashboard).toEqual({
         pending: mockPending,
         lastCompleted: null,
         history: [],
       });
-      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(requestSpy).toHaveBeenCalledTimes(3);
     });
   });
 });

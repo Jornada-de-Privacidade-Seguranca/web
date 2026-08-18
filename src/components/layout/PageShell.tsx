@@ -6,7 +6,7 @@ import { SidebarLeftIcon } from "@hugeicons/core-free-icons";
 import { SwitchThemeButton } from "./SwitchThemeButton";
 import { IdiomSwitch } from "./IdiomSwitch";
 import { useSidebarStore } from "@/store/sidebar.store";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 export interface PageShellProps {

@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { useAuthStore } from "@features/auth/auth.store";
 import {
   getPendingAssessments,
   getCatalogAssessments,
@@ -30,7 +29,6 @@ function formatErrorMessage(err: unknown, defaultMsg: string): string {
 
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
-  const userToken = useAuthStore((state) => state.token) ?? undefined;
 
   // Pagination & Search States
   const [pendingPage, setPendingPage] = useState<number>(1);
@@ -65,19 +63,20 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Pending Journeys
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", pendingPage, userToken],
-    queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }, userToken),
+    queryKey: ["assessments", "pending", pendingPage],
+    queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }),
     retry: false,
   });
 
   // TanStack Query - Catalog Journeys
   const catalogQuery = useQuery({
-    queryKey: ["assessments", "catalog", catalogPage, debouncedSearchTerm, userToken],
+    queryKey: ["assessments", "catalog", catalogPage, debouncedSearchTerm],
     queryFn: () =>
-      getCatalogAssessments(
-        { page: catalogPage, limit: 6, search: debouncedSearchTerm },
-        userToken
-      ),
+      getCatalogAssessments({
+        page: catalogPage,
+        limit: 6,
+        search: debouncedSearchTerm,
+      }),
     retry: false,
   });
 

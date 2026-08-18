@@ -1,10 +1,17 @@
 "use client";
 
 import { AuthenticatedUserSidebar } from "@/components/layout/AuthenticatedUserSidebar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
+import { useRequireAuth } from "@/hooks/useAuthGuard";
 import { PropsWithChildren } from "react";
 
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
+  const { isLoading, isAuthenticated } = useRequireAuth();
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="relative flex h-screen w-screen overflow-hidden bg-background">
       <AuthenticatedUserSidebar />
