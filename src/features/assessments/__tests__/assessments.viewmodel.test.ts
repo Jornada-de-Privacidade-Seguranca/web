@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import * as AssessmentsService from "@services/AssessmentsService";
+import * as AssessmentsService from "@services/assessmentsService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useAssessmentsVM } from "../assessments.viewmodel";
 
@@ -62,9 +62,21 @@ describe("useAssessmentsVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useAuthStore.setState({
-      user: { id: "usr_1", name: "Maria Oliveira", firstName: "Maria" },
-      token: "valid-token",
-      isAuthenticated: true,
+      user: {
+        id: 1,
+        name: "Maria Oliveira",
+        email: "maria@empresa.com",
+        role: "common_user",
+        profile: {
+          role: "common_user",
+          label: "Colaborador",
+          user_type_id: 1,
+          profile_type_id: 1,
+          profile_type_name: "Colaborador",
+        },
+        active_status: 1,
+      },
+      isLoading: false,
     });
   });
 
@@ -134,10 +146,7 @@ describe("useAssessmentsVM", () => {
 
     await waitFor(
       () => {
-        expect(catalogSpy).toHaveBeenCalledWith(
-          { page: 1, limit: 6, search: "LGPD" },
-          "valid-token"
-        );
+        expect(catalogSpy).toHaveBeenCalledWith({ page: 1, limit: 6, search: "LGPD" });
       },
       { timeout: 1000 }
     );
@@ -162,10 +171,7 @@ describe("useAssessmentsVM", () => {
     });
 
     await waitFor(() => {
-      expect(pendingSpy).toHaveBeenCalledWith(
-        { page: 2, limit: 6 },
-        "valid-token"
-      );
+      expect(pendingSpy).toHaveBeenCalledWith({ page: 2, limit: 6 });
     });
 
     act(() => {
@@ -173,10 +179,7 @@ describe("useAssessmentsVM", () => {
     });
 
     await waitFor(() => {
-      expect(catalogSpy).toHaveBeenCalledWith(
-        { page: 3, limit: 6, search: "" },
-        "valid-token"
-      );
+      expect(catalogSpy).toHaveBeenCalledWith({ page: 3, limit: 6, search: "" });
     });
   });
 

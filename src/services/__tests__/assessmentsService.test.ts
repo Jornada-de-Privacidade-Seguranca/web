@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   getPendingAssessments,
   getCatalogAssessments,
-} from "../AssessmentsService";
+} from "../assessmentsService";
 
 describe("AssessmentsService", () => {
   beforeEach(() => {

@@ -1,0 +1,165 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AxiosError, type AxiosResponse } from "axios";
+import { apiRequest, axiosInstance, clearCsrfToken } from "../httpClient";
+
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  };
+}
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    "Request failed",
+    "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      data,
+      status,
+      statusText: "",
+      headers: {},
+      config: {} as AxiosResponse["config"],
+    } as AxiosResponse
+  );
+}
+
+describe("httpClient", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    clearCsrfToken();
+  });
+
+  it("should authenticate via session cookie by default", () => {
+    expect(axiosInstance.defaults.withCredentials).toBe(true);
+  });
+
+  it("should not fetch a CSRF token for GET requests", async () => {
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(mockResponse({ success: true, data: { foo: "bar" } }));
+
+    const result = await apiRequest<{ foo: string }>("/dashboard/pending");
+
+    expect(result).toEqual({ foo: "bar" });
+    expect(requestSpy).toHaveBeenCalledTimes(1);
+    const [config] = requestSpy.mock.calls[0];
+    expect(
+      (config.headers as Record<string, string>)?.["X-CSRF-TOKEN"]
+    ).toBeUndefined();
+  });
+
+  it("should fetch and attach a CSRF token for mutating requests when withCsrf is true", async () => {
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "token-1" } })
+      )
+      .mockResolvedValueOnce(mockResponse({ success: true, data: { done: true } }));
+
+    const result = await apiRequest<{ done: boolean }>("/auth/login", {
+      method: "post",
+      data: { email: "a@a.com", password: "b" },
+      withCsrf: true,
+    });
+
+    expect(result).toEqual({ done: true });
+    expect(requestSpy).toHaveBeenCalledTimes(2);
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ url: "/auth/csrf-token", method: "get" })
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        url: "/auth/login",
+        headers: expect.objectContaining({ "X-CSRF-TOKEN": "token-1" }),
+      })
+    );
+  });
+
+  it("should reuse a cached CSRF token across multiple mutating requests", async () => {
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "token-1" } })
+      )
+      .mockResolvedValueOnce(mockResponse({ success: true, data: {} }))
+      .mockResolvedValueOnce(mockResponse({ success: true, data: {} }));
+
+    await apiRequest("/auth/login", { method: "post", withCsrf: true });
+    await apiRequest("/auth/logout", { method: "post", withCsrf: true });
+
+    expect(requestSpy).toHaveBeenCalledTimes(3);
+    const csrfCalls = requestSpy.mock.calls.filter(
+      ([config]) => config.url === "/auth/csrf-token"
+    );
+    expect(csrfCalls).toHaveLength(1);
+  });
+
+  it("should refresh the CSRF token and retry once when the server rejects it (403/419)", async () => {
+    const requestSpy = vi
+      .spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "stale-token" } })
+      )
+      .mockRejectedValueOnce(
+        mockAxiosError(419, { success: false, message: "CSRF token inválido." })
+      )
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "fresh-token" } })
+      )
+      .mockResolvedValueOnce(mockResponse({ success: true, data: { done: true } }));
+
+    const result = await apiRequest<{ done: boolean }>("/auth/login", {
+      method: "post",
+      withCsrf: true,
+    });
+
+    expect(result).toEqual({ done: true });
+    expect(requestSpy).toHaveBeenCalledTimes(4);
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      4,
+      expect.objectContaining({
+        headers: expect.objectContaining({ "X-CSRF-TOKEN": "fresh-token" }),
+      })
+    );
+  });
+
+  it("should throw when the retried request still fails after refreshing the token", async () => {
+    vi.spyOn(axiosInstance, "request")
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "stale-token" } })
+      )
+      .mockRejectedValueOnce(
+        mockAxiosError(419, { success: false, message: "CSRF token inválido." })
+      )
+      .mockResolvedValueOnce(
+        mockResponse({ success: true, data: { csrf_token: "fresh-token" } })
+      )
+      .mockRejectedValueOnce(
+        mockAxiosError(419, { success: false, message: "CSRF token inválido." })
+      );
+
+    await expect(
+      apiRequest("/auth/login", { method: "post", withCsrf: true })
+    ).rejects.toThrow("CSRF token inválido.");
+  });
+
+  it("should throw the API message when the request fails without CSRF involvement", async () => {
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(409, {
+        success: false,
+        message: "Já existe uma conta cadastrada com este e-mail.",
+      })
+    );
+
+    await expect(
+      apiRequest("/auth/register", { method: "post", data: {} })
+    ).rejects.toThrow("Já existe uma conta cadastrada com este e-mail.");
+  });
+});

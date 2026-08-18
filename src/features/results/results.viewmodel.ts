@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useAuthStore } from "@features/auth/auth.store";
 import { getMetrics, getResultsList } from "@services/ResultsService";
 import type {
   ResultItem,
@@ -14,7 +13,6 @@ import type {
 
 export function useResultsVM(): ResultsViewModelReturn {
   const t = useTranslations("results");
-  const userToken = useAuthStore((state) => state.token) ?? undefined;
 
   // Metrics State
   const [metrics, setMetrics] = useState<ResultsMetrics | null>(null);
@@ -60,7 +58,7 @@ export function useResultsVM(): ResultsViewModelReturn {
   const fetchMetricsData = useCallback(async () => {
     setIsMetricsLoading(true);
     try {
-      const data = await getMetrics(userToken);
+      const data = await getMetrics();
       setMetrics(data);
     } catch (err: unknown) {
       const message =
@@ -76,17 +74,14 @@ export function useResultsVM(): ResultsViewModelReturn {
     } finally {
       setIsMetricsLoading(false);
     }
-  }, [userToken, t]);
+  }, [t]);
 
   // Fetch Results List
   const fetchResultsData = useCallback(
     async (currentPage: number, search: string) => {
       setIsResultsLoading(true);
       try {
-        const response = await getResultsList(
-          { page: currentPage, limit: 6, search },
-          userToken
-        );
+        const response = await getResultsList({ page: currentPage, limit: 6, search });
         setResults(response.items || []);
         setTotalPages(response.totalPages || 1);
       } catch (err: unknown) {
@@ -104,7 +99,7 @@ export function useResultsVM(): ResultsViewModelReturn {
         setIsResultsLoading(false);
       }
     },
-    [userToken, t]
+    [t]
   );
 
   // Initial fetch metrics

@@ -5,6 +5,7 @@ import React from "react";
 import { ResultsView } from "../index";
 import * as viewModelModule from "../results.viewmodel";
 import type { ResultsViewModelReturn, ResultsLabels } from "../results.types";
+import { AppProviders } from "@/shared/providers";
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
@@ -53,6 +54,14 @@ describe("ResultsView Component", () => {
       disconnect() {}
     };
   });
+
+  function renderView() {
+    return render(
+      <AppProviders>
+        <ResultsView />
+      </AppProviders>
+    );
+  }
 
   const mockLabels: ResultsLabels = {
     title: "Resultados",
@@ -119,7 +128,7 @@ describe("ResultsView Component", () => {
       createMockVMReturn()
     );
 
-    render(<ResultsView />);
+    renderView();
 
     expect(screen.getByText("JORNADAS CONCLUÍDAS")).toBeDefined();
     expect(screen.getByText("15")).toBeDefined();
@@ -146,7 +155,7 @@ describe("ResultsView Component", () => {
       })
     );
 
-    render(<ResultsView />);
+    renderView();
 
     const scoreTag = screen.getByTestId("result-score-tag");
     expect(scoreTag).toBeDefined();
@@ -162,7 +171,7 @@ describe("ResultsView Component", () => {
       })
     );
 
-    render(<ResultsView />);
+    renderView();
 
     const skeletons = screen.getByTestId("results-skeleton");
     expect(skeletons).toBeDefined();
@@ -175,7 +184,7 @@ describe("ResultsView Component", () => {
       })
     );
 
-    render(<ResultsView />);
+    renderView();
 
     expect(
       screen.getByText(
@@ -190,7 +199,7 @@ describe("ResultsView Component", () => {
       createMockVMReturn({ handleSearchChange: handleSearchChangeMock })
     );
 
-    render(<ResultsView />);
+    renderView();
 
     const searchInput = screen.getByPlaceholderText(
       "Buscar jornada pelo nome..."

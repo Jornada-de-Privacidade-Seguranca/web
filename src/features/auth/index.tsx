@@ -60,21 +60,22 @@ export function AuthView() {
               <div className="space-y-1.5">
                 <label
                   className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted-foreground"
-                  htmlFor="username"
+                  htmlFor="email"
                 >
-                  {labels.usernameLabel}
+                  {labels.emailLabel}
                 </label>
                 <Input
-                  id="username"
-                  aria-invalid={Boolean(errors.username)}
-                  {...register("username")}
-                  placeholder={labels.usernamePlaceholder}
+                  id="email"
+                  type="email"
+                  aria-invalid={Boolean(errors.email)}
+                  {...register("email")}
+                  placeholder={labels.emailPlaceholder}
                   className="h-10 border-input bg-input/30 text-foreground placeholder:text-muted-foreground"
-                  autoComplete="username"
+                  autoComplete="email"
                 />
-                {errors.username?.message ? (
+                {errors.email?.message ? (
                   <p className="text-xs text-destructive">
-                    {errors.username.message}
+                    {errors.email.message}
                   </p>
                 ) : null}
               </div>

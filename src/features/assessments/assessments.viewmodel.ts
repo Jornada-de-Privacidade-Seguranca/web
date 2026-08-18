@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useAuthStore } from "@features/auth/auth.store";
 import {
   getPendingAssessments,
   getCatalogAssessments,
-} from "@services/AssessmentsService";
+} from "@services/assessmentsService";
 import type {
   Journey,
   AssessmentsViewModelReturn,
@@ -16,7 +15,6 @@ import type {
 
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
-  const userToken = useAuthStore((state) => state.token) ?? undefined;
 
   // Pending State
   const [pendingJourneys, setPendingJourneys] = useState<Journey[]>([]);
@@ -63,10 +61,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     async (page: number) => {
       setIsPendingLoading(true);
       try {
-        const response = await getPendingAssessments(
-          { page, limit: 6 },
-          userToken
-        );
+        const response = await getPendingAssessments({ page, limit: 6 });
         setPendingJourneys(response.items || []);
         setPendingTotalPages(response.totalPages || 1);
       } catch (err: unknown) {
@@ -84,7 +79,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
         setIsPendingLoading(false);
       }
     },
-    [userToken, t]
+    [t]
   );
 
   // Fetch Catalog Journeys
@@ -92,10 +87,11 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     async (page: number, search: string) => {
       setIsCatalogLoading(true);
       try {
-        const response = await getCatalogAssessments(
-          { page, limit: 6, search },
-          userToken
-        );
+        const response = await getCatalogAssessments({
+          page,
+          limit: 6,
+          search,
+        });
         setCatalogJourneys(response.items || []);
         setCatalogTotalPages(response.totalPages || 1);
       } catch (err: unknown) {
@@ -113,7 +109,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
         setIsCatalogLoading(false);
       }
     },
-    [userToken, t]
+    [t]
   );
 
   // Trigger pending fetch when pendingPage changes

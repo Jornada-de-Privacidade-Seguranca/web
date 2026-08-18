@@ -17,7 +17,11 @@
     "journeys": "Jornadas",
     "results": "Resultados",
     "profile": "Perfil",
-    "admin-panel": "Painel administrativo"
+    "admin-panel": "Painel administrativo",
+    "userMenu": {
+      "profile": "Meu perfil",
+      "logout": "Sair"
+    }
   },
   "switchThemeButton": {
     "light": "Trocar para tema claro",
@@ -60,8 +64,8 @@
       "description": "Avalie seu conhecimento em privacidade e segurança",
       "welcomeTitle": "Bem-vindo de volta",
       "welcomeDescription": "Acesse sua conta corporativa para continuar",
-      "usernameLabel": "Usuário",
-      "usernamePlaceholder": "seu.usuario",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "seu.email@empresa.com",
       "passwordLabel": "Senha",
       "passwordPlaceholder": "Digite sua senha",
       "forgotPassword": "Esqueceu sua senha?",
@@ -70,8 +74,13 @@
       "signUpLink": "Cadastre-se",
       "privacyNotice": "Ao continuar você aceita nossos termos de privacidade.",
       "validation": {
-        "usernameRequired": "O usuário é obrigatório.",
+        "emailRequired": "O e-mail é obrigatório.",
+        "emailInvalid": "Informe um e-mail válido.",
         "passwordRequired": "A senha é obrigatória."
+      },
+      "serverError": {
+        "title": "Não foi possível entrar",
+        "genericDescription": "Ocorreu um erro ao tentar entrar. Por favor, tente novamente mais tarde."
       }
     },
     "register": {

@@ -5,6 +5,7 @@ import React from "react";
 import { AssessmentsView } from "../index";
 import * as viewModelModule from "../assessments.viewmodel";
 import type { AssessmentsViewModelReturn, AssessmentsLabels } from "../assessments.types";
+import { AppProviders } from "@/shared/providers";
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/shared/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
-  usePathname: () => "/assessments",
+  usePathname: () => "/jornadas",
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -53,6 +54,14 @@ describe("AssessmentsView Component", () => {
       disconnect() {}
     };
   });
+
+  function renderView() {
+    return render(
+      <AppProviders>
+        <AssessmentsView />
+      </AppProviders>
+    );
+  }
 
   const mockLabels: AssessmentsLabels = {
     title: "Jornadas de Aprendizado",
@@ -134,7 +143,7 @@ describe("AssessmentsView Component", () => {
       createMockVMReturn()
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Jornadas pendentes")).toBeDefined();
     expect(screen.getByText("Segurança Digital Básica")).toBeDefined();
@@ -151,7 +160,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.queryByText("Jornadas pendentes")).toBeNull();
   });
@@ -162,7 +171,7 @@ describe("AssessmentsView Component", () => {
       createMockVMReturn({ handleSearchChange: handleSearchChangeMock })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Todas as jornadas")).toBeDefined();
     expect(screen.getByText("LGPD para Desenvolvedores")).toBeDefined();
@@ -186,7 +195,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     const skeletons = screen.getAllByTestId("journey-skeleton");
     expect(skeletons.length).toBeGreaterThan(0);
@@ -208,7 +217,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     const completedTag = screen.getByTestId("status-completed-tag");
     expect(completedTag).toBeDefined();
@@ -226,7 +235,7 @@ describe("AssessmentsView Component", () => {
       })
     );
 
-    render(<AssessmentsView />);
+    renderView();
 
     expect(screen.getByText("Erro ao carregar jornadas")).toBeDefined();
     expect(screen.getByText("Falha de conexão com o servidor")).toBeDefined();
