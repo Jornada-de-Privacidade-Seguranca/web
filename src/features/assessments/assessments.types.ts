@@ -8,6 +8,7 @@ export interface Journey {
   estimatedMinutes: number;
   status: JourneyStatus;
   score?: number;
+  href?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -56,16 +57,20 @@ export interface AssessmentsViewModelReturn {
   pendingPage: number;
   pendingTotalPages: number;
   isPendingLoading: boolean;
+  pendingError: string | null;
   isPendingSectionVisible: boolean;
   handlePendingPageChange: (page: number) => void;
+  handleRetryPending: () => void;
 
   catalogJourneys: Journey[];
   catalogPage: number;
   catalogTotalPages: number;
   isCatalogLoading: boolean;
+  catalogError: string | null;
   searchTerm: string;
   handleSearchChange: (term: string) => void;
   handleCatalogPageChange: (page: number) => void;
+  handleRetryCatalog: () => void;
 
   isLoading: boolean;
   error: string | null;

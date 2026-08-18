@@ -7,7 +7,7 @@ export function useJourneyCardVM(props: JourneyCardProps) {
   const isInProgress = journey.status === "in_progress";
   const isNotStarted = journey.status === "not_started";
 
-  const actionHref = `/jornada/${journey.id}`;
+  const actionHref = journey.href ?? `/jornada/${journey.id}`;
 
   const buttonText = isCompleted
     ? labels.actionRetake

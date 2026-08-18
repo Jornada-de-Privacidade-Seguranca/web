@@ -1,38 +1,43 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
 import {
   getPendingAssessments,
   getCatalogAssessments,
 } from "@services/assessmentsService";
 import type {
-  Journey,
   AssessmentsViewModelReturn,
   AssessmentsLabels,
   ServerMessage,
 } from "./assessments.types";
 
+function formatErrorMessage(err: unknown, defaultMsg: string): string {
+  if (err instanceof Error) {
+    if (
+      err.message.includes("Failed to fetch") ||
+      err.message.includes("NetworkError") ||
+      err.message.includes("fetch failed")
+    ) {
+      return defaultMsg;
+    }
+    return err.message;
+  }
+  return defaultMsg;
+}
+
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
 
-  // Pending State
-  const [pendingJourneys, setPendingJourneys] = useState<Journey[]>([]);
+  // Pagination & Search States
   const [pendingPage, setPendingPage] = useState<number>(1);
-  const [pendingTotalPages, setPendingTotalPages] = useState<number>(1);
-  const [isPendingLoading, setIsPendingLoading] = useState<boolean>(true);
-
-  // Catalog State
-  const [catalogJourneys, setCatalogJourneys] = useState<Journey[]>([]);
   const [catalogPage, setCatalogPage] = useState<number>(1);
-  const [catalogTotalPages, setCatalogTotalPages] = useState<number>(1);
-  const [isCatalogLoading, setIsCatalogLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
-  // Error State
-  const [error, setError] = useState<string | null>(null);
-  const [serverMessage, setServerMessage] = useState<ServerMessage | null>(null);
+  // Dismissable banner message override
+  const [dismissedBanner, setDismissedBanner] = useState<boolean>(false);
 
   // Debounce effect for search term (300ms)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -56,76 +61,44 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     };
   }, []);
 
-  // Fetch Pending Journeys
-  const fetchPending = useCallback(
-    async (page: number) => {
-      setIsPendingLoading(true);
-      try {
-        const response = await getPendingAssessments({ page, limit: 6 });
-        setPendingJourneys(response.items || []);
-        setPendingTotalPages(response.totalPages || 1);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : t("errorMessage") || "Erro ao carregar jornadas pendentes.";
-        setError(message);
-        setServerMessage({
-          title: t("errorTitle"),
-          description: message,
-          variant: "destructive",
-        });
-      } finally {
-        setIsPendingLoading(false);
-      }
-    },
-    [t]
-  );
+  // TanStack Query - Pending Journeys
+  const pendingQuery = useQuery({
+    queryKey: ["assessments", "pending", pendingPage],
+    queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }),
+    retry: false,
+  });
 
-  // Fetch Catalog Journeys
-  const fetchCatalog = useCallback(
-    async (page: number, search: string) => {
-      setIsCatalogLoading(true);
-      try {
-        const response = await getCatalogAssessments({
-          page,
-          limit: 6,
-          search,
-        });
-        setCatalogJourneys(response.items || []);
-        setCatalogTotalPages(response.totalPages || 1);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : t("errorMessage") || "Erro ao carregar catálogo de jornadas.";
-        setError(message);
-        setServerMessage({
-          title: t("errorTitle"),
-          description: message,
-          variant: "destructive",
-        });
-      } finally {
-        setIsCatalogLoading(false);
-      }
-    },
-    [t]
-  );
+  // TanStack Query - Catalog Journeys
+  const catalogQuery = useQuery({
+    queryKey: ["assessments", "catalog", catalogPage, debouncedSearchTerm],
+    queryFn: () =>
+      getCatalogAssessments({
+        page: catalogPage,
+        limit: 6,
+        search: debouncedSearchTerm,
+      }),
+    retry: false,
+  });
 
-  // Trigger pending fetch when pendingPage changes
-  useEffect(() => {
-    queueMicrotask(() => {
-      void fetchPending(pendingPage);
-    });
-  }, [fetchPending, pendingPage]);
+  const pendingJourneys = pendingQuery.data?.items ?? [];
+  const pendingTotalPages = pendingQuery.data?.totalPages ?? 1;
+  const isPendingLoading = pendingQuery.isLoading;
+  const pendingError = pendingQuery.error
+    ? formatErrorMessage(pendingQuery.error, t("errorMessage") || "Erro ao carregar jornadas pendentes.")
+    : null;
 
-  // Trigger catalog fetch when catalogPage or debouncedSearchTerm changes
-  useEffect(() => {
-    queueMicrotask(() => {
-      void fetchCatalog(catalogPage, debouncedSearchTerm);
-    });
-  }, [fetchCatalog, catalogPage, debouncedSearchTerm]);
+  const catalogJourneys = catalogQuery.data?.items ?? [];
+  const catalogTotalPages = catalogQuery.data?.totalPages ?? 1;
+  const isCatalogLoading = catalogQuery.isLoading;
+  const catalogError = catalogQuery.error
+    ? formatErrorMessage(catalogQuery.error, t("errorMessage") || "Erro ao carregar catálogo de jornadas.")
+    : null;
 
+  // Pending section is visible if loading, has journeys, or failed with an error
+  const isPendingSectionVisible =
+    isPendingLoading || pendingJourneys.length > 0 || pendingError !== null;
+
+  // Handle Page Changes
   const handlePendingPageChange = (page: number) => {
     setPendingPage(page);
   };
@@ -134,15 +107,22 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     setCatalogPage(page);
   };
 
-  const onCloseMsg = () => {
-    setError(null);
-    setServerMessage(null);
+  const handleRetryPending = () => {
+    void pendingQuery.refetch();
+  };
+
+  const handleRetryCatalog = () => {
+    void catalogQuery.refetch();
   };
 
   const handleRetry = () => {
-    onCloseMsg();
-    fetchPending(pendingPage);
-    fetchCatalog(catalogPage, debouncedSearchTerm);
+    setDismissedBanner(false);
+    void pendingQuery.refetch();
+    void catalogQuery.refetch();
+  };
+
+  const onCloseMsg = () => {
+    setDismissedBanner(true);
   };
 
   const labels: AssessmentsLabels = {
@@ -174,26 +154,37 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   };
 
   const isLoading = isPendingLoading && isCatalogLoading;
-  const isPendingSectionVisible = isPendingLoading || pendingJourneys.length > 0;
+  const globalError = !dismissedBanner ? (pendingError || catalogError) : null;
+  const serverMessage: ServerMessage | null = globalError
+    ? {
+        title: labels.errorTitle,
+        description: globalError,
+        variant: "destructive",
+      }
+    : null;
 
   return {
     pendingJourneys,
     pendingPage,
     pendingTotalPages,
     isPendingLoading,
+    pendingError,
     isPendingSectionVisible,
     handlePendingPageChange,
+    handleRetryPending,
 
     catalogJourneys,
     catalogPage,
     catalogTotalPages,
     isCatalogLoading,
+    catalogError,
     searchTerm,
     handleSearchChange,
     handleCatalogPageChange,
+    handleRetryCatalog,
 
     isLoading,
-    error,
+    error: globalError,
     serverMessage,
     onCloseMsg,
     handleRetry,
