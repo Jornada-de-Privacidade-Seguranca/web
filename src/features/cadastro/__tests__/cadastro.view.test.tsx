@@ -60,7 +60,7 @@ describe("CadastroView Component", () => {
           ref: vi.fn(),
         })),
         formState: { errors: {}, isSubmitting: false },
-      } as any,
+      } as unknown as ReturnType<typeof viewModelModule.useCadastroVM>["form"],
       serverMessage: null,
       onCloseMsg: vi.fn(),
       handleSubmit: vi.fn((e?: React.BaseSyntheticEvent) => {
@@ -124,7 +124,7 @@ describe("CadastroView Component", () => {
             ref: vi.fn(),
           })),
           formState: { errors: {}, isSubmitting: true },
-        } as any,
+        } as unknown as ReturnType<typeof viewModelModule.useCadastroVM>["form"],
       })
     );
 

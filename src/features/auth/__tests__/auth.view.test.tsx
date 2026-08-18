@@ -49,7 +49,7 @@ describe("AuthView Component", () => {
           ref: vi.fn(),
         })),
         formState: { errors: {}, isSubmitting: false },
-      } as any,
+      } as unknown as ReturnType<typeof viewModelModule.useAuthVM>["form"],
       serverMessage: null,
       onCloseMsg: vi.fn(),
       handleSubmit: vi.fn((e?: React.BaseSyntheticEvent) => {
