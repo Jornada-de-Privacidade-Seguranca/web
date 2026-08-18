@@ -1,0 +1,216 @@
+"use client";
+
+import {
+  RefreshIcon,
+  AlertCircleIcon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Button, Input, Message } from "@/components/ui";
+import { PageShell } from "@/components/layout/PageShell";
+import { useAssessmentsVM } from "./assessments.viewmodel";
+import { Accordion } from "./components/Accordion";
+import { JourneyCard } from "./components/JourneyCard";
+import { JourneySkeleton } from "./components/JourneySkeleton";
+import { Pagination } from "./components/Pagination";
+import { EmptyState } from "./components/EmptyState";
+
+export function AssessmentsView() {
+  const {
+    pendingJourneys,
+    pendingPage,
+    pendingTotalPages,
+    isPendingLoading,
+    pendingError,
+    isPendingSectionVisible,
+    handlePendingPageChange,
+    handleRetryPending,
+
+    catalogJourneys,
+    catalogPage,
+    catalogTotalPages,
+    isCatalogLoading,
+    catalogError,
+    searchTerm,
+    handleSearchChange,
+    handleCatalogPageChange,
+    handleRetryCatalog,
+    catalogPageError,
+    dismissCatalogPageError,
+
+    pendingPageError,
+    dismissPendingPageError,
+    labels,
+  } = useAssessmentsVM();
+
+  return (
+    <PageShell title={labels.title} subtitle={labels.subtitle}>
+      <div className="space-y-8">
+        {/* Seção 1: Jornadas Pendentes (Accordion aberto por padrão) */}
+        {isPendingSectionVisible && (
+          <>
+            <section aria-label={labels.pendingSectionTitle}>
+              <Accordion
+                title={labels.pendingSectionTitle}
+                subtitle={labels.pendingSectionSubtitle}
+                count={pendingJourneys.length}
+                defaultOpen={true}
+              >
+                {isPendingLoading ? (
+                  <JourneySkeleton count={3} />
+                ) : pendingError ? (
+                  <div
+                    data-testid="pending-error-state"
+                    className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
+                  >
+                    <HugeiconsIcon icon={AlertCircleIcon} size={28} />
+                    <p className="text-sm font-medium">{pendingError}</p>
+                    <Button
+                      onClick={handleRetryPending}
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+                    >
+                      <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+                      {labels.retryButton}
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {pendingJourneys.map((journey) => (
+                        <JourneyCard
+                          key={journey.id}
+                          journey={journey}
+                          labels={labels}
+                        />
+                      ))}
+                    </div>
+
+                    <Pagination
+                      currentPage={pendingPage}
+                      totalPages={pendingTotalPages}
+                      onPageChange={handlePendingPageChange}
+                      previousText={labels.paginationPrevious}
+                      nextText={labels.paginationNext}
+                      pageOfText={labels.paginationPageOf}
+                    />
+                  </div>
+                )}
+              </Accordion>
+            </section>
+
+            {/* Divisória sutil */}
+            <hr className="my-8 border-border/60" />
+          </>
+        )}
+
+        {/* Seção 2: Todas as Jornadas (Catálogo) */}
+        <section aria-label={labels.catalogSectionTitle} className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
+                {labels.catalogSectionTitle}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {labels.catalogSectionSubtitle}
+              </p>
+            </div>
+
+            {/* Input de Busca */}
+            <div className="relative w-full sm:w-80">
+              <HugeiconsIcon
+                icon={Search01Icon}
+                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                type="text"
+                placeholder={labels.catalogSearchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10 h-11 rounded-full bg-card/80 border-border/80 text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                aria-label={labels.catalogSearchPlaceholder}
+              />
+            </div>
+          </div>
+
+          {/* Lista de Jornadas do Catálogo */}
+          {isCatalogLoading ? (
+            <JourneySkeleton count={6} />
+          ) : catalogError ? (
+            <div
+              data-testid="catalog-error-state"
+              className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
+            >
+              <HugeiconsIcon icon={AlertCircleIcon} size={28} />
+              <p className="text-sm font-medium">{catalogError}</p>
+              <Button
+                onClick={handleRetryCatalog}
+                variant="outline"
+                size="sm"
+                className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+              >
+                <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+                {labels.retryButton}
+              </Button>
+            </div>
+          ) : catalogJourneys.length === 0 ? (
+            <EmptyState message={labels.catalogEmpty} />
+          ) : (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {catalogJourneys.map((journey) => (
+                  <JourneyCard
+                    key={journey.id}
+                    journey={journey}
+                    labels={labels}
+                  />
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={catalogPage}
+                totalPages={catalogTotalPages}
+                onPageChange={handleCatalogPageChange}
+                previousText={labels.paginationPrevious}
+                nextText={labels.paginationNext}
+                pageOfText={labels.paginationPageOf}
+              />
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Toasts pontuais: falha ao trocar de página mantendo os dados anteriores na tela */}
+      {(pendingPageError || catalogPageError) && (
+        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+          {pendingPageError && (
+            <Message
+              title={labels.errorTitle}
+              description={pendingPageError}
+              variant="destructive"
+              onClose={dismissPendingPageError}
+              icon={
+                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
+              }
+            />
+          )}
+          {catalogPageError && (
+            <Message
+              title={labels.errorTitle}
+              description={catalogPageError}
+              variant="destructive"
+              onClose={dismissCatalogPageError}
+              icon={
+                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
+              }
+            />
+          )}
+        </div>
+      )}
+    </PageShell>
+  );
+}
+
+export default AssessmentsView;

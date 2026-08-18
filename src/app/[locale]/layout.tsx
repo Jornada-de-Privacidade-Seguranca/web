@@ -10,6 +10,8 @@ import { AppProviders } from "@/shared/providers";
 import { ThemeScript } from "@/shared/theme-script";
 import { cookies } from "next/headers";
 
+import { QueryProvider } from "@/shared/providers/queryProvider";
+
 export const metadata: Metadata = {
   title: "Jornada de Privacidade/Segurança",
   description:
@@ -53,7 +55,7 @@ export default async function RootLayout({
         <AppProviders>
           <ThemeScript />
           <NextIntlClientProvider messages={appMessages}>
-            {children}
+            <QueryProvider>{children}</QueryProvider>
           </NextIntlClientProvider>
         </AppProviders>
       </body>

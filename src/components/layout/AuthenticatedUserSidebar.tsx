@@ -15,6 +15,7 @@ import { useSidebarStore } from "@/store/sidebar.store";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { PropsWithChildren } from "react";
+import { usePathname } from "@/shared/i18n/navigation";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -28,6 +29,7 @@ function useSidebarVM() {
   const toggle = useSidebarStore((state) => state.toggle);
   const { user: authUser, logout } = useAuth();
   const t = useTranslations();
+  const pathname = usePathname();
 
   async function handleLogout() {
     await logout();
@@ -38,14 +40,17 @@ function useSidebarVM() {
       label: t("sidebar.dashboard"),
       icon: DashboardSquare01Icon,
       href: "/painel",
-      active: true,
+      active: pathname.startsWith("/painel"),
     },
     {
       label: t("sidebar.journeys"),
       icon: Task01Icon,
       href: "/jornadas",
-      active: false,
-      disabled: true,
+      active:
+        pathname.startsWith("/jornadas") ||
+        pathname.startsWith("/assessments") ||
+        pathname.startsWith("/avaliacoes"),
+      disabled: false,
     },
     {
       label: t("sidebar.profile"),
