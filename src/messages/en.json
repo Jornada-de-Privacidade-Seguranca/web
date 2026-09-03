@@ -222,5 +222,61 @@
     "retryButton": "Try again",
     "loadingAriaLabel": "Loading evaluation results",
     "scoreAriaLabel": "Score: {score}"
+  },
+  "journeySummary": {
+    "loadingTitle": "Loading journey...",
+    "subtitleStatic": "Review the details before you begin.",
+    "backToJourneys": "Back to journeys",
+    "backToJourneysAriaLabel": "Back to the journeys list",
+    "badgeLabel": "Journey summary",
+    "questionsLabel": "Questions",
+    "durationLabel": "Duration",
+    "areasLabel": "Areas",
+    "competenciesLabel": "Competencies",
+    "questionsAriaLabel": "{count} questions",
+    "durationAriaLabel": "{minutes} minutes long",
+    "areasAriaLabel": "{count} areas",
+    "competenciesAriaLabel": "{count} competencies",
+    "estimatedMinutesText": "{minutes} min",
+    "howItWorksTitle": "How it works",
+    "howItWorksSubtitle": "The journey is split into short steps. You can move at your own pace.",
+    "steps": [
+      {
+        "title": "Professional Experience",
+        "description": "Professional experience in the privacy and/or information security field."
+      },
+      {
+        "title": "English Proficiency Level",
+        "description": "Fluency and knowledge level of the English language."
+      },
+      {
+        "title": "Time in the Chosen Role",
+        "description": "Time spent working in the role chosen for the journey."
+      },
+      {
+        "title": "Academic Background",
+        "description": "Undergraduate, licentiate or technologist degrees, and graduate studies."
+      },
+      {
+        "title": "Professional Certifications",
+        "description": "List of professional certifications in privacy and/or information security."
+      },
+      {
+        "title": "Competencies",
+        "description": "Technical knowledge of privacy and/or information security related to the role chosen for the journey."
+      }
+    ],
+    "footerNote": "Your answers are saved as you progress.",
+    "dismissLabel": "Not now",
+    "dismissAriaLabel": "Go back to the previous page",
+    "actionStart": "Start journey",
+    "actionContinue": "Continue journey",
+    "actionRetake": "Retake journey",
+    "notFoundTitle": "Journey not found",
+    "notFoundMessage": "We couldn't find the requested journey. It may have been removed, or the link may be incorrect.",
+    "serverErrorTitle": "Unable to load the journey",
+    "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
+    "backToJourneysLink": "Back to the journeys list",
+    "loadingAriaLabel": "Loading journey summary"
   }
 }
