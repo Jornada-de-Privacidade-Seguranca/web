@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "@/shared/i18n/navigation";
+import { useRouter } from "@shared/i18n/navigation";
 import {
   getJourneySummary,
   JourneySummaryRequestError,
@@ -24,6 +24,7 @@ export function useJourneySummaryVM(
   const query = useQuery({
     queryKey: ["journey-summary", "detail", journeyId],
     queryFn: () => getJourneySummary(journeyId),
+    enabled: Boolean(journeyId),
     retry: false,
   });
 
@@ -56,7 +57,8 @@ export function useJourneySummaryVM(
     router.back();
   };
 
-  const steps = t.raw("steps") as HowItWorksStep[];
+  const rawSteps = t.raw("steps");
+  const steps = (Array.isArray(rawSteps) ? rawSteps : []) as HowItWorksStep[];
 
   const labels: JourneySummaryLabels = {
     loadingTitle: t("loadingTitle"),

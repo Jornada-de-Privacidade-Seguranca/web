@@ -6,9 +6,9 @@ import {
   ArrowRight01Icon,
   Mortarboard01Icon,
 } from "@hugeicons/core-free-icons";
-import { Link } from "@/shared/i18n/navigation";
-import { Button } from "@/components/ui";
-import { PageShell } from "@/components/layout/PageShell";
+import { Link } from "@shared/i18n/navigation";
+import { Button } from "@components/ui";
+import { PageShell } from "@components/layout/PageShell";
 import { useJourneySummaryVM } from "./journeySummary.viewmodel";
 import { JourneySummarySkeleton } from "./components/JourneySummarySkeleton";
 import { JourneyStatsGrid } from "./components/JourneyStatsGrid";
@@ -26,15 +26,21 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
     error,
     ctaLabel,
     ctaAriaLabel,
-    onStartJourney,
+    resolvedStartUrl,
     onDismiss,
     labels,
   } = useJourneySummaryVM(journeyId);
 
-  const pageTitle = journey?.title ?? labels.loadingTitle;
+  const pageTitle = error
+    ? error === "not_found"
+      ? labels.notFoundTitle
+      : labels.serverErrorTitle
+    : journey?.title ?? labels.loadingTitle;
+
+  const pageSubtitle = error ? undefined : labels.subtitleStatic;
 
   return (
-    <PageShell title={pageTitle} subtitle={labels.subtitleStatic}>
+    <PageShell title={pageTitle} subtitle={pageSubtitle}>
       {error ? (
         <JourneySummaryErrorState
           variant={error}
@@ -56,7 +62,12 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
             {labels.backToJourneysText}
           </Link>
 
-          <div aria-busy={isLoading} data-testid="journey-summary-content">
+          <div
+            aria-busy={isLoading}
+            aria-label={isLoading ? labels.loadingAriaLabel : undefined}
+            role={isLoading ? "status" : undefined}
+            data-testid="journey-summary-content"
+          >
             {isLoading ? (
               <JourneySummarySkeleton />
             ) : (
@@ -68,9 +79,9 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
                       {labels.badgeLabel}
                     </span>
 
-                    <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-card-foreground">
+                    <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight text-card-foreground">
                       {journey.title}
-                    </h1>
+                    </h2>
 
                     <div className="mt-6">
                       <JourneyStatsGrid journey={journey} labels={labels} />
@@ -98,9 +109,11 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
                 >
                   {labels.dismissLabel}
                 </Button>
-                <Button onClick={onStartJourney} aria-label={ctaAriaLabel}>
-                  <span>{ctaLabel}</span>
-                  <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+                <Button asChild aria-label={ctaAriaLabel}>
+                  <Link href={resolvedStartUrl}>
+                    <span>{ctaLabel}</span>
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+                  </Link>
                 </Button>
               </div>
             </div>

@@ -8,7 +8,4 @@ export interface JourneySummaryErrorStateProps {
   backLinkText: string;
 }
 
-export interface JourneySummaryErrorStateViewModelReturn
-  extends JourneySummaryErrorStateProps {
-  backLinkId: string;
-}
+export type JourneySummaryErrorStateViewModelReturn = JourneySummaryErrorStateProps;

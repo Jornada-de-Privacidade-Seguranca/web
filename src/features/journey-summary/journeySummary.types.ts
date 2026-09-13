@@ -1,23 +1,16 @@
-export type JourneyStatus = "not_started" | "in_progress" | "completed";
+import type {
+  JourneyStatus,
+  JourneyProgress,
+  JourneySummary,
+  JourneySummaryErrorType,
+} from "@services/journeySummaryService";
 
-export interface JourneyProgress {
-  firstStepSlug: string;
-  lastAnsweredStepSlug: string | null;
-}
-
-export interface JourneySummary {
-  id: string;
-  slug: string;
-  title: string;
-  questionsCount: number;
-  estimatedMinutes: number;
-  areasCount: number;
-  competenciesCount: number;
-  status: JourneyStatus;
-  progress: JourneyProgress;
-}
-
-export type JourneySummaryErrorType = "not_found" | "server_error";
+export type {
+  JourneyStatus,
+  JourneyProgress,
+  JourneySummary,
+  JourneySummaryErrorType,
+};
 
 export interface HowItWorksStep {
   title: string;

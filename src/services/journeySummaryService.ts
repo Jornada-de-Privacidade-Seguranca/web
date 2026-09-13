@@ -1,7 +1,25 @@
 import axios from "axios";
 import { axiosInstance, type ApiResponse } from "@services/httpClient";
-import type { JourneySummary } from "@features/journey-summary/journeySummary.types";
-import { env } from "@/shared/config/env";
+import { env } from "@shared/config/env";
+
+export type JourneyStatus = "not_started" | "in_progress" | "completed";
+
+export interface JourneyProgress {
+  firstStepSlug: string;
+  lastAnsweredStepSlug: string | null;
+}
+
+export interface JourneySummary {
+  id: string;
+  slug: string;
+  title: string;
+  questionsCount: number;
+  estimatedMinutes: number;
+  areasCount: number;
+  competenciesCount: number;
+  status: JourneyStatus;
+  progress: JourneyProgress;
+}
 
 export type JourneySummaryErrorType = "not_found" | "server_error";
 
@@ -77,6 +95,12 @@ export async function getJourneySummary(id: string): Promise<JourneySummary> {
       const mock = MOCK_JOURNEY_SUMMARIES[id];
       if (mock) {
         return mock;
+      }
+
+      // Em ambiente de dev sem backend rodando, se o ID não constar no mock,
+      // ou se o backend retornar 404, tratamos como jornada não encontrada.
+      if (!axios.isAxiosError(err) || !err.response || err.response.status === 404) {
+        throw new JourneySummaryRequestError("not_found", "Jornada não encontrada.");
       }
     }
 

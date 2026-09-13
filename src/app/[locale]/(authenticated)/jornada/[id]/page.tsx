@@ -1,4 +1,4 @@
-import JourneySummaryView from "@/features/journey-summary";
+import JourneySummaryView from "@features/journey-summary";
 
 export default async function JornadaSummaryPage({
   params,

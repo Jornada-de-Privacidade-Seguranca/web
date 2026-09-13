@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import React from "react";
 import { JourneySummaryView } from "../index";
 import * as viewModelModule from "../journeySummary.viewmodel";
@@ -19,6 +19,20 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/shared/i18n/navigation", () => ({
+  Link: ({
+    children,
+    ...rest
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...rest}>{children}</a>,
+  usePathname: () => "/jornada/1",
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@shared/i18n/navigation", () => ({
   Link: ({
     children,
     ...rest
@@ -137,12 +151,10 @@ describe("JourneySummaryView Component", () => {
     expect(screen.queryByText("Iniciar jornada")).toBeNull();
   });
 
-  it("deve renderizar o resumo e chamar onStartJourney/onDismiss ao clicar nos botões", () => {
-    const onStartJourneyMock = vi.fn();
+  it("deve renderizar o resumo com CTA apontando para a rota resolvida e chamar onDismiss ao clicar em voltar", () => {
     const onDismissMock = vi.fn();
     vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
       createMockVMReturn({
-        onStartJourney: onStartJourneyMock,
         onDismiss: onDismissMock,
       })
     );
@@ -156,8 +168,10 @@ describe("JourneySummaryView Component", () => {
     fireEvent.click(screen.getByText("Agora não"));
     expect(onDismissMock).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText("Iniciar jornada"));
-    expect(onStartJourneyMock).toHaveBeenCalled();
+    const ctaLink = screen.getByText("Iniciar jornada").closest("a");
+    expect(ctaLink?.getAttribute("href")).toBe(
+      "/journey/data-governance/pre-questionario"
+    );
   });
 
   it("deve exibir o estado de não encontrado substituindo o conteúdo, com link de volta para /jornadas", () => {
@@ -167,9 +181,10 @@ describe("JourneySummaryView Component", () => {
 
     renderView();
 
-    expect(screen.getByTestId("journey-summary-error-state")).toBeDefined();
-    expect(screen.getByText("Jornada não encontrada")).toBeDefined();
-    const backLink = screen.getByText("Voltar para a listagem de jornadas");
+    const errorState = screen.getByTestId("journey-summary-error-state");
+    expect(errorState).toBeDefined();
+    expect(within(errorState).getByText("Jornada não encontrada")).toBeDefined();
+    const backLink = within(errorState).getByText("Voltar para a listagem de jornadas");
     expect(backLink.closest("a")?.getAttribute("href")).toBe("/jornadas");
   });
 
@@ -180,9 +195,12 @@ describe("JourneySummaryView Component", () => {
 
     renderView();
 
-    expect(screen.getByTestId("journey-summary-error-state")).toBeDefined();
-    expect(screen.getByText("Não foi possível carregar a jornada")).toBeDefined();
-    const backLink = screen.getByText("Voltar para a listagem de jornadas");
+    const errorState = screen.getByTestId("journey-summary-error-state");
+    expect(errorState).toBeDefined();
+    expect(
+      within(errorState).getByText("Não foi possível carregar a jornada")
+    ).toBeDefined();
+    const backLink = within(errorState).getByText("Voltar para a listagem de jornadas");
     expect(backLink.closest("a")?.getAttribute("href")).toBe("/jornadas");
   });
 });
