@@ -278,5 +278,40 @@
     "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
     "backToJourneysLink": "Back to the journeys list",
     "loadingAriaLabel": "Loading journey summary"
+  },
+  "preQuestionnaire": {
+    "header": {
+      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
+      "exitButton": "Exit",
+      "exitAriaLabel": "Exit pre-questionnaire",
+      "backAriaLabel": "Go back to previous step"
+    },
+    "english": {
+      "title": "English proficiency level",
+      "description": "This helps us calibrate the complexity of the technical questions presented throughout the journey.",
+      "questionLabel": "English proficiency level",
+      "options": {
+        "none": "None",
+        "basic-reading": "Basic - Reading",
+        "intermediate-reading-writing": "Intermediate - Reading and Writing",
+        "advanced-fluent": "Advanced - Fluent"
+      }
+    },
+    "actions": {
+      "back": "Back",
+      "continue": "Continue",
+      "saving": "Saving..."
+    },
+    "exitModal": {
+      "title": "Do you want to leave the pre-questionnaire?",
+      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
+      "cancelButton": "Keep answering",
+      "confirmButton": "Exit journey"
+    },
+    "loading": "Loading question...",
+    "errorTitle": "Unable to load pre-questionnaire",
+    "errorMessage": "An error occurred while fetching step data. Please try again.",
+    "retryButton": "Try again",
+    "saveError": "Could not save your answer. Please try again."
   }
 }

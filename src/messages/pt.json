@@ -278,5 +278,40 @@
     "serverErrorMessage": "Não foi possível completar a busca pelos dados da jornada. Tente novamente mais tarde.",
     "backToJourneysLink": "Voltar para a listagem de jornadas",
     "loadingAriaLabel": "Carregando resumo da jornada"
+  },
+  "preQuestionnaire": {
+    "header": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
+      "exitButton": "Sair",
+      "exitAriaLabel": "Sair do pré-questionário",
+      "backAriaLabel": "Voltar para a etapa anterior"
+    },
+    "english": {
+      "title": "Nível de proficiência em inglês",
+      "description": "Isso nos ajuda a calibrar a complexidade das perguntas técnicas apresentadas ao longo da jornada.",
+      "questionLabel": "Nível de proficiência em inglês",
+      "options": {
+        "none": "Nenhum",
+        "basic-reading": "Básico - Leitura",
+        "intermediate-reading-writing": "Intermediário - Leitura e Escritura",
+        "advanced-fluent": "Avançado - Fluente"
+      }
+    },
+    "actions": {
+      "back": "Voltar",
+      "continue": "Continuar",
+      "saving": "Salvando..."
+    },
+    "exitModal": {
+      "title": "Deseja sair do pré-questionário?",
+      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
+      "cancelButton": "Continuar respondendo",
+      "confirmButton": "Sair da jornada"
+    },
+    "loading": "Carregando pergunta...",
+    "errorTitle": "Não foi possível carregar o pré-questionário",
+    "errorMessage": "Ocorreu um erro ao buscar os dados da etapa. Tente novamente.",
+    "retryButton": "Tentar novamente",
+    "saveError": "Não foi possível salvar sua resposta. Tente novamente."
   }
 }
