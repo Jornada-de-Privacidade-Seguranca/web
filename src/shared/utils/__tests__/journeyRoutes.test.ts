@@ -4,6 +4,7 @@ import {
   getJourneyStepUrl,
   getJourneySummaryUrl,
   formatJourneyTitleFromSlug,
+  PRE_QUESTIONNAIRE_STEPS,
 } from "../journeyRoutes";
 
 describe("journeyRoutes utils", () => {
@@ -55,6 +56,19 @@ describe("journeyRoutes utils", () => {
       expect(formatJourneyTitleFromSlug("seguranca-da-informacao")).toBe(
         "Seguranca Da Informacao"
       );
+    });
+  });
+
+  describe("PRE_QUESTIONNAIRE_STEPS", () => {
+    it("deve conter a sequência de etapas correta da jornada", () => {
+      expect(PRE_QUESTIONNAIRE_STEPS).toEqual([
+        "experiencia-profissional",
+        "english",
+        "tempo-atuacao-perfil",
+        "formacao-academica",
+        "certificacoes-profissionais",
+        "competencias",
+      ]);
     });
   });
 });

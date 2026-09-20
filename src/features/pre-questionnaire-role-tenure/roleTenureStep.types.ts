@@ -1,3 +1,10 @@
+/**
+ * Identificador oficial da etapa de tempo de atuação enviado ao backend.
+ * Rota correspondente na aplicação web: /tempo-atuacao-perfil
+ */
+export const ROLE_TENURE_STEP_ID = "role-tenure" as const;
+export type RoleTenureStepId = typeof ROLE_TENURE_STEP_ID;
+
 export type RoleTenureOptionId =
   | "0-years"
   | "1-3-years"
@@ -17,6 +24,7 @@ export interface RoleTenureStepLabels {
   questionLabel: string;
   options: Record<RoleTenureOptionId, string>;
   backLabel: string;
+  backAriaLabel: string;
   continueLabel: string;
   savingLabel: string;
   exitLabel: string;

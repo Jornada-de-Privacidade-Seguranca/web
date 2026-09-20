@@ -59,6 +59,7 @@ describe("RoleTenureStepView", () => {
       "10-plus-years": "Mais de 10 anos",
     },
     backLabel: "Voltar",
+    backAriaLabel: "Voltar para etapa anterior",
     continueLabel: "Continuar",
     savingLabel: "Salvando...",
     exitLabel: "Sair",
@@ -166,6 +167,24 @@ describe("RoleTenureStepView", () => {
     expect(handleContinueMock).toHaveBeenCalled();
   });
 
+  it("deve exibir savingLabel durante o salvamento (isSubmitting = true)", () => {
+    vi.spyOn(viewModelModule, "useRoleTenureStepVM").mockReturnValue(
+      createMockVMReturn({
+        selectedOption: "1-3-years",
+        isSubmitting: true,
+      })
+    );
+
+    render(
+      <AppProviders>
+        <RoleTenureStepView journeySlug="data-governance" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Salvando...")).toBeDefined();
+    expect(screen.queryByText("Continuar")).toBeNull();
+  });
+
   it("deve chamar handleExit ao clicar no botão Sair", () => {
     const handleExitMock = vi.fn();
     vi.spyOn(viewModelModule, "useRoleTenureStepVM").mockReturnValue(
@@ -184,5 +203,59 @@ describe("RoleTenureStepView", () => {
     fireEvent.click(exitButton!);
 
     expect(handleExitMock).toHaveBeenCalled();
+  });
+
+  it("deve exibir o banner de erro com role alert e chamar handleRetry ao clicar em tentar novamente", () => {
+    const handleRetryMock = vi.fn();
+    vi.spyOn(viewModelModule, "useRoleTenureStepVM").mockReturnValue(
+      createMockVMReturn({
+        error: "Falha ao carregar.",
+        handleRetry: handleRetryMock,
+      })
+    );
+
+    render(
+      <AppProviders>
+        <RoleTenureStepView journeySlug="data-governance" />
+      </AppProviders>
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeDefined();
+    expect(screen.getByText("Falha ao carregar.")).toBeDefined();
+
+    const retryBtn = screen.getByText("Tentar novamente");
+    fireEvent.click(retryBtn);
+    expect(handleRetryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve renderizar o modal de saída quando isExitModalOpen for true e acionar callbacks de cancelar e confirmar", () => {
+    const handleCancelExitMock = vi.fn();
+    const handleConfirmExitMock = vi.fn();
+
+    vi.spyOn(viewModelModule, "useRoleTenureStepVM").mockReturnValue(
+      createMockVMReturn({
+        isExitModalOpen: true,
+        handleCancelExit: handleCancelExitMock,
+        handleConfirmExit: handleConfirmExitMock,
+      })
+    );
+
+    render(
+      <AppProviders>
+        <RoleTenureStepView journeySlug="data-governance" />
+      </AppProviders>
+    );
+
+    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByText("Deseja sair do pré-questionário?")).toBeDefined();
+
+    const cancelBtn = screen.getByText("Continuar respondendo");
+    fireEvent.click(cancelBtn);
+    expect(handleCancelExitMock).toHaveBeenCalledTimes(1);
+
+    const confirmBtn = screen.getByText("Sair da jornada");
+    fireEvent.click(confirmBtn);
+    expect(handleConfirmExitMock).toHaveBeenCalledTimes(1);
   });
 });

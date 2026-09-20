@@ -5,6 +5,7 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as preQuestionnaireService from "@services/preQuestionnaireService";
 import { useRoleTenureStepVM } from "../roleTenureStep.viewmodel";
+import { ROLE_TENURE_STEP_ID } from "../roleTenureStep.types";
 
 const pushMock = vi.fn();
 
@@ -33,6 +34,7 @@ vi.mock("next-intl", () => ({
         "roleTenure.options.7-10-years": "Entre 7 e 10 anos",
         "roleTenure.options.10-plus-years": "Mais de 10 anos",
         "actions.back": "Voltar",
+        "header.backAriaLabel": "Voltar para a etapa anterior",
         "actions.continue": "Continuar",
         "actions.saving": "Salvando...",
         "header.exitButton": "Sair",
@@ -225,5 +227,43 @@ describe("useRoleTenureStepVM", () => {
     });
     expect(result.current.isExitModalOpen).toBe(false);
     expect(pushMock).toHaveBeenCalledWith("/jornadas");
+  });
+
+  it("deve enviar o identificador oficial do contrato ROLE_TENURE_STEP_ID ('role-tenure') para get e save", async () => {
+    const getSpy = vi
+      .spyOn(preQuestionnaireService, "getPreQuestionnaireStep")
+      .mockResolvedValue({
+        slug: "data-governance",
+        step: ROLE_TENURE_STEP_ID,
+        selectedOption: null,
+      });
+    const saveSpy = vi
+      .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
+      .mockResolvedValue();
+
+    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getSpy).toHaveBeenCalledWith("data-governance", ROLE_TENURE_STEP_ID);
+    expect(ROLE_TENURE_STEP_ID).toBe("role-tenure");
+
+    act(() => {
+      result.current.handleSelectOption("1-3-years");
+    });
+    act(() => {
+      result.current.handleContinue();
+    });
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledWith(
+        "data-governance",
+        ROLE_TENURE_STEP_ID,
+        {
+          selectedOption: "1-3-years",
+        }
+      );
+    });
   });
 });

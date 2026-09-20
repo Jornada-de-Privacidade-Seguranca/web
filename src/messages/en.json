@@ -287,6 +287,7 @@
       "backAriaLabel": "Go back to previous step"
     },
     "english": {
+      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
       "title": "English proficiency level",
       "description": "This helps us calibrate the complexity of the technical questions presented throughout the journey.",
       "questionLabel": "English proficiency level",

@@ -23,6 +23,7 @@ vi.mock("next-intl", () => ({
     const t = (key: string) => {
       const translations: Record<string, string> = {
         "header.stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
+        "english.stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
         "english.title": "Nível de proficiência em inglês",
         "english.description": "Isso nos ajuda a calibrar a complexidade.",
         "english.questionLabel": "Nível de proficiência em inglês",

@@ -104,7 +104,7 @@ export function useEnglishStepVM(
   };
 
   const labels: EnglishStepLabels = {
-    stepTag: t("header.stepTag"),
+    stepTag: t("english.stepTag"),
     title: t("english.title"),
     description: t("english.description"),
     questionLabel: t("english.questionLabel"),

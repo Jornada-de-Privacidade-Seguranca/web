@@ -8,11 +8,17 @@ import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
 } from "@services/preQuestionnaireService";
-import type {
-  RoleTenureOptionId,
-  RoleTenureOption,
-  RoleTenureStepLabels,
-  RoleTenureStepViewModelReturn,
+import {
+  getJourneyRoutePrefix,
+  getJourneyStepUrl,
+  formatJourneyTitleFromSlug,
+} from "@shared/utils/journeyRoutes";
+import {
+  ROLE_TENURE_STEP_ID,
+  type RoleTenureOptionId,
+  type RoleTenureOption,
+  type RoleTenureStepLabels,
+  type RoleTenureStepViewModelReturn,
 } from "./roleTenureStep.types";
 
 const OPTION_IDS: RoleTenureOptionId[] = [
@@ -29,7 +35,7 @@ export function useRoleTenureStepVM(
   const t = useTranslations("preQuestionnaire");
   const router = useRouter();
   const pathname = usePathname();
-  const routePrefix = pathname?.startsWith("/jornada") ? "jornada" : "journey";
+  const routePrefix = getJourneyRoutePrefix(pathname);
 
   const [selectedOption, setSelectedOption] = useState<RoleTenureOptionId | null>(
     null
@@ -38,8 +44,8 @@ export function useRoleTenureStepVM(
 
   // Busca dados previamente salvos da etapa role-tenure
   const query = useQuery({
-    queryKey: ["pre-questionnaire", journeySlug, "role-tenure"],
-    queryFn: () => getPreQuestionnaireStep(journeySlug, "role-tenure"),
+    queryKey: ["pre-questionnaire", journeySlug, ROLE_TENURE_STEP_ID],
+    queryFn: () => getPreQuestionnaireStep(journeySlug, ROLE_TENURE_STEP_ID),
     enabled: Boolean(journeySlug),
     retry: 1,
   });
@@ -57,12 +63,14 @@ export function useRoleTenureStepVM(
   // Mutation para persistir a resposta da etapa role-tenure
   const mutation = useMutation({
     mutationFn: (option: RoleTenureOptionId) =>
-      savePreQuestionnaireStep(journeySlug, "role-tenure", {
+      savePreQuestionnaireStep(journeySlug, ROLE_TENURE_STEP_ID, {
         selectedOption: option,
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Formação Acadêmica
-      router.push(`/${routePrefix}/${journeySlug}/formacao-academica`);
+      router.push(
+        getJourneyStepUrl(routePrefix, journeySlug, "formacao-academica")
+      );
     },
   });
 
@@ -77,7 +85,7 @@ export function useRoleTenureStepVM(
 
   const handleBack = () => {
     // Retorna para a etapa anterior: Nível de Proficiência em Inglês
-    router.push(`/${routePrefix}/${journeySlug}/english`);
+    router.push(getJourneyStepUrl(routePrefix, journeySlug, "english"));
   };
 
   const handleExit = () => {
@@ -110,6 +118,7 @@ export function useRoleTenureStepVM(
       "10-plus-years": t("roleTenure.options.10-plus-years"),
     },
     backLabel: t("actions.back"),
+    backAriaLabel: t("header.backAriaLabel"),
     continueLabel: t("actions.continue"),
     savingLabel: t("actions.saving"),
     exitLabel: t("header.exitButton"),
@@ -132,8 +141,7 @@ export function useRoleTenureStepVM(
   }));
 
   const journeyTitle =
-    query.data?.journeyTitle ??
-    journeySlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
 
   const error = query.isError
     ? labels.errorMessage
