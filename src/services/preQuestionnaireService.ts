@@ -1,6 +1,7 @@
 import axios from "axios";
 import { axiosInstance, type ApiResponse } from "@services/httpClient";
 import { env } from "@shared/config/env";
+import { formatJourneyTitleFromSlug } from "@shared/utils/journeyRoutes";
 
 export interface PreQuestionnaireStepAnswer {
   selectedOption: string;
@@ -52,6 +53,8 @@ export async function getPreQuestionnaireStep(
     }
     return payload as PreQuestionnaireStepData;
   } catch (err: unknown) {
+    // Em ambiente de desenvolvimento, enquanto o endpoint não estiver disponível no backend,
+    // utilizamos o armazenamento em memória mock (padrão idêntico ao de journeySummaryService.ts).
     if (env.isDev) {
       if (DEV_MOCK_STORE[key]) {
         return DEV_MOCK_STORE[key];
@@ -60,7 +63,7 @@ export async function getPreQuestionnaireStep(
       const fallback: PreQuestionnaireStepData = {
         slug,
         step,
-        journeyTitle: slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        journeyTitle: formatJourneyTitleFromSlug(slug),
         selectedOption: null,
       };
       DEV_MOCK_STORE[key] = fallback;
@@ -94,6 +97,8 @@ export async function savePreQuestionnaireStep(
       }
     }
   } catch (err: unknown) {
+    // Em ambiente de desenvolvimento, enquanto o endpoint não estiver disponível no backend,
+    // atualizamos o armazenamento em memória mock (padrão idêntico ao de journeySummaryService.ts).
     if (env.isDev) {
       if (!DEV_MOCK_STORE[key]) {
         DEV_MOCK_STORE[key] = {

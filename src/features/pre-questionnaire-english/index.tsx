@@ -72,7 +72,9 @@ export function EnglishStepView({ journeySlug }: EnglishStepViewProps) {
             journeyTitle={journeyTitle}
             stepTag={labels.stepTag}
             backLabel={labels.backLabel}
+            backAriaLabel={labels.backAriaLabel}
             continueLabel={labels.continueLabel}
+            savingLabel={labels.savingLabel}
             exitLabel={labels.exitLabel}
             exitAriaLabel={labels.exitAriaLabel}
           />

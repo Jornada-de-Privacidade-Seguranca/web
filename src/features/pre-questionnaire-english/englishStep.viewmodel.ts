@@ -8,6 +8,11 @@ import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
 } from "@services/preQuestionnaireService";
+import {
+  getJourneyRoutePrefix,
+  getJourneyStepUrl,
+  formatJourneyTitleFromSlug,
+} from "@shared/utils/journeyRoutes";
 import type {
   EnglishOptionId,
   EnglishOption,
@@ -28,7 +33,7 @@ export function useEnglishStepVM(
   const t = useTranslations("preQuestionnaire");
   const router = useRouter();
   const pathname = usePathname();
-  const routePrefix = pathname?.startsWith("/jornada") ? "jornada" : "journey";
+  const routePrefix = getJourneyRoutePrefix(pathname);
 
   const [selectedOption, setSelectedOption] = useState<EnglishOptionId | null>(
     null
@@ -60,8 +65,10 @@ export function useEnglishStepVM(
         selectedOption: option,
       }),
     onSuccess: () => {
-      // Navega para a próxima etapa: Tempo de Atuação no Perfil
-      router.push(`/${routePrefix}/${journeySlug}/tempo-atuacao-perfil`);
+      // Navega para a próxima etapa: Tempo de Atuação no Perfil (introduzida no PR #68)
+      router.push(
+        getJourneyStepUrl(routePrefix, journeySlug, "tempo-atuacao-perfil")
+      );
     },
   });
 
@@ -74,10 +81,10 @@ export function useEnglishStepVM(
     mutation.mutate(selectedOption);
   };
 
-  const handleBack = () => {
-    // Retorna para a etapa anterior: Tempo de Experiência Profissional
-    router.push(`/${routePrefix}/${journeySlug}/experiencia-profissional`);
-  };
+  // Nota: A etapa de inglês é a primeira etapa ativa do pré-questionário.
+  // Não há etapa anterior implementada no repositório; portanto handleBack não
+  // é repassado para a View a fim de não renderizar botão com rota 404.
+  const handleBack = undefined;
 
   const handleExit = () => {
     setIsExitModalOpen(true);
@@ -108,6 +115,7 @@ export function useEnglishStepVM(
       "advanced-fluent": t("english.options.advanced-fluent"),
     },
     backLabel: t("actions.back"),
+    backAriaLabel: t("header.backAriaLabel"),
     continueLabel: t("actions.continue"),
     savingLabel: t("actions.saving"),
     exitLabel: t("header.exitButton"),
@@ -130,8 +138,7 @@ export function useEnglishStepVM(
   }));
 
   const journeyTitle =
-    query.data?.journeyTitle ??
-    journeySlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
 
   const error = query.isError
     ? labels.errorMessage

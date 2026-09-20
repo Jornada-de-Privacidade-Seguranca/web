@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import type React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -29,11 +31,44 @@ export function SingleChoiceQuestionStep<T extends string = string>(
     journeyTitle,
     stepTag,
     backLabel = "Voltar",
+    backAriaLabel,
     continueLabel = "Continuar",
+    savingLabel,
     exitLabel = "Sair",
     exitAriaLabel = "Sair da etapa",
     canContinue,
   } = useSingleChoiceQuestionStepVM(props);
+
+  const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const handleOptionKeyDown = (
+    e: React.KeyboardEvent<HTMLDivElement>,
+    index: number
+  ) => {
+    if (options.length === 0) return;
+
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      onSelectOption(options[index].id);
+      return;
+    }
+
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+      e.preventDefault();
+      nextIndex = (index + 1) % options.length;
+    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      nextIndex = (index - 1 + options.length) % options.length;
+    }
+
+    if (nextIndex !== null) {
+      onSelectOption(options[nextIndex].id);
+      optionRefs.current[nextIndex]?.focus();
+    }
+  };
+
+  const hasSelectedOption = options.some((opt) => opt.id === selectedOption);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
@@ -97,22 +132,22 @@ export function SingleChoiceQuestionStep<T extends string = string>(
             aria-label={questionLabel}
             className="space-y-3"
           >
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isSelected = selectedOption === option.id;
+              const isFocusable =
+                isSelected || (!hasSelectedOption && index === 0);
 
               return (
                 <div
                   key={option.id}
+                  ref={(el) => {
+                    optionRefs.current[index] = el;
+                  }}
                   role="radio"
                   aria-checked={isSelected}
-                  tabIndex={0}
+                  tabIndex={isFocusable ? 0 : -1}
                   onClick={() => onSelectOption(option.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === " " || e.key === "Enter") {
-                      e.preventDefault();
-                      onSelectOption(option.id);
-                    }
-                  }}
+                  onKeyDown={(e) => handleOptionKeyDown(e, index)}
                   className={cn(
                     "group flex items-center gap-3.5 w-full rounded-2xl border p-4 text-left transition-all duration-150 cursor-pointer select-none",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
@@ -152,6 +187,7 @@ export function SingleChoiceQuestionStep<T extends string = string>(
                 variant="outline"
                 onClick={onBack}
                 disabled={isSubmitting}
+                aria-label={backAriaLabel}
                 className="gap-1.5"
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
@@ -167,7 +203,9 @@ export function SingleChoiceQuestionStep<T extends string = string>(
             disabled={!canContinue}
             className="gap-2 px-6"
           >
-            <span>{isSubmitting ? "Salvando..." : continueLabel}</span>
+            <span>
+              {isSubmitting ? (savingLabel ?? continueLabel) : continueLabel}
+            </span>
             <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
           </Button>
         </footer>

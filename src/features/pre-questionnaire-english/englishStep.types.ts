@@ -16,6 +16,7 @@ export interface EnglishStepLabels {
   questionLabel: string;
   options: Record<EnglishOptionId, string>;
   backLabel: string;
+  backAriaLabel: string;
   continueLabel: string;
   savingLabel: string;
   exitLabel: string;
@@ -44,7 +45,7 @@ export interface EnglishStepViewModelReturn {
   labels: EnglishStepLabels;
   handleSelectOption: (id: EnglishOptionId) => void;
   handleContinue: () => void;
-  handleBack: () => void;
+  handleBack?: () => void;
   handleExit: () => void;
   handleCancelExit: () => void;
   handleConfirmExit: () => void;

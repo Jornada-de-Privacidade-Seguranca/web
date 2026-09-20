@@ -31,6 +31,7 @@ vi.mock("next-intl", () => ({
         "english.options.intermediate-reading-writing": "Intermediário - Leitura e Escritura",
         "english.options.advanced-fluent": "Avançado - Fluente",
         "actions.back": "Voltar",
+        "header.backAriaLabel": "Voltar para a etapa anterior",
         "actions.continue": "Continuar",
         "actions.saving": "Salvando...",
         "header.exitButton": "Sair",
@@ -167,7 +168,7 @@ describe("useEnglishStepVM", () => {
     });
   });
 
-  it("handleBack deve navegar para a etapa anterior: experiencia-profissional", async () => {
+  it("handleBack deve ser undefined nesta primeira etapa ativa para evitar rota inexistente 404", async () => {
     vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
       slug: "data-governance",
       step: "english",
@@ -180,13 +181,8 @@ describe("useEnglishStepVM", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    act(() => {
-      result.current.handleBack();
-    });
-
-    expect(pushMock).toHaveBeenCalledWith(
-      "/journey/data-governance/experiencia-profissional"
-    );
+    expect(result.current.handleBack).toBeUndefined();
+    expect(result.current.labels.backAriaLabel).toBe("Voltar para a etapa anterior");
   });
 
   it("deve controlar a abertura, cancelamento e confirmação do modal de saída", async () => {

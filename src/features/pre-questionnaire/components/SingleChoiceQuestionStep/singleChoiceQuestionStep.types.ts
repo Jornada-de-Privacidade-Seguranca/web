@@ -35,8 +35,12 @@ export interface SingleChoiceQuestionStepProps<T extends string = string> {
   stepTag?: string;
   /** Rótulo do botão de voltar */
   backLabel?: string;
+  /** Aria-label do botão de voltar */
+  backAriaLabel?: string;
   /** Rótulo do botão de continuar */
   continueLabel?: string;
+  /** Rótulo do botão de continuar durante envio/salvamento */
+  savingLabel?: string;
   /** Rótulo do botão de sair */
   exitLabel?: string;
   /** Aria-label do botão de sair */
