@@ -281,7 +281,6 @@
   },
   "preQuestionnaire": {
     "header": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
       "exitButton": "Sair",
       "exitAriaLabel": "Sair do pré-questionário",
       "backAriaLabel": "Voltar para a etapa anterior"

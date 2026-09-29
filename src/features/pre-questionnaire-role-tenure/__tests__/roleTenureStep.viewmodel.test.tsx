@@ -266,4 +266,75 @@ describe("useRoleTenureStepVM", () => {
       );
     });
   });
+
+  it("handleRetry deve reenviar a resposta quando o salvamento falhar", async () => {
+    vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
+      slug: "data-governance",
+      step: "role-tenure",
+      selectedOption: null,
+    });
+    const getSpy = vi.mocked(preQuestionnaireService.getPreQuestionnaireStep);
+    const saveSpy = vi
+      .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce();
+
+    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleSelectOption("1-3-years");
+    });
+    act(() => {
+      result.current.handleContinue();
+    });
+
+    await waitFor(() =>
+      expect(result.current.error).toBe("Falha ao salvar resposta.")
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(2);
+      expect(result.current.error).toBeNull();
+      expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/formacao-academica");
+    });
+    expect(getSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("handleRetry deve refazer a busca da etapa quando o carregamento falhar", async () => {
+    const getSpy = vi
+      .spyOn(preQuestionnaireService, "getPreQuestionnaireStep")
+      .mockRejectedValueOnce(new Error("network"))
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce({
+        slug: "data-governance",
+        step: "role-tenure",
+        selectedOption: null,
+      });
+
+    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    // A query usa retry: 1, então o erro só aparece após a segunda falha
+    await waitFor(
+      () => expect(result.current.error).toBe("Falha ao carregar."),
+      { timeout: 3000 }
+    );
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => expect(result.current.error).toBeNull());
+    expect(getSpy).toHaveBeenCalledTimes(3);
+  });
 });

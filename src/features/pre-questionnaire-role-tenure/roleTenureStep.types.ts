@@ -59,3 +59,7 @@ export interface RoleTenureStepViewModelReturn {
   handleConfirmExit: () => void;
   handleRetry: () => void;
 }
+
+export interface RoleTenureStepViewProps {
+  journeySlug: string;
+}

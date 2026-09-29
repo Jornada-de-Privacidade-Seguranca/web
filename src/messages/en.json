@@ -281,7 +281,6 @@
   },
   "preQuestionnaire": {
     "header": {
-      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
       "exitButton": "Exit",
       "exitAriaLabel": "Exit pre-questionnaire",
       "backAriaLabel": "Go back to previous step"

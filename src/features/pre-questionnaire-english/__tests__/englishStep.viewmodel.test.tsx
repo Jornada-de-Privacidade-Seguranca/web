@@ -22,7 +22,6 @@ vi.mock("next-intl", () => ({
   useTranslations: () => {
     const t = (key: string) => {
       const translations: Record<string, string> = {
-        "header.stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
         "english.stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
         "english.title": "Nível de proficiência em inglês",
         "english.description": "Isso nos ajuda a calibrar a complexidade.",
@@ -219,5 +218,76 @@ describe("useEnglishStepVM", () => {
     });
     expect(result.current.isExitModalOpen).toBe(false);
     expect(pushMock).toHaveBeenCalledWith("/jornadas");
+  });
+
+  it("handleRetry deve reenviar a resposta quando o salvamento falhar", async () => {
+    vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
+      slug: "data-governance",
+      step: "english",
+      selectedOption: null,
+    });
+    const getSpy = vi.mocked(preQuestionnaireService.getPreQuestionnaireStep);
+    const saveSpy = vi
+      .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce();
+
+    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleSelectOption("basic-reading");
+    });
+    act(() => {
+      result.current.handleContinue();
+    });
+
+    await waitFor(() =>
+      expect(result.current.error).toBe("Falha ao salvar resposta.")
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => {
+      expect(saveSpy).toHaveBeenCalledTimes(2);
+      expect(result.current.error).toBeNull();
+      expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/tempo-atuacao-perfil");
+    });
+    expect(getSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("handleRetry deve refazer a busca da etapa quando o carregamento falhar", async () => {
+    const getSpy = vi
+      .spyOn(preQuestionnaireService, "getPreQuestionnaireStep")
+      .mockRejectedValueOnce(new Error("network"))
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce({
+        slug: "data-governance",
+        step: "english",
+        selectedOption: null,
+      });
+
+    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    // A query usa retry: 1, então o erro só aparece após a segunda falha
+    await waitFor(
+      () => expect(result.current.error).toBe("Falha ao carregar."),
+      { timeout: 3000 }
+    );
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => expect(result.current.error).toBeNull());
+    expect(getSpy).toHaveBeenCalledTimes(3);
   });
 });

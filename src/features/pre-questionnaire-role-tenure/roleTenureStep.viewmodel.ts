@@ -11,6 +11,8 @@ import {
 import {
   getJourneyRoutePrefix,
   getJourneyStepUrl,
+  getNextPreQuestionnaireStep,
+  getPreviousPreQuestionnaireStep,
   formatJourneyTitleFromSlug,
 } from "@shared/utils/journeyRoutes";
 import {
@@ -28,6 +30,9 @@ const OPTION_IDS: RoleTenureOptionId[] = [
   "7-10-years",
   "10-plus-years",
 ];
+
+const NEXT_STEP = getNextPreQuestionnaireStep("tempo-atuacao-perfil");
+const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("tempo-atuacao-perfil");
 
 export function useRoleTenureStepVM(
   journeySlug: string
@@ -68,9 +73,9 @@ export function useRoleTenureStepVM(
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Formação Acadêmica
-      router.push(
-        getJourneyStepUrl(routePrefix, journeySlug, "formacao-academica")
-      );
+      if (NEXT_STEP) {
+        router.push(getJourneyStepUrl(routePrefix, journeySlug, NEXT_STEP));
+      }
     },
   });
 
@@ -85,7 +90,9 @@ export function useRoleTenureStepVM(
 
   const handleBack = () => {
     // Retorna para a etapa anterior: Nível de Proficiência em Inglês
-    router.push(getJourneyStepUrl(routePrefix, journeySlug, "english"));
+    if (PREVIOUS_STEP) {
+      router.push(getJourneyStepUrl(routePrefix, journeySlug, PREVIOUS_STEP));
+    }
   };
 
   const handleExit = () => {
@@ -101,8 +108,15 @@ export function useRoleTenureStepVM(
     router.push("/jornadas");
   };
 
+  // Reexecuta a operação que falhou: a busca da etapa ou o salvamento da resposta
   const handleRetry = () => {
-    query.refetch();
+    if (query.isError) {
+      query.refetch();
+      return;
+    }
+    if (mutation.isError && selectedOption) {
+      mutation.mutate(selectedOption);
+    }
   };
 
   const labels: RoleTenureStepLabels = {
