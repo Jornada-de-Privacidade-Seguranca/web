@@ -222,5 +222,61 @@
     "retryButton": "Tentar novamente",
     "loadingAriaLabel": "Carregando resultados de avaliações",
     "scoreAriaLabel": "Nota: {score}"
+  },
+  "journeySummary": {
+    "loadingTitle": "Carregando jornada...",
+    "subtitleStatic": "Confira os detalhes antes de começar.",
+    "backToJourneys": "Voltar para jornadas",
+    "backToJourneysAriaLabel": "Voltar para a listagem de jornadas",
+    "badgeLabel": "Resumo da jornada",
+    "questionsLabel": "Perguntas",
+    "durationLabel": "Duração",
+    "areasLabel": "Áreas",
+    "competenciesLabel": "Competências",
+    "questionsAriaLabel": "{count} perguntas",
+    "durationAriaLabel": "{minutes} minutos de duração",
+    "areasAriaLabel": "{count} áreas",
+    "competenciesAriaLabel": "{count} competências",
+    "estimatedMinutesText": "{minutes} min",
+    "howItWorksTitle": "Como funciona",
+    "howItWorksSubtitle": "A jornada é dividida em etapas curtas. Você pode avançar no seu ritmo.",
+    "steps": [
+      {
+        "title": "Tempo de Experiência Profissional",
+        "description": "Tempo de experiência profissional na área de privacidade e/ou segurança da informação."
+      },
+      {
+        "title": "Nível de Proficiência em Inglês",
+        "description": "Nível de fluência e conhecimento da língua inglesa."
+      },
+      {
+        "title": "Tempo de Atuação no Perfil",
+        "description": "Tempo de atuação no perfil escolhido para a jornada."
+      },
+      {
+        "title": "Formação Acadêmica",
+        "description": "Formação em cursos de Graduação/Licenciatura/Tecnólogo e pós graduações."
+      },
+      {
+        "title": "Certificações Profissionais",
+        "description": "Lista de certificações profissionais das áreas de privacidade e/ou segurança da informação."
+      },
+      {
+        "title": "Competências",
+        "description": "Conhecimentos técnicos de privacidade e/ou segurança da informação relacionados ao perfil escolhido para a jornada."
+      }
+    ],
+    "footerNote": "Suas respostas ficam salvas conforme você avança.",
+    "dismissLabel": "Agora não",
+    "dismissAriaLabel": "Voltar para a página anterior",
+    "actionStart": "Iniciar jornada",
+    "actionContinue": "Continuar jornada",
+    "actionRetake": "Refazer jornada",
+    "notFoundTitle": "Jornada não encontrada",
+    "notFoundMessage": "Não encontramos a jornada solicitada. Ela pode ter sido removida ou o link pode estar incorreto.",
+    "serverErrorTitle": "Não foi possível carregar a jornada",
+    "serverErrorMessage": "Não foi possível completar a busca pelos dados da jornada. Tente novamente mais tarde.",
+    "backToJourneysLink": "Voltar para a listagem de jornadas",
+    "loadingAriaLabel": "Carregando resumo da jornada"
   }
 }
