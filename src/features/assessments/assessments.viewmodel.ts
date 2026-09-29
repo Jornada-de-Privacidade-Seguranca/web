@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useAuth } from "@hooks/useAuth";
 import {
   getPendingAssessments,
   getCatalogAssessments,
@@ -32,6 +33,8 @@ function formatErrorMessage(err: unknown, defaultMsg: string): string {
 
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
 
   // Pagination & Search States
   const [pendingPage, setPendingPage] = useState<number>(1);
@@ -63,8 +66,10 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Pending Journeys
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", pendingPage],
-    queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }),
+    queryKey: ["assessments", "pending", userId, pendingPage],
+    queryFn: () =>
+      getPendingAssessments({ userId: userId as number, page: pendingPage, perPage: 6 }),
+    enabled: Boolean(userId),
     retry: false,
     placeholderData: keepPreviousData,
   });
@@ -106,7 +111,9 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   const pendingJourneys = pendingData?.items ?? [];
   const pendingTotalPages = pendingData?.totalPages ?? 1;
-  const isPendingLoading = pendingQuery.isLoading;
+  // Enquanto a sessão carrega a query fica desabilitada (isLoading = false);
+  // mantém o skeleton em vez de ocultar a seção e reexibi-la em seguida.
+  const isPendingLoading = pendingQuery.isLoading || (!userId && isAuthLoading);
   const pendingError =
     pendingQuery.isError && !pendingLastSuccess
       ? formatErrorMessage(pendingQuery.error, t("errorMessage"))

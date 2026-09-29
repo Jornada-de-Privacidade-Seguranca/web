@@ -17,8 +17,15 @@ export function useJourneyCardVM(props: JourneyCardProps) {
 
   const buttonVariant: "outline" | "default" = isCompleted ? "outline" : "default";
 
-  const questionsText = labels.questionsCount(journey.totalQuestions);
-  const timeText = labels.estimatedMinutes(journey.estimatedMinutes);
+  const questionsText =
+    journey.totalQuestions !== undefined
+      ? labels.questionsCount(journey.totalQuestions)
+      : null;
+  const timeText =
+    journey.estimatedMinutes !== undefined
+      ? labels.estimatedMinutes(journey.estimatedMinutes)
+      : null;
+  const hasMeta = questionsText !== null || timeText !== null;
 
   const badgeText = isCompleted
     ? labels.statusCompleted
@@ -39,6 +46,7 @@ export function useJourneyCardVM(props: JourneyCardProps) {
     badgeText,
     questionsText,
     timeText,
+    hasMeta,
     ctaAriaLabel,
   };
 }

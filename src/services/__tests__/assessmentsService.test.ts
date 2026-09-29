@@ -37,38 +37,97 @@ describe("assessmentsService", () => {
     vi.restoreAllMocks();
   });
 
-  it("deve buscar jornadas pendentes desembrulhando a propriedade 'data'", async () => {
-    const mockData = {
-      items: [
+  it("deve buscar as jornadas em andamento do usuário e mapear para PaginatedResponse<Journey>", async () => {
+    const apiResponse = {
+      success: true,
+      message: "Jornadas retornadas com sucesso.",
+      data: [
         {
-          id: "j1",
-          title: "Segurança Digital Básica",
-          description: "Aprenda conceitos fundamentais",
-          totalQuestions: 10,
-          estimatedMinutes: 15,
-          status: "not_started" as const,
+          id: 10,
+          user_id: 2,
+          user_name: "Maria Silva",
+          journey_profile: {
+            id: 1,
+            name: "Encarregado pelo Tratamento de Dados Pessoais",
+            description: "Privacidade e Seguranca",
+            knowledge_domain: { id: 1, name: "Privacidade" },
+          },
+          started_at: "2026-07-23 16:30:00",
+          finished_at: null,
+          status: "ongoing",
+          is_completed: false,
+          summary: {
+            acquired_knowledges_count: 8,
+            professional_certifications_count: 2,
+          },
         },
       ],
-      total: 1,
-      page: 1,
-      limit: 6,
-      totalPages: 1,
+      meta: {
+        pagination: {
+          current_page: 2,
+          per_page: 6,
+          total: 7,
+          last_page: 2,
+          has_next_page: false,
+        },
+      },
     };
 
     const requestSpy = vi
       .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
+      .mockResolvedValueOnce(mockResponse(apiResponse));
 
-    const result = await getPendingAssessments({ page: 1, limit: 6 });
+    const result = await getPendingAssessments({ userId: 2, page: 2, perPage: 6 });
 
     expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/assessments/pending",
-        params: { page: 1, limit: 6 },
+        url: "/users/2/journeys",
+        params: { status: "ongoing", page: 2, per_page: 6 },
       })
     );
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0].title).toBe("Segurança Digital Básica");
+    expect(result).toEqual({
+      items: [
+        {
+          id: "10",
+          title: "Encarregado pelo Tratamento de Dados Pessoais",
+          description: "Privacidade e Seguranca",
+          status: "in_progress",
+        },
+      ],
+      total: 7,
+      page: 2,
+      limit: 6,
+      totalPages: 2,
+    });
+  });
+
+  it("deve usar page=1 e per_page=6 por padrão e tolerar lista vazia", async () => {
+    const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [],
+        meta: {
+          pagination: {
+            current_page: 1,
+            per_page: 6,
+            total: 0,
+            last_page: 1,
+            has_next_page: false,
+          },
+        },
+      })
+    );
+
+    const result = await getPendingAssessments({ userId: 5 });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "/users/5/journeys",
+        params: { status: "ongoing", page: 1, per_page: 6 },
+      })
+    );
+    expect(result.items).toEqual([]);
+    expect(result.total).toBe(0);
   });
 
   it("deve buscar o catálogo de jornadas aplicando o filtro de busca", async () => {
@@ -113,7 +172,7 @@ describe("assessmentsService", () => {
       mockAxiosError(500, { message: "Erro interno no servidor" })
     );
 
-    await expect(getPendingAssessments({})).rejects.toThrow(
+    await expect(getPendingAssessments({ userId: 1 })).rejects.toThrow(
       "Erro interno no servidor"
     );
   });

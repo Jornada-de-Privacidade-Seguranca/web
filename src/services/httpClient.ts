@@ -11,6 +11,11 @@ export interface ApiResponse<T> {
   meta?: Record<string, unknown>;
 }
 
+export interface ApiResponseWithMeta<T, M> {
+  data: T;
+  meta: M | undefined;
+}
+
 export interface ApiRequestConfig extends AxiosRequestConfig {
   /**
    * Requisições mutáveis de sessão (login, logout, etc.) precisam do token
@@ -81,16 +86,16 @@ export function clearCsrfToken(): void {
 }
 
 /**
- * Cliente HTTP autenticado por sessão (cookie httpOnly). Requisições
- * mutáveis com `withCsrf: true` recebem o header X-CSRF-TOKEN; se o backend
- * rejeitar por token ausente/expirado (403/419), busca um token novo e
- * refaz a requisição original uma única vez.
+ * Envia a requisição com a sessão (cookie httpOnly). Requisições mutáveis
+ * com `withCsrf: true` recebem o header X-CSRF-TOKEN; se o backend rejeitar
+ * por token ausente/expirado (403/419), busca um token novo e refaz a
+ * requisição original uma única vez. Retorna o corpo bruto da resposta.
  */
-export async function apiRequest<T>(
+async function sendRequest(
   path: string,
-  { withCsrf = false, headers, ...config }: ApiRequestConfig = {},
-  defaultErrorMessage = "Erro ao comunicar com o servidor."
-): Promise<T> {
+  { withCsrf = false, headers, ...config }: ApiRequestConfig,
+  defaultErrorMessage: string
+): Promise<unknown> {
   const mutating = withCsrf && isMutatingMethod(config.method);
   const requestHeaders: Record<string, string> = {
     ...(headers as Record<string, string>),
@@ -101,7 +106,7 @@ export async function apiRequest<T>(
   }
 
   const send = () =>
-    axiosInstance.request<ApiResponse<T> | T>({
+    axiosInstance.request<unknown>({
       ...config,
       url: path,
       headers: requestHeaders,
@@ -128,5 +133,33 @@ export async function apiRequest<T>(
     }
   }
 
-  return unwrap<T>(response.data, defaultErrorMessage);
+  return response.data;
+}
+
+/** Cliente HTTP autenticado por sessão; devolve apenas o `data` do envelope. */
+export async function apiRequest<T>(
+  path: string,
+  config: ApiRequestConfig = {},
+  defaultErrorMessage = "Erro ao comunicar com o servidor."
+): Promise<T> {
+  const payload = await sendRequest(path, config, defaultErrorMessage);
+  return unwrap<T>(payload, defaultErrorMessage);
+}
+
+/**
+ * Igual a `apiRequest`, mas preserva o `meta` do envelope — necessário para
+ * listagens paginadas (`meta.pagination`).
+ */
+export async function apiRequestWithMeta<T, M = Record<string, unknown>>(
+  path: string,
+  config: ApiRequestConfig = {},
+  defaultErrorMessage = "Erro ao comunicar com o servidor."
+): Promise<ApiResponseWithMeta<T, M>> {
+  const payload = await sendRequest(path, config, defaultErrorMessage);
+  const data = unwrap<T>(payload, defaultErrorMessage);
+  const meta =
+    payload && typeof payload === "object" && "meta" in payload
+      ? (payload as { meta?: M }).meta
+      : undefined;
+  return { data, meta };
 }

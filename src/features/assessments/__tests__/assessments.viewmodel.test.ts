@@ -4,8 +4,16 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as assessmentsService from "@services/assessmentsService";
-import { useAuthStore } from "@features/auth/auth.store";
 import { useAssessmentsVM } from "../assessments.viewmodel";
+
+const mockAuth = vi.hoisted(() => ({
+  user: { id: 1 } as { id: number } | null,
+  isLoading: false,
+}));
+
+vi.mock("@hooks/useAuth", () => ({
+  useAuth: () => mockAuth,
+}));
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
@@ -79,23 +87,8 @@ describe("useAssessmentsVM", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    useAuthStore.setState({
-      user: {
-        id: 1,
-        name: "Maria Oliveira",
-        email: "maria@empresa.com",
-        role: "common_user",
-        profile: {
-          role: "common_user",
-          label: "Colaborador",
-          user_type_id: 1,
-          profile_type_id: 1,
-          profile_type_name: "Colaborador",
-        },
-        active_status: 1,
-      },
-      isLoading: false,
-    });
+    mockAuth.user = { id: 1 };
+    mockAuth.isLoading = false;
   });
 
   it("deve carregar inicialmente as listas de jornadas pendentes e catálogo paginados", async () => {
@@ -225,7 +218,7 @@ describe("useAssessmentsVM", () => {
     });
 
     await waitFor(() => {
-      expect(pendingSpy).toHaveBeenCalledWith({ page: 2, limit: 6 });
+      expect(pendingSpy).toHaveBeenCalledWith({ userId: 1, page: 2, perPage: 6 });
     });
 
     act(() => {
@@ -268,5 +261,42 @@ describe("useAssessmentsVM", () => {
     });
 
     expect(result.current.pendingPageError).toBeNull();
+  });
+
+  it("deve buscar as jornadas pendentes do usuário autenticado", async () => {
+    const pendingSpy = vi
+      .spyOn(assessmentsService, "getPendingAssessments")
+      .mockResolvedValue(mockPendingJourneys);
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
+    );
+
+    renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(pendingSpy).toHaveBeenCalledWith({ userId: 1, page: 1, perPage: 6 });
+    });
+  });
+
+  it("não deve buscar jornadas pendentes enquanto não houver usuário na sessão", async () => {
+    mockAuth.user = null;
+    mockAuth.isLoading = true;
+    const pendingSpy = vi
+      .spyOn(assessmentsService, "getPendingAssessments")
+      .mockResolvedValue(mockPendingJourneys);
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
+      mockCatalogJourneys
+    );
+
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isCatalogLoading).toBe(false);
+    });
+
+    expect(pendingSpy).not.toHaveBeenCalled();
+    // Mantém o skeleton enquanto a sessão carrega, em vez de ocultar a seção.
+    expect(result.current.isPendingLoading).toBe(true);
+    expect(result.current.isPendingSectionVisible).toBe(true);
   });
 });
