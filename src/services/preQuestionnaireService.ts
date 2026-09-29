@@ -35,6 +35,18 @@ const DEV_MOCK_STORE: Record<string, PreQuestionnaireStepData> = {
     journeyTitle: "Fundamentos de LGPD",
     selectedOption: null,
   },
+  "data-governance:role-tenure": {
+    slug: "data-governance",
+    step: "role-tenure",
+    journeyTitle: "Governança de Dados",
+    selectedOption: null,
+  },
+  "lgpd-basics:role-tenure": {
+    slug: "lgpd-basics",
+    step: "role-tenure",
+    journeyTitle: "Fundamentos de LGPD",
+    selectedOption: null,
+  },
 };
 
 export async function getPreQuestionnaireStep(

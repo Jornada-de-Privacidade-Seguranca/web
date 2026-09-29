@@ -281,12 +281,12 @@
   },
   "preQuestionnaire": {
     "header": {
-      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
       "exitButton": "Exit",
       "exitAriaLabel": "Exit pre-questionnaire",
       "backAriaLabel": "Go back to previous step"
     },
     "english": {
+      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
       "title": "English proficiency level",
       "description": "This helps us calibrate the complexity of the technical questions presented throughout the journey.",
       "questionLabel": "English proficiency level",
@@ -295,6 +295,19 @@
         "basic-reading": "Basic - Reading",
         "intermediate-reading-writing": "Intermediate - Reading and Writing",
         "advanced-fluent": "Advanced - Fluent"
+      }
+    },
+    "roleTenure": {
+      "stepTag": "PRE-QUESTIONNAIRE · TIME WORKING IN THIS ROLE",
+      "title": "Time working in this role",
+      "description": "This helps us understand how long you have been working in this role and calibrate the depth of the questions.",
+      "questionLabel": "Time working in this role",
+      "options": {
+        "0-years": "None",
+        "1-3-years": "Between 1 and 3 years",
+        "4-6-years": "Between 4 and 6 years",
+        "7-10-years": "Between 7 and 10 years",
+        "10-plus-years": "More than 10 years"
       }
     },
     "actions": {

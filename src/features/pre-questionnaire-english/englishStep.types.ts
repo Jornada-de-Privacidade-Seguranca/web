@@ -51,3 +51,7 @@ export interface EnglishStepViewModelReturn {
   handleConfirmExit: () => void;
   handleRetry: () => void;
 }
+
+export interface EnglishStepViewProps {
+  journeySlug: string;
+}

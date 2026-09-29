@@ -281,12 +281,12 @@
   },
   "preQuestionnaire": {
     "header": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
       "exitButton": "Sair",
       "exitAriaLabel": "Sair do pré-questionário",
       "backAriaLabel": "Voltar para a etapa anterior"
     },
     "english": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
       "title": "Nível de proficiência em inglês",
       "description": "Isso nos ajuda a calibrar a complexidade das perguntas técnicas apresentadas ao longo da jornada.",
       "questionLabel": "Nível de proficiência em inglês",
@@ -295,6 +295,19 @@
         "basic-reading": "Básico - Leitura",
         "intermediate-reading-writing": "Intermediário - Leitura e Escritura",
         "advanced-fluent": "Avançado - Fluente"
+      }
+    },
+    "roleTenure": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · TEMPO DE ATUAÇÃO NO PERFIL",
+      "title": "Tempo de atuação no perfil",
+      "description": "Isso nos ajuda a entender quanto tempo você atua nesse perfil e calibrar o nível de profundidade das perguntas.",
+      "questionLabel": "Tempo de atuação no perfil",
+      "options": {
+        "0-years": "Nenhum",
+        "1-3-years": "Entre 1 e 3 anos",
+        "4-6-years": "Entre 4 e 6 anos",
+        "7-10-years": "Entre 7 e 10 anos",
+        "10-plus-years": "Mais de 10 anos"
       }
     },
     "actions": {

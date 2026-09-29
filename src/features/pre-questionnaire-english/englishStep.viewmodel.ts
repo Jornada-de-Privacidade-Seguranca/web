@@ -11,6 +11,7 @@ import {
 import {
   getJourneyRoutePrefix,
   getJourneyStepUrl,
+  getNextPreQuestionnaireStep,
   formatJourneyTitleFromSlug,
 } from "@shared/utils/journeyRoutes";
 import type {
@@ -26,6 +27,8 @@ const OPTION_IDS: EnglishOptionId[] = [
   "intermediate-reading-writing",
   "advanced-fluent",
 ];
+
+const NEXT_STEP = getNextPreQuestionnaireStep("english");
 
 export function useEnglishStepVM(
   journeySlug: string
@@ -66,9 +69,9 @@ export function useEnglishStepVM(
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Tempo de Atuação no Perfil (introduzida no PR #68)
-      router.push(
-        getJourneyStepUrl(routePrefix, journeySlug, "tempo-atuacao-perfil")
-      );
+      if (NEXT_STEP) {
+        router.push(getJourneyStepUrl(routePrefix, journeySlug, NEXT_STEP));
+      }
     },
   });
 
@@ -99,12 +102,19 @@ export function useEnglishStepVM(
     router.push("/jornadas");
   };
 
+  // Reexecuta a operação que falhou: a busca da etapa ou o salvamento da resposta
   const handleRetry = () => {
-    query.refetch();
+    if (query.isError) {
+      query.refetch();
+      return;
+    }
+    if (mutation.isError && selectedOption) {
+      mutation.mutate(selectedOption);
+    }
   };
 
   const labels: EnglishStepLabels = {
-    stepTag: t("header.stepTag"),
+    stepTag: t("english.stepTag"),
     title: t("english.title"),
     description: t("english.description"),
     questionLabel: t("english.questionLabel"),

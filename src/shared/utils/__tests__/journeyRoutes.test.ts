@@ -4,6 +4,9 @@ import {
   getJourneyStepUrl,
   getJourneySummaryUrl,
   formatJourneyTitleFromSlug,
+  getNextPreQuestionnaireStep,
+  getPreviousPreQuestionnaireStep,
+  PRE_QUESTIONNAIRE_STEPS,
 } from "../journeyRoutes";
 
 describe("journeyRoutes utils", () => {
@@ -55,6 +58,46 @@ describe("journeyRoutes utils", () => {
       expect(formatJourneyTitleFromSlug("seguranca-da-informacao")).toBe(
         "Seguranca Da Informacao"
       );
+    });
+  });
+
+  describe("PRE_QUESTIONNAIRE_STEPS", () => {
+    it("deve conter a sequência de etapas correta da jornada", () => {
+      expect(PRE_QUESTIONNAIRE_STEPS).toEqual([
+        "experiencia-profissional",
+        "english",
+        "tempo-atuacao-perfil",
+        "formacao-academica",
+        "certificacoes-profissionais",
+        "competencias",
+      ]);
+    });
+  });
+
+  describe("getNextPreQuestionnaireStep", () => {
+    it("deve retornar a etapa seguinte da sequência", () => {
+      expect(getNextPreQuestionnaireStep("english")).toBe("tempo-atuacao-perfil");
+      expect(getNextPreQuestionnaireStep("tempo-atuacao-perfil")).toBe(
+        "formacao-academica"
+      );
+    });
+
+    it("deve retornar null para a última etapa", () => {
+      expect(getNextPreQuestionnaireStep("competencias")).toBeNull();
+    });
+  });
+
+  describe("getPreviousPreQuestionnaireStep", () => {
+    it("deve retornar a etapa anterior da sequência", () => {
+      expect(getPreviousPreQuestionnaireStep("tempo-atuacao-perfil")).toBe(
+        "english"
+      );
+    });
+
+    it("deve retornar null para a primeira etapa", () => {
+      expect(
+        getPreviousPreQuestionnaireStep("experiencia-profissional")
+      ).toBeNull();
     });
   });
 });
