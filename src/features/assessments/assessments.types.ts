@@ -26,7 +26,7 @@ export type UserJourneyApiStatus = "ongoing" | "completed";
 
 export interface UserJourneyProfileSummaryApi {
   id: number | null;
-  name: string | null;
+  name?: string | null;
   description: string | null;
   knowledge_domain: {
     id: number | null;
@@ -91,6 +91,7 @@ export interface AssessmentsLabels {
 
 export interface AssessmentsViewModelReturn {
   pendingJourneys: Journey[];
+  pendingTotal: number;
   pendingPage: number;
   pendingTotalPages: number;
   isPendingLoading: boolean;

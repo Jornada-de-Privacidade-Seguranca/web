@@ -176,4 +176,51 @@ describe("assessmentsService", () => {
       "Erro interno no servidor"
     );
   });
+
+  it("deve usar description como fallback de title quando name for ausente", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 20,
+            user_id: 2,
+            journey_profile: {
+              id: 1,
+              description: "Especialista em Proteção de Dados",
+              knowledge_domain: { id: 1, name: "Privacidade" },
+            },
+            status: "ongoing",
+            is_completed: false,
+          },
+        ],
+        meta: {
+          pagination: {
+            current_page: 1,
+            per_page: 6,
+            total: 1,
+            last_page: 1,
+            has_next_page: false,
+          },
+        },
+      })
+    );
+
+    const result = await getPendingAssessments({ userId: 2 });
+    expect(result.items[0].title).toBe("Especialista em Proteção de Dados");
+  });
+
+  it("deve retornar lista vazia sem chamar requisição HTTP quando userId não for informado", async () => {
+    const requestSpy = vi.spyOn(axiosInstance, "request");
+    const result = await getPendingAssessments({ userId: 0 });
+
+    expect(requestSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 6,
+      totalPages: 1,
+    });
+  });
 });

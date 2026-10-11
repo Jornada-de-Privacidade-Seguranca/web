@@ -18,11 +18,11 @@ export function useJourneyCardVM(props: JourneyCardProps) {
   const buttonVariant: "outline" | "default" = isCompleted ? "outline" : "default";
 
   const questionsText =
-    journey.totalQuestions !== undefined
+    journey.totalQuestions != null
       ? labels.questionsCount(journey.totalQuestions)
       : null;
   const timeText =
-    journey.estimatedMinutes !== undefined
+    journey.estimatedMinutes != null
       ? labels.estimatedMinutes(journey.estimatedMinutes)
       : null;
   const hasMeta = questionsText !== null || timeText !== null;
@@ -33,7 +33,9 @@ export function useJourneyCardVM(props: JourneyCardProps) {
     ? labels.statusInProgress
     : labels.statusNotStarted;
 
-  const ctaAriaLabel = `${buttonText} — ${journey.title}`;
+  const ctaAriaLabel = journey.title
+    ? `${buttonText} — ${journey.title}`
+    : buttonText;
 
   return {
     journey,

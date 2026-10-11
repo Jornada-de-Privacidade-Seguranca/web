@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { apiRequest, axiosInstance, clearCsrfToken } from "../httpClient";
+import {
+  apiRequest,
+  apiRequestWithMeta,
+  axiosInstance,
+  clearCsrfToken,
+} from "../httpClient";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
   return {
@@ -161,5 +166,41 @@ describe("httpClient", () => {
     await expect(
       apiRequest("/auth/register", { method: "post", data: {} })
     ).rejects.toThrow("Já existe uma conta cadastrada com este e-mail.");
+  });
+
+  it("should return data and meta when using apiRequestWithMeta", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [{ id: 1 }],
+        meta: { pagination: { total: 1 } },
+      })
+    );
+
+    const result = await apiRequestWithMeta<
+      Array<{ id: number }>,
+      { pagination: { total: number } }
+    >("/test-endpoint");
+
+    expect(result).toEqual({
+      data: [{ id: 1 }],
+      meta: { pagination: { total: 1 } },
+    });
+  });
+
+  it("should return meta as undefined when response has no meta", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: { message: "ok" },
+      })
+    );
+
+    const result = await apiRequestWithMeta<{ message: string }>("/test-endpoint");
+
+    expect(result).toEqual({
+      data: { message: "ok" },
+      meta: undefined,
+    });
   });
 });

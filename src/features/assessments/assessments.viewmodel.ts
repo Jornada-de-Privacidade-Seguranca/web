@@ -110,6 +110,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const catalogData = catalogQuery.data ?? catalogLastSuccess;
 
   const pendingJourneys = pendingData?.items ?? [];
+  const pendingTotal = pendingData?.total ?? 0;
   const pendingTotalPages = pendingData?.totalPages ?? 1;
   // Enquanto a sessão carrega a query fica desabilitada (isLoading = false);
   // mantém o skeleton em vez de ocultar a seção e reexibi-la em seguida.
@@ -224,6 +225,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   return {
     pendingJourneys,
+    pendingTotal,
     pendingPage,
     pendingTotalPages,
     isPendingLoading,

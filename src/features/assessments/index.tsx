@@ -18,6 +18,7 @@ import { EmptyState } from "./components/EmptyState";
 export function AssessmentsView() {
   const {
     pendingJourneys,
+    pendingTotal,
     pendingPage,
     pendingTotalPages,
     isPendingLoading,
@@ -53,7 +54,7 @@ export function AssessmentsView() {
               <Accordion
                 title={labels.pendingSectionTitle}
                 subtitle={labels.pendingSectionSubtitle}
-                count={pendingJourneys.length}
+                count={pendingTotal}
                 defaultOpen={true}
               >
                 {isPendingLoading ? (

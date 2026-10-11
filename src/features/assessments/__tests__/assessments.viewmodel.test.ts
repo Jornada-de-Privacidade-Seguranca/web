@@ -107,6 +107,7 @@ describe("useAssessmentsVM", () => {
     });
 
     expect(result.current.pendingJourneys).toHaveLength(1);
+    expect(result.current.pendingTotal).toBe(1);
     expect(result.current.pendingJourneys[0].title).toBe("Segurança na Nuvem");
     expect(result.current.catalogJourneys).toHaveLength(2);
     expect(result.current.isPendingSectionVisible).toBe(true);

@@ -27,12 +27,17 @@ const USER_JOURNEY_STATUS_MAP: Record<UserJourneyApiStatus, JourneyStatus> = {
 
 function mapUserJourneyToJourney(item: UserJourneyListItemApi): Journey {
   // O endpoint não expõe totalQuestions, estimatedMinutes nem score; ficam
-  // ausentes e o card deixa de exibi-los. `name`/`description` vêm sem
-  // variante por idioma (diferente de GET /dashboard).
+  // ausentes e o card deixa de exibi-los. Quando `name` não vier do backend,
+  // fazemos fallback para `description` para garantir que o título do card
+  // não fique vazio.
+  const profile = item.journey_profile;
+  const title = profile?.name || profile?.description || "";
+  const description = profile?.name ? (profile?.description ?? "") : "";
+
   return {
     id: String(item.id),
-    title: item.journey_profile.name ?? "",
-    description: item.journey_profile.description ?? "",
+    title,
+    description,
     status: USER_JOURNEY_STATUS_MAP[item.status] ?? "in_progress",
   };
 }
@@ -42,6 +47,16 @@ export async function getPendingAssessments({
   page = 1,
   perPage = 6,
 }: GetPendingAssessmentsParams): Promise<PaginatedResponse<Journey>> {
+  if (!userId) {
+    return {
+      items: [],
+      total: 0,
+      page,
+      limit: perPage,
+      totalPages: 1,
+    };
+  }
+
   const { data, meta } = await apiRequestWithMeta<
     UserJourneyListItemApi[],
     UserJourneyListMetaApi
