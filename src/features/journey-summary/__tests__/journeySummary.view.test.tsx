@@ -85,11 +85,14 @@ describe("JourneySummaryView Component", () => {
     backToJourneysText: "Voltar para jornadas",
     backToJourneysAriaLabel: "Voltar para a listagem de jornadas",
     badgeLabel: "Resumo da jornada",
-    questionsLabel: "Perguntas",
+    stepsCountLabel: "Etapas",
     durationLabel: "Duração",
     areasLabel: "Áreas",
     competenciesLabel: "Competências",
-    questionsAriaLabel: (count) => `${count} perguntas`,
+    stepsCountAriaLabel: (count) => `${count} etapas`,
+    stepsProgressText: (completed, total) => `${completed} de ${total}`,
+    stepsProgressAriaLabel: (completed, total) =>
+      `${completed} de ${total} etapas concluídas`,
     durationAriaLabel: (minutes) => `${minutes} minutos de duração`,
     areasAriaLabel: (count) => `${count} áreas`,
     competenciesAriaLabel: (count) => `${count} competências`,
@@ -118,20 +121,20 @@ describe("JourneySummaryView Component", () => {
     return {
       journey: {
         id: "1",
-        slug: "data-governance",
-        title: "Governança de Dados",
-        questionsCount: 12,
-        estimatedMinutes: 18,
+            title: "Governança de Dados",
+        stepsCount: 6,
+        completedStepsCount: 0,
+        estimatedMinutes: 23,
         areasCount: 13,
         competenciesCount: 39,
         status: "not_started",
-        progress: { firstStepSlug: "pre-questionario", lastAnsweredStepSlug: null },
+        progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
       },
       isLoading: false,
       error: null,
       ctaLabel: "Iniciar jornada",
       ctaAriaLabel: "Iniciar jornada — Governança de Dados",
-      resolvedStartUrl: "/journey/data-governance/pre-questionario",
+      resolvedStartUrl: "/jornada/1/experiencia-profissional",
       onStartJourney: vi.fn(),
       onDismiss: vi.fn(),
       labels: mockLabels,
@@ -162,7 +165,8 @@ describe("JourneySummaryView Component", () => {
     renderView();
 
     expect(screen.getAllByText("Governança de Dados").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("12 perguntas")).toBeDefined();
+    expect(screen.getByLabelText("6 etapas")).toBeDefined();
+    expect(screen.getByLabelText("23 minutos de duração")).toBeDefined();
     expect(screen.getByText("Como funciona")).toBeDefined();
 
     fireEvent.click(screen.getByText("Agora não"));
@@ -170,7 +174,7 @@ describe("JourneySummaryView Component", () => {
 
     const ctaLink = screen.getByText("Iniciar jornada").closest("a");
     expect(ctaLink?.getAttribute("href")).toBe(
-      "/journey/data-governance/pre-questionario"
+      "/jornada/1/experiencia-profissional"
     );
   });
 

@@ -18,6 +18,20 @@ vi.mock("@shared/i18n/navigation", () => ({
   usePathname: () => "/journey/data-governance/english",
 }));
 
+let mockProfileName: string | null = null;
+
+vi.mock("@hooks/useJourneyContext", () => ({
+  useJourneyContext: () => ({
+    profileName: mockProfileName,
+    domain: null,
+    isOngoing: true,
+    isLoading: false,
+    isError: false,
+    isNotFound: false,
+    refetch: vi.fn(),
+  }),
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => {
     const t = (key: string) => {
@@ -70,6 +84,7 @@ describe("useEnglishStepVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     pushMock.mockReset();
+    mockProfileName = null;
   });
 
   it("deve carregar os dados da etapa e expor as 4 opções configuradas", async () => {
@@ -95,6 +110,23 @@ describe("useEnglishStepVM", () => {
       "intermediate-reading-writing",
       "advanced-fluent",
     ]);
+  });
+
+  it("deve usar o nome do perfil da jornada como título quando disponível", async () => {
+    mockProfileName = "Encarregado de Dados";
+    vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
+      slug: "data-governance",
+      step: "english",
+      journeyTitle: "Governança de Dados",
+      selectedOption: null,
+    });
+
+    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.journeyTitle).toBe("Encarregado de Dados");
   });
 
   it("deve pré-selecionar a opção caso venha preenchida do backend", async () => {
@@ -168,7 +200,7 @@ describe("useEnglishStepVM", () => {
     });
   });
 
-  it("handleBack deve ser undefined nesta primeira etapa ativa para evitar rota inexistente 404", async () => {
+  it("handleBack deve navegar para a etapa anterior (experiencia-profissional)", async () => {
     vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
       slug: "data-governance",
       step: "english",
@@ -181,7 +213,13 @@ describe("useEnglishStepVM", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.handleBack).toBeUndefined();
+    act(() => {
+      result.current.handleBack();
+    });
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/journey/data-governance/experiencia-profissional"
+    );
     expect(result.current.labels.backAriaLabel).toBe("Voltar para a etapa anterior");
   });
 

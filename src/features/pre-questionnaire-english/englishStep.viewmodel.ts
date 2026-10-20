@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRouter, usePathname } from "@shared/i18n/navigation";
+import { useJourneyContext } from "@hooks/useJourneyContext";
 import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
@@ -12,6 +13,7 @@ import {
   getJourneyRoutePrefix,
   getJourneyStepUrl,
   getNextPreQuestionnaireStep,
+  getPreviousPreQuestionnaireStep,
   formatJourneyTitleFromSlug,
 } from "@shared/utils/journeyRoutes";
 import type {
@@ -29,6 +31,7 @@ const OPTION_IDS: EnglishOptionId[] = [
 ];
 
 const NEXT_STEP = getNextPreQuestionnaireStep("english");
+const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("english");
 
 export function useEnglishStepVM(
   journeySlug: string
@@ -37,6 +40,7 @@ export function useEnglishStepVM(
   const router = useRouter();
   const pathname = usePathname();
   const routePrefix = getJourneyRoutePrefix(pathname);
+  const { profileName } = useJourneyContext(journeySlug);
 
   const [selectedOption, setSelectedOption] = useState<EnglishOptionId | null>(
     null
@@ -84,10 +88,12 @@ export function useEnglishStepVM(
     mutation.mutate(selectedOption);
   };
 
-  // Nota: A etapa de inglês é a primeira etapa ativa do pré-questionário.
-  // Não há etapa anterior implementada no repositório; portanto handleBack não
-  // é repassado para a View a fim de não renderizar botão com rota 404.
-  const handleBack = undefined;
+  const handleBack = () => {
+    // Retorna para a etapa anterior: Tempo de Experiência Profissional
+    if (PREVIOUS_STEP) {
+      router.push(getJourneyStepUrl(routePrefix, journeySlug, PREVIOUS_STEP));
+    }
+  };
 
   const handleExit = () => {
     setIsExitModalOpen(true);
@@ -148,7 +154,9 @@ export function useEnglishStepVM(
   }));
 
   const journeyTitle =
-    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
+    profileName ??
+    query.data?.journeyTitle ??
+    formatJourneyTitleFromSlug(journeySlug);
 
   const error = query.isError
     ? labels.errorMessage

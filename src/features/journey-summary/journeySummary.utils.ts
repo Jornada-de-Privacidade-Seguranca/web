@@ -1,3 +1,4 @@
+import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
 import type { JourneySummary } from "./journeySummary.types";
 
 /**
@@ -6,12 +7,14 @@ import type { JourneySummary } from "./journeySummary.types";
  * quando ainda não houver nenhuma resposta registrada.
  */
 export function resolveJourneyStartUrl(journey: JourneySummary): string {
-  const { slug, status, progress } = journey;
+  const { id, status, progress } = journey;
 
   const stepSlug =
     status === "in_progress" && progress.lastAnsweredStepSlug
       ? progress.lastAnsweredStepSlug
       : progress.firstStepSlug;
 
-  return `/journey/${slug}/${stepSlug}`;
+  // As etapas são identificadas pelo id da jornada, o mesmo usado pela rota do
+  // resumo, para que o "Voltar" da primeira etapa retorne a esta tela.
+  return `${getJourneySummaryUrl("jornada", id)}/${stepSlug}`;
 }
