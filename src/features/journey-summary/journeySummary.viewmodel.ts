@@ -2,11 +2,12 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "@shared/i18n/navigation";
+import { useRouter, usePathname } from "@shared/i18n/navigation";
 import {
   getJourneySummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
+import { getJourneyRoutePrefix } from "@shared/utils/journeyRoutes";
 import { resolveJourneyStartUrl } from "./journeySummary.utils";
 import type {
   JourneySummaryViewModelReturn,
@@ -20,6 +21,8 @@ export function useJourneySummaryVM(
 ): JourneySummaryViewModelReturn {
   const t = useTranslations("journeySummary");
   const router = useRouter();
+  const pathname = usePathname();
+  const routePrefix = getJourneyRoutePrefix(pathname);
   const locale = useLocale() === "en" ? "en" : "pt";
 
   const query = useQuery({
@@ -46,7 +49,9 @@ export function useJourneySummaryVM(
         : t("actionStart")
     : "";
 
-  const resolvedStartUrl = journey ? resolveJourneyStartUrl(journey) : "";
+  const resolvedStartUrl = journey
+    ? resolveJourneyStartUrl(journey, routePrefix)
+    : "";
   const ctaAriaLabel = journey ? `${ctaLabel} — ${journey.title}` : "";
 
   const onStartJourney = () => {

@@ -32,7 +32,20 @@ vi.mock("next-intl", () => ({
   },
 }));
 
+let mockPathname = "/jornada/1";
+
 vi.mock("@/shared/i18n/navigation", () => ({
+  usePathname: () => mockPathname,
+  useRouter: () => ({
+    push: pushMock,
+    back: backMock,
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@shared/i18n/navigation", () => ({
+  usePathname: () => mockPathname,
   useRouter: () => ({
     push: pushMock,
     back: backMock,
@@ -68,6 +81,7 @@ describe("useJourneySummaryVM", () => {
     vi.restoreAllMocks();
     pushMock.mockReset();
     backMock.mockReset();
+    mockPathname = "/jornada/1";
   });
 
   it("deve carregar a jornada e derivar rótulo/rota do CTA para status not_started", async () => {
@@ -196,5 +210,22 @@ describe("useJourneySummaryVM", () => {
 
     result.current.onDismiss();
     expect(backMock).toHaveBeenCalled();
+  });
+
+  it("deve respeitar o prefixo /journey ao resolver a URL de início", async () => {
+    mockPathname = "/journey/1";
+    vi.spyOn(journeySummaryService, "getJourneySummary").mockResolvedValue(
+      notStartedJourney
+    );
+
+    const { result } = renderHook(() => useJourneySummaryVM("1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.resolvedStartUrl).toBe(
+      "/journey/1/experiencia-profissional"
+    );
   });
 });

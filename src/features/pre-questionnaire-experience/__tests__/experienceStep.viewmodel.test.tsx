@@ -321,6 +321,26 @@ describe("useExperienceStepVM", () => {
     expect(result.current.journeysHref).toBe("/jornadas");
   });
 
+  it("deve exibir banner de erro e desabilitar Continuar quando a jornada carregar com domínio nulo", async () => {
+    mockStep();
+    mockJourneyContext = buildJourneyContext({
+      isLoading: false,
+      isError: false,
+      isNotFound: false,
+      profileName: "Perfil Sem Dominio",
+      domain: null,
+    });
+
+    const { result } = renderHook(() => useExperienceStepVM("10"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBe("Falha ao carregar.");
+    expect(result.current.isContinueDisabled).toBe(true);
+    expect(result.current.questionLabel).toBe("");
+  });
+
   it("handleRetry deve reenviar a resposta quando o salvamento falhar", async () => {
     mockStep();
     const saveSpy = vi

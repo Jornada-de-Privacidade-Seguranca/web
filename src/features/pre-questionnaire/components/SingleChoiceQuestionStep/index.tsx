@@ -73,7 +73,7 @@ export function SingleChoiceQuestionStep<T extends string = string>(
   return (
     <div className="flex min-h-full w-full flex-col bg-background text-foreground">
       {/* Barra superior de navegação / contexto, fixa no topo da área de conteúdo */}
-      <header className="sticky top-0 z-20 flex min-h-16 my-1 text-red shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
+      <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
         <div className="flex items-center gap-4">
           <button
             type="button"

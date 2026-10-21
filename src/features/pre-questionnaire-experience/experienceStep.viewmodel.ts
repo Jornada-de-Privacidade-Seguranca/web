@@ -171,7 +171,9 @@ export function useExperienceStepVM(
     : "";
 
   const error =
-    (journeyContext.isError && !journeyContext.isNotFound) || query.isError
+    (journeyContext.isError && !journeyContext.isNotFound) ||
+    query.isError ||
+    (!journeyContext.isLoading && !journeyContext.isNotFound && !journeyContext.domain)
       ? labels.errorMessage
       : mutation.isError
         ? t("saveError")
