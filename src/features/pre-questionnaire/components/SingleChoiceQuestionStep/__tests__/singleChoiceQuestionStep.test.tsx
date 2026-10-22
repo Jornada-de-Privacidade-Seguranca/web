@@ -186,4 +186,16 @@ describe("SingleChoiceQuestionStep", () => {
     fireEvent.click(exitButton);
     expect(onExit).toHaveBeenCalledTimes(1);
   });
+
+  it("deve truncar os textos do cabeçalho com reticências e expor o texto completo no title", () => {
+    render(<SingleChoiceQuestionStep {...createProps()} />);
+
+    const stepTag = screen.getByText("PRÉ-QUESTIONÁRIO");
+    expect(stepTag.getAttribute("title")).toBe("PRÉ-QUESTIONÁRIO");
+    expect(stepTag.className).toContain("truncate");
+
+    const journeyTitle = screen.getByText("Governança de Dados");
+    expect(journeyTitle.getAttribute("title")).toBe("Governança de Dados");
+    expect(journeyTitle.className).toContain("truncate");
+  });
 });

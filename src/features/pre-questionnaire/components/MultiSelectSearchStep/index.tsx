@@ -158,27 +158,35 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
     <div className="flex min-h-full w-full flex-col bg-background text-foreground">
       {/* Barra superior de navegação / contexto, fixa no topo da área de conteúdo */}
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
           <button
             type="button"
             onClick={onExit}
             aria-label={exitAriaLabel}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={16} />
             <span>{exitLabel}</span>
           </button>
 
-          <div className="hidden h-5 w-px bg-border/60 sm:block" />
+          <div className="hidden h-5 w-px shrink-0 bg-border/60 sm:block" />
 
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             {stepTag && (
-              <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              <span
+                title={stepTag}
+                className="truncate text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground"
+              >
                 {stepTag}
               </span>
             )}
             {journeyTitle && (
-              <span className="text-sm font-semibold text-foreground">{journeyTitle}</span>
+              <span
+                title={journeyTitle}
+                className="truncate text-sm font-semibold text-foreground"
+              >
+                {journeyTitle}
+              </span>
             )}
           </div>
         </div>

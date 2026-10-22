@@ -207,4 +207,16 @@ describe("MultiSelectSearchStep", () => {
     expect(chips.className).toContain("max-h-36");
     expect(chips.className).toContain("overflow-y-auto");
   });
+
+  it("deve truncar os textos do cabeçalho com reticências e expor o texto completo no title", () => {
+    render(<MultiSelectSearchStep {...createProps()} />);
+
+    const stepTag = screen.getByText("PRÉ-QUESTIONÁRIO · FORMAÇÃO ACADÊMICA");
+    expect(stepTag.getAttribute("title")).toBe("PRÉ-QUESTIONÁRIO · FORMAÇÃO ACADÊMICA");
+    expect(stepTag.className).toContain("truncate");
+
+    const journeyTitle = screen.getByText("Encarregado de Dados");
+    expect(journeyTitle.getAttribute("title")).toBe("Encarregado de Dados");
+    expect(journeyTitle.className).toContain("truncate");
+  });
 });
