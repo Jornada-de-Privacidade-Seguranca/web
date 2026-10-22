@@ -23,11 +23,13 @@ export interface JourneySummaryLabels {
   backToJourneysText: string;
   backToJourneysAriaLabel: string;
   badgeLabel: string;
-  questionsLabel: string;
+  stepsCountLabel: string;
   durationLabel: string;
   areasLabel: string;
   competenciesLabel: string;
-  questionsAriaLabel: (count: number) => string;
+  stepsCountAriaLabel: (count: number) => string;
+  stepsProgressText: (completed: number, total: number) => string;
+  stepsProgressAriaLabel: (completed: number, total: number) => string;
   durationAriaLabel: (minutes: number) => string;
   areasAriaLabel: (count: number) => string;
   competenciesAriaLabel: (count: number) => string;

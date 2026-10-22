@@ -1,12 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "@shared/i18n/navigation";
+import { useRouter, usePathname } from "@shared/i18n/navigation";
 import {
   getJourneySummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
+import { getJourneyRoutePrefix } from "@shared/utils/journeyRoutes";
 import { resolveJourneyStartUrl } from "./journeySummary.utils";
 import type {
   JourneySummaryViewModelReturn,
@@ -20,10 +21,13 @@ export function useJourneySummaryVM(
 ): JourneySummaryViewModelReturn {
   const t = useTranslations("journeySummary");
   const router = useRouter();
+  const pathname = usePathname();
+  const routePrefix = getJourneyRoutePrefix(pathname);
+  const locale = useLocale() === "en" ? "en" : "pt";
 
   const query = useQuery({
-    queryKey: ["journey-summary", "detail", journeyId],
-    queryFn: () => getJourneySummary(journeyId),
+    queryKey: ["journey-summary", "detail", journeyId, locale],
+    queryFn: () => getJourneySummary(journeyId, locale),
     enabled: Boolean(journeyId),
     retry: false,
   });
@@ -45,7 +49,9 @@ export function useJourneySummaryVM(
         : t("actionStart")
     : "";
 
-  const resolvedStartUrl = journey ? resolveJourneyStartUrl(journey) : "";
+  const resolvedStartUrl = journey
+    ? resolveJourneyStartUrl(journey, routePrefix)
+    : "";
   const ctaAriaLabel = journey ? `${ctaLabel} — ${journey.title}` : "";
 
   const onStartJourney = () => {
@@ -66,11 +72,15 @@ export function useJourneySummaryVM(
     backToJourneysText: t("backToJourneys"),
     backToJourneysAriaLabel: t("backToJourneysAriaLabel"),
     badgeLabel: t("badgeLabel"),
-    questionsLabel: t("questionsLabel"),
+    stepsCountLabel: t("stepsCountLabel"),
     durationLabel: t("durationLabel"),
     areasLabel: t("areasLabel"),
     competenciesLabel: t("competenciesLabel"),
-    questionsAriaLabel: (count: number) => t("questionsAriaLabel", { count }),
+    stepsCountAriaLabel: (count: number) => t("stepsCountAriaLabel", { count }),
+    stepsProgressText: (completed: number, total: number) =>
+      t("stepsProgressText", { completed, total }),
+    stepsProgressAriaLabel: (completed: number, total: number) =>
+      t("stepsProgressAriaLabel", { completed, total }),
     durationAriaLabel: (minutes: number) => t("durationAriaLabel", { minutes }),
     areasAriaLabel: (count: number) => t("areasAriaLabel", { count }),
     competenciesAriaLabel: (count: number) => t("competenciesAriaLabel", { count }),

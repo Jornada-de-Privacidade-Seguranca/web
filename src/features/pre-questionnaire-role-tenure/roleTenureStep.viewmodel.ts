@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRouter, usePathname } from "@shared/i18n/navigation";
+import { useJourneyContext } from "@hooks/useJourneyContext";
 import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
@@ -41,6 +42,7 @@ export function useRoleTenureStepVM(
   const router = useRouter();
   const pathname = usePathname();
   const routePrefix = getJourneyRoutePrefix(pathname);
+  const { profileName } = useJourneyContext(journeySlug);
 
   const [selectedOption, setSelectedOption] = useState<RoleTenureOptionId | null>(
     null
@@ -155,7 +157,9 @@ export function useRoleTenureStepVM(
   }));
 
   const journeyTitle =
-    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
+    profileName ??
+    query.data?.journeyTitle ??
+    formatJourneyTitleFromSlug(journeySlug);
 
   const error = query.isError
     ? labels.errorMessage

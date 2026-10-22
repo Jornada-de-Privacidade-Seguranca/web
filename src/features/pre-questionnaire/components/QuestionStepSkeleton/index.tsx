@@ -13,10 +13,10 @@ export function QuestionStepSkeleton(props: QuestionStepSkeletonProps) {
       aria-busy="true"
       aria-label={loadingLabel}
       data-testid={testId}
-      className="flex min-h-screen w-full flex-col bg-background"
+      className="flex min-h-full w-full flex-col bg-background"
     >
-      <header className="h-16 border-b border-border/40 bg-background/50 animate-pulse" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 pt-24 pb-12 animate-pulse space-y-6">
+      <header className="h-16 shrink-0 border-b border-border/40 bg-background/50 animate-pulse" />
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-12 animate-pulse space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-11 w-11 rounded-2xl bg-muted" />
           <div className="h-8 w-64 rounded-lg bg-muted" />
@@ -30,7 +30,7 @@ export function QuestionStepSkeleton(props: QuestionStepSkeletonProps) {
             ))}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

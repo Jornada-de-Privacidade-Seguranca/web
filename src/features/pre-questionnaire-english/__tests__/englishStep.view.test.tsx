@@ -96,7 +96,7 @@ describe("EnglishStepView", () => {
       labels: mockLabels,
       handleSelectOption: vi.fn(),
       handleContinue: vi.fn(),
-      handleBack: undefined,
+      handleBack: vi.fn(),
       handleExit: vi.fn(),
       handleCancelExit: vi.fn(),
       handleConfirmExit: vi.fn(),
@@ -223,6 +223,22 @@ describe("EnglishStepView", () => {
     const retryBtn = screen.getByText("Tentar novamente");
     fireEvent.click(retryBtn);
     expect(handleRetryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve exibir o botão Voltar e chamar handleBack no clique", () => {
+    const handleBackMock = vi.fn();
+    vi.spyOn(viewModelModule, "useEnglishStepVM").mockReturnValue(
+      createMockVMReturn({ handleBack: handleBackMock })
+    );
+
+    render(
+      <AppProviders>
+        <EnglishStepView journeySlug="data-governance" />
+      </AppProviders>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Voltar para etapa anterior" }));
+    expect(handleBackMock).toHaveBeenCalledTimes(1);
   });
 
   it("deve renderizar o modal de saída quando isExitModalOpen for true e acionar callbacks de cancelar e confirmar", () => {

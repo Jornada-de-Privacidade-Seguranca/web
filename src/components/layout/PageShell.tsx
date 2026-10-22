@@ -65,7 +65,10 @@ export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
           <HugeiconsIcon icon={SidebarLeftIcon} />
         </Button>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h1 className="font-display text-base font-semibold text-foreground md:text-lg">
+          <h1
+            title={title}
+            className="truncate font-display text-base font-semibold text-foreground md:text-lg"
+          >
             {title}
           </h1>
         </div>

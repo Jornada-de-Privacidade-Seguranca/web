@@ -12,9 +12,10 @@ const pushMock = vi.fn();
 const backMock = vi.fn();
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "pt",
   useTranslations: () => {
     const t = (key: string, params?: Record<string, unknown>) => {
-      if (key === "questionsAriaLabel") return `${params?.count} perguntas`;
+      if (key === "stepsCountAriaLabel") return `${params?.count} etapas`;
       if (key === "durationAriaLabel") return `${params?.minutes} minutos de duração`;
       if (key === "areasAriaLabel") return `${params?.count} áreas`;
       if (key === "competenciesAriaLabel") return `${params?.count} competências`;
@@ -31,7 +32,20 @@ vi.mock("next-intl", () => ({
   },
 }));
 
+let mockPathname = "/jornada/1";
+
 vi.mock("@/shared/i18n/navigation", () => ({
+  usePathname: () => mockPathname,
+  useRouter: () => ({
+    push: pushMock,
+    back: backMock,
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@shared/i18n/navigation", () => ({
+  usePathname: () => mockPathname,
   useRouter: () => ({
     push: pushMock,
     back: backMock,
@@ -53,20 +67,21 @@ function createWrapper() {
 describe("useJourneySummaryVM", () => {
   const notStartedJourney: JourneySummary = {
     id: "1",
-    slug: "data-governance",
     title: "Governança de Dados",
-    questionsCount: 12,
-    estimatedMinutes: 18,
+    stepsCount: 6,
+    completedStepsCount: 0,
+    estimatedMinutes: 23,
     areasCount: 13,
     competenciesCount: 39,
     status: "not_started",
-    progress: { firstStepSlug: "pre-questionario", lastAnsweredStepSlug: null },
+    progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
   };
 
   beforeEach(() => {
     vi.restoreAllMocks();
     pushMock.mockReset();
     backMock.mockReset();
+    mockPathname = "/jornada/1";
   });
 
   it("deve carregar a jornada e derivar rótulo/rota do CTA para status not_started", async () => {
@@ -83,7 +98,7 @@ describe("useJourneySummaryVM", () => {
     expect(result.current.journey?.title).toBe("Governança de Dados");
     expect(result.current.ctaLabel).toBe("actionStart");
     expect(result.current.resolvedStartUrl).toBe(
-      "/journey/data-governance/pre-questionario"
+      "/jornada/1/experiencia-profissional"
     );
     expect(result.current.error).toBeNull();
   });
@@ -93,7 +108,7 @@ describe("useJourneySummaryVM", () => {
       ...notStartedJourney,
       status: "in_progress",
       progress: {
-        firstStepSlug: "pre-questionario",
+        firstStepSlug: "experiencia-profissional",
         lastAnsweredStepSlug: "formacao-academica",
       },
     });
@@ -106,7 +121,7 @@ describe("useJourneySummaryVM", () => {
 
     expect(result.current.ctaLabel).toBe("actionContinue");
     expect(result.current.resolvedStartUrl).toBe(
-      "/journey/data-governance/formacao-academica"
+      "/jornada/1/formacao-academica"
     );
   });
 
@@ -114,7 +129,7 @@ describe("useJourneySummaryVM", () => {
     vi.spyOn(journeySummaryService, "getJourneySummary").mockResolvedValue({
       ...notStartedJourney,
       status: "in_progress",
-      progress: { firstStepSlug: "pre-questionario", lastAnsweredStepSlug: null },
+      progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
     });
 
     const { result } = renderHook(() => useJourneySummaryVM("2"), {
@@ -124,7 +139,7 @@ describe("useJourneySummaryVM", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.resolvedStartUrl).toBe(
-      "/journey/data-governance/pre-questionario"
+      "/jornada/1/experiencia-profissional"
     );
   });
 
@@ -133,7 +148,7 @@ describe("useJourneySummaryVM", () => {
       ...notStartedJourney,
       status: "completed",
       progress: {
-        firstStepSlug: "pre-questionario",
+        firstStepSlug: "experiencia-profissional",
         lastAnsweredStepSlug: "competencias",
       },
     });
@@ -146,7 +161,7 @@ describe("useJourneySummaryVM", () => {
 
     expect(result.current.ctaLabel).toBe("actionRetake");
     expect(result.current.resolvedStartUrl).toBe(
-      "/journey/data-governance/pre-questionario"
+      "/jornada/1/experiencia-profissional"
     );
   });
 
@@ -191,9 +206,26 @@ describe("useJourneySummaryVM", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     result.current.onStartJourney();
-    expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/pre-questionario");
+    expect(pushMock).toHaveBeenCalledWith("/jornada/1/experiencia-profissional");
 
     result.current.onDismiss();
     expect(backMock).toHaveBeenCalled();
+  });
+
+  it("deve respeitar o prefixo /journey ao resolver a URL de início", async () => {
+    mockPathname = "/journey/1";
+    vi.spyOn(journeySummaryService, "getJourneySummary").mockResolvedValue(
+      notStartedJourney
+    );
+
+    const { result } = renderHook(() => useJourneySummaryVM("1"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.resolvedStartUrl).toBe(
+      "/journey/1/experiencia-profissional"
+    );
   });
 });

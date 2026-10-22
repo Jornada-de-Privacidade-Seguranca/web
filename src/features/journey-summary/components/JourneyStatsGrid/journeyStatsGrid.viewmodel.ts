@@ -8,12 +8,22 @@ export function useJourneyStatsGridVM(
 ): JourneyStatsGridViewModelReturn {
   const { journey, labels } = props;
 
+  const { stepsCount, completedStepsCount, status } = journey;
+
+  // Jornada não iniciada mostra só o total de etapas; em andamento ou
+  // concluída, mostra o progresso ("2 de 6")
+  const showProgress = status !== "not_started";
+
   const stats: JourneyStatsGridViewModelReturn["stats"] = [
     {
-      key: "questions",
-      value: String(journey.questionsCount),
-      label: labels.questionsLabel,
-      ariaLabel: labels.questionsAriaLabel(journey.questionsCount),
+      key: "steps",
+      value: showProgress
+        ? labels.stepsProgressText(completedStepsCount, stepsCount)
+        : String(stepsCount),
+      label: labels.stepsCountLabel,
+      ariaLabel: showProgress
+        ? labels.stepsProgressAriaLabel(completedStepsCount, stepsCount)
+        : labels.stepsCountAriaLabel(stepsCount),
     },
     {
       key: "duration",
