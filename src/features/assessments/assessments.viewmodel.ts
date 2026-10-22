@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useJourneyContext } from "@hooks/useJourneyContext";
+import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import {
@@ -31,8 +33,19 @@ function formatErrorMessage(err: unknown, defaultMsg: string): string {
   return defaultMsg;
 }
 
+/** Normaliza para busca: sem acentos, em minúsculas e sem espaços nas pontas. */
+function normalizeSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
+  const locale = useLocale() === "en" ? "en" : "pt";
+  const currentJourney = useJourneyContext();
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
 
@@ -50,9 +63,10 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
+    // A busca filtra apenas a página do catálogo já carregada (o backend não
+    // tem busca por texto), então não reinicia a paginação
     debounceTimerRef.current = setTimeout(() => {
       setDebouncedSearchTerm(term);
-      setCatalogPage(1);
     }, 300);
   }, []);
 
@@ -76,12 +90,12 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Catalog Journeys
   const catalogQuery = useQuery({
-    queryKey: ["assessments", "catalog", catalogPage, debouncedSearchTerm],
+    queryKey: ["assessments", "catalog", catalogPage, locale],
     queryFn: () =>
       getCatalogAssessments({
         page: catalogPage,
         limit: 6,
-        search: debouncedSearchTerm,
+        locale,
       }),
     placeholderData: keepPreviousData,
     retry: false,
@@ -120,7 +134,24 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
       ? formatErrorMessage(pendingQuery.error, t("errorMessage"))
       : null;
 
-  const catalogJourneys = catalogData?.items ?? [];
+  const normalizedSearch = normalizeSearch(debouncedSearchTerm);
+  const catalogJourneys = (catalogData?.items ?? [])
+    .map((journey) =>
+      // O perfil da jornada em andamento continua a jornada atual em vez de
+      // levar ao resumo do perfil (que tentaria criar outra jornada)
+      currentJourney.journeyId && journey.id === currentJourney.profileId
+        ? {
+            ...journey,
+            status: "in_progress" as const,
+            href: getJourneySummaryUrl(currentJourney.journeyId),
+          }
+        : journey
+    )
+    .filter(
+      (journey) =>
+        !normalizedSearch ||
+        normalizeSearch(`${journey.title} ${journey.description}`).includes(normalizedSearch)
+    );
   const catalogTotalPages = catalogData?.totalPages ?? 1;
   const isCatalogLoading = catalogQuery.isLoading;
   const catalogError =

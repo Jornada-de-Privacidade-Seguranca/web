@@ -1,4 +1,6 @@
-import { apiRequest, apiRequestWithMeta } from "@services/httpClient";
+import { apiRequestWithMeta } from "@services/httpClient";
+import { getJourneyProfiles, type JourneyProfileApi } from "@services/journeyProfileService";
+import { getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
 import type {
   Journey,
   JourneyStatus,
@@ -17,7 +19,7 @@ export interface GetPendingAssessmentsParams {
 export interface GetCatalogAssessmentsParams {
   page?: number;
   limit?: number;
-  search?: string;
+  locale?: "pt" | "en";
 }
 
 const USER_JOURNEY_STATUS_MAP: Record<UserJourneyApiStatus, JourneyStatus> = {
@@ -78,13 +80,35 @@ export async function getPendingAssessments({
   };
 }
 
+function mapProfileToJourney(profile: JourneyProfileApi, locale: "pt" | "en"): Journey {
+  const isEnglish = locale === "en";
+  const id = String(profile.id);
+  return {
+    id,
+    title: (isEnglish ? profile.name_en : profile.name_pt) || profile.name_pt,
+    description: (isEnglish ? profile.description_en : profile.description_pt) ?? "",
+    // Perfis do catálogo ainda não viraram jornada: o card leva ao resumo do
+    // perfil, onde "Iniciar jornada" cria a jornada no backend
+    status: "not_started",
+    href: getProfileSummaryUrl(id),
+  };
+}
+
+/**
+ * Catálogo de jornadas: perfis de GET /journey-profiles, paginados no backend.
+ * O endpoint não tem busca por texto; a busca do catálogo é feita na View
+ * Model sobre a página carregada.
+ */
 export async function getCatalogAssessments(
   params: GetCatalogAssessmentsParams = {}
 ): Promise<PaginatedResponse<Journey>> {
-  const { page = 1, limit = 6, search } = params;
-  return apiRequest<PaginatedResponse<Journey>>(
-    "/assessments",
-    { params: { page, limit, ...(search ? { search } : {}) } },
-    "Erro ao carregar catálogo de jornadas."
-  );
+  const { page = 1, limit = 6, locale = "pt" } = params;
+  const result = await getJourneyProfiles(page, limit);
+  return {
+    items: result.items.map((profile) => mapProfileToJourney(profile, locale)),
+    total: result.total,
+    page: result.page,
+    limit: result.perPage,
+    totalPages: result.totalPages,
+  };
 }
