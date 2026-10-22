@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui";
 import { cn } from "@/shared/lib/utils";
+import { StepHeader } from "../StepHeader";
 import { useMultiSelectSearchStepVM } from "./multiSelectSearchStep.viewmodel";
 import type {
   MultiSelectItemListProps,
@@ -156,41 +157,13 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
 
   return (
     <div className="flex min-h-full w-full flex-col bg-background text-foreground">
-      {/* Barra superior de navegação / contexto, fixa no topo da área de conteúdo */}
-      <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <button
-            type="button"
-            onClick={onExit}
-            aria-label={exitAriaLabel}
-            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={16} />
-            <span>{exitLabel}</span>
-          </button>
-
-          <div className="hidden h-5 w-px shrink-0 bg-border/60 sm:block" />
-
-          <div className="flex min-w-0 flex-col">
-            {stepTag && (
-              <span
-                title={stepTag}
-                className="truncate text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground"
-              >
-                {stepTag}
-              </span>
-            )}
-            {journeyTitle && (
-              <span
-                title={journeyTitle}
-                className="truncate text-sm font-semibold text-foreground"
-              >
-                {journeyTitle}
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
+      <StepHeader
+        stepTag={stepTag}
+        journeyTitle={journeyTitle}
+        onExit={onExit}
+        exitLabel={exitLabel}
+        exitAriaLabel={exitAriaLabel}
+      />
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-12">
         {/* Título com ícone */}

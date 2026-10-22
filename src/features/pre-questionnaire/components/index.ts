@@ -4,3 +4,4 @@ export * from "./MultiSelectSearchStep";
 export * from "./QuestionStepErrorBanner";
 export * from "./QuestionStepSkeleton";
 export * from "./SingleChoiceQuestionStep";
+export * from "./StepHeader";
