@@ -338,6 +338,23 @@
         "10-plus-years": "More than 10 years"
       }
     },
+    "academic": {
+      "stepTag": "PRE-QUESTIONNAIRE · ACADEMIC BACKGROUND",
+      "title": "Academic background",
+      "description": "Select one or more courses that are part of your résumé.",
+      "searchPlaceholder": "Search course...",
+      "searchAriaLabel": "Search course",
+      "groupsAriaLabel": "Degree levels",
+      "emptyLabel": "No courses found.",
+      "counterLabel": "{count} course(s) selected",
+      "removeCourseAriaLabel": "Remove {course}",
+      "typeLegends": {
+        "1": "Bachelor's/Teaching degree/Technologist",
+        "2": "lato sensu",
+        "3": "stricto sensu",
+        "4": "stricto sensu"
+      }
+    },
     "actions": {
       "back": "Back",
       "continue": "Continue",
