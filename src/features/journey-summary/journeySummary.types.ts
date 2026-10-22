@@ -46,6 +46,12 @@ export interface JourneySummaryLabels {
   serverErrorMessage: string;
   backToJourneysLink: string;
   loadingAriaLabel: string;
+  /** Valor exibido nas caixas quando o dado não está disponível */
+  notAvailable: string;
+  notAvailableAriaLabel: (label: string) => string;
+  startingLabel: string;
+  startErrorMessage: string;
+  resumeCurrentJourneyLabel: string;
 }
 
 export interface JourneySummaryViewModelReturn {
@@ -54,8 +60,21 @@ export interface JourneySummaryViewModelReturn {
   error: JourneySummaryErrorType | null;
   ctaLabel: string;
   ctaAriaLabel: string;
-  resolvedStartUrl: string;
+  /** Criando a jornada ou localizando a jornada em andamento */
+  isStarting: boolean;
+  /** Botão principal bloqueado (verificando a jornada atual, outra em andamento ou iniciando) */
+  isCtaDisabled: boolean;
+  /** Mensagem de falha ao iniciar/refazer a jornada */
+  startError: string | null;
+  /** Aviso de que o usuário já tem outra jornada em andamento (null quando não houver) */
+  journeyInProgressNotice: string | null;
   onStartJourney: () => void;
+  onResumeCurrentJourney: () => void;
   onDismiss: () => void;
   labels: JourneySummaryLabels;
 }
+
+/** Resumo de uma jornada já criada ou de um perfil (antes de criar a jornada). */
+export type JourneySummaryTarget = { journeyId: string } | { profileId: string };
+
+export type JourneySummaryViewProps = JourneySummaryTarget;

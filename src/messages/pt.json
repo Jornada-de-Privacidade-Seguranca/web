@@ -279,7 +279,14 @@
     "serverErrorTitle": "Não foi possível carregar a jornada",
     "serverErrorMessage": "Não foi possível completar a busca pelos dados da jornada. Tente novamente mais tarde.",
     "backToJourneysLink": "Voltar para a listagem de jornadas",
-    "loadingAriaLabel": "Carregando resumo da jornada"
+    "loadingAriaLabel": "Carregando resumo da jornada",
+    "notAvailable": "—",
+    "notAvailableAriaLabel": "{label}: não disponível",
+    "startingLabel": "Iniciando...",
+    "startErrorMessage": "Não foi possível iniciar a jornada. Tente novamente.",
+    "resumeCurrentJourneyLabel": "Continuar jornada atual",
+    "actionResume": "Retomar jornada",
+    "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova."
   },
   "preQuestionnaire": {
     "header": {
@@ -349,6 +356,8 @@
     "saveError": "Não foi possível salvar sua resposta. Tente novamente.",
     "notFoundTitle": "Jornada não encontrada",
     "notFoundMessage": "Não encontramos a jornada que você está tentando acessar. Ela pode ter sido removida ou o link está incorreto.",
-    "backToJourneysLink": "Voltar para jornadas"
+    "backToJourneysLink": "Voltar para jornadas",
+    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
+    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem."
   }
 }

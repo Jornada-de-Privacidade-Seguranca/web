@@ -29,15 +29,20 @@ export interface EnglishStepLabels {
   };
   loadingText: string;
   errorTitle: string;
+  noOngoingJourneyTitle: string;
+  noOngoingJourneyMessage: string;
+  backToJourneysLink: string;
   errorMessage: string;
   retryButton: string;
 }
 
 export interface EnglishStepViewModelReturn {
-  journeySlug: string;
   journeyTitle: string;
   selectedOption: EnglishOptionId | null;
   isLoading: boolean;
+  /** O usuário não tem jornada em andamento */
+  isNotFound: boolean;
+  journeysHref: string;
   isSubmitting: boolean;
   isExitModalOpen: boolean;
   error: string | null;
@@ -50,8 +55,4 @@ export interface EnglishStepViewModelReturn {
   handleCancelExit: () => void;
   handleConfirmExit: () => void;
   handleRetry: () => void;
-}
-
-export interface EnglishStepViewProps {
-  journeySlug: string;
 }

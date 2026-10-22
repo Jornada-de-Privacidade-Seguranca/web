@@ -15,19 +15,21 @@ vi.mock("@shared/i18n/navigation", () => ({
     replace: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => "/journey/data-governance/english",
 }));
 
 let mockProfileName: string | null = null;
 
+let mockJourneyNotFound = false;
+
 vi.mock("@hooks/useJourneyContext", () => ({
   useJourneyContext: () => ({
+    journeyId: mockJourneyNotFound ? null : "data-governance",
+    profileId: mockJourneyNotFound ? null : "1",
     profileName: mockProfileName,
     domain: null,
-    isOngoing: true,
     isLoading: false,
-    isError: false,
-    isNotFound: false,
+    isError: mockJourneyNotFound,
+    isNotFound: mockJourneyNotFound,
     refetch: vi.fn(),
   }),
 }));
@@ -85,6 +87,7 @@ describe("useEnglishStepVM", () => {
     vi.restoreAllMocks();
     pushMock.mockReset();
     mockProfileName = null;
+    mockJourneyNotFound = false;
   });
 
   it("deve carregar os dados da etapa e expor as 4 opções configuradas", async () => {
@@ -95,7 +98,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -121,7 +124,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -137,7 +140,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: "basic-reading",
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -153,7 +156,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -176,7 +179,7 @@ describe("useEnglishStepVM", () => {
       .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
       .mockResolvedValue();
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -195,7 +198,7 @@ describe("useEnglishStepVM", () => {
         selectedOption: "intermediate-reading-writing",
       });
       expect(pushMock).toHaveBeenCalledWith(
-        "/journey/data-governance/tempo-atuacao-perfil"
+        "/jornada/atual/tempo-atuacao-perfil"
       );
     });
   });
@@ -207,7 +210,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -218,7 +221,7 @@ describe("useEnglishStepVM", () => {
     });
 
     expect(pushMock).toHaveBeenCalledWith(
-      "/journey/data-governance/experiencia-profissional"
+      "/jornada/atual/experiencia-profissional"
     );
     expect(result.current.labels.backAriaLabel).toBe("Voltar para a etapa anterior");
   });
@@ -230,7 +233,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -270,7 +273,7 @@ describe("useEnglishStepVM", () => {
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce();
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -295,7 +298,7 @@ describe("useEnglishStepVM", () => {
     await waitFor(() => {
       expect(saveSpy).toHaveBeenCalledTimes(2);
       expect(result.current.error).toBeNull();
-      expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/tempo-atuacao-perfil");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/tempo-atuacao-perfil");
     });
     expect(getSpy).toHaveBeenCalledTimes(1);
   });
@@ -311,7 +314,7 @@ describe("useEnglishStepVM", () => {
         selectedOption: null,
       });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -327,5 +330,19 @@ describe("useEnglishStepVM", () => {
 
     await waitFor(() => expect(result.current.error).toBeNull());
     expect(getSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it("sem jornada em andamento deve sinalizar isNotFound sem buscar a etapa", async () => {
+    mockJourneyNotFound = true;
+    const getSpy = vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep");
+
+    const { result } = renderHook(() => useEnglishStepVM(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isNotFound).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.journeysHref).toBe("/jornadas");
+    expect(getSpy).not.toHaveBeenCalled();
   });
 });

@@ -37,15 +37,20 @@ export interface RoleTenureStepLabels {
   };
   loadingText: string;
   errorTitle: string;
+  noOngoingJourneyTitle: string;
+  noOngoingJourneyMessage: string;
+  backToJourneysLink: string;
   errorMessage: string;
   retryButton: string;
 }
 
 export interface RoleTenureStepViewModelReturn {
-  journeySlug: string;
   journeyTitle: string;
   selectedOption: RoleTenureOptionId | null;
   isLoading: boolean;
+  /** O usuário não tem jornada em andamento */
+  isNotFound: boolean;
+  journeysHref: string;
   isSubmitting: boolean;
   isExitModalOpen: boolean;
   error: string | null;
@@ -58,8 +63,4 @@ export interface RoleTenureStepViewModelReturn {
   handleCancelExit: () => void;
   handleConfirmExit: () => void;
   handleRetry: () => void;
-}
-
-export interface RoleTenureStepViewProps {
-  journeySlug: string;
 }

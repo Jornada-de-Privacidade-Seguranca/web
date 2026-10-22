@@ -18,6 +18,11 @@ vi.mock("@shared/i18n/navigation", () => ({
     back: vi.fn(),
     prefetch: vi.fn(),
   }),
+  Link: ({ href, children, ...rest }: React.ComponentProps<"a">) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 describe("EnglishStepView", () => {
@@ -70,6 +75,9 @@ describe("EnglishStepView", () => {
     },
     loadingText: "Carregando pergunta...",
     errorTitle: "Erro",
+    noOngoingJourneyTitle: "Nenhuma jornada em andamento",
+    noOngoingJourneyMessage: "Não encontramos uma jornada em andamento.",
+    backToJourneysLink: "Voltar para jornadas",
     errorMessage: "Falha ao carregar.",
     retryButton: "Tentar novamente",
   };
@@ -85,10 +93,11 @@ describe("EnglishStepView", () => {
     overrides?: Partial<EnglishStepViewModelReturn>
   ): EnglishStepViewModelReturn {
     return {
-      journeySlug: "data-governance",
       journeyTitle: "Governança de Dados",
       selectedOption: null,
       isLoading: false,
+      isNotFound: false,
+      journeysHref: "/jornadas",
       isSubmitting: false,
       isExitModalOpen: false,
       error: null,
@@ -112,7 +121,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -127,7 +136,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -152,7 +161,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -173,7 +182,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -191,7 +200,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -212,7 +221,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -233,7 +242,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -255,7 +264,7 @@ describe("EnglishStepView", () => {
 
     render(
       <AppProviders>
-        <EnglishStepView journeySlug="data-governance" />
+        <EnglishStepView />
       </AppProviders>
     );
 
@@ -269,5 +278,22 @@ describe("EnglishStepView", () => {
     const confirmBtn = screen.getByText("Sair da jornada");
     fireEvent.click(confirmBtn);
     expect(handleConfirmExitMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve exibir o estado sem jornada em andamento com link para /jornadas", () => {
+    vi.spyOn(viewModelModule, "useEnglishStepVM").mockReturnValue(
+      createMockVMReturn({ isNotFound: true })
+    );
+
+    render(
+      <AppProviders>
+        <EnglishStepView />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Nenhuma jornada em andamento")).toBeDefined();
+    expect(screen.getByText("Voltar para jornadas").closest("a")?.getAttribute("href")).toBe(
+      "/jornadas"
+    );
   });
 });

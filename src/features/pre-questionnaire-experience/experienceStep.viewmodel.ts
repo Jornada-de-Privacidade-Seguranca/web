@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRouter, usePathname } from "@shared/i18n/navigation";
+import { useRouter } from "@shared/i18n/navigation";
 import { useJourneyContext } from "@hooks/useJourneyContext";
 import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
 } from "@services/preQuestionnaireService";
 import {
-  getJourneyRoutePrefix,
-  getJourneyStepUrl,
+  getCurrentJourneyStepUrl,
   getJourneySummaryUrl,
   getNextPreQuestionnaireStep,
 } from "@shared/utils/journeyRoutes";
@@ -36,14 +35,11 @@ const NEXT_STEP = getNextPreQuestionnaireStep("experiencia-profissional");
 
 const JOURNEYS_HREF = "/jornadas";
 
-export function useExperienceStepVM(
-  journeyId: string
-): ExperienceStepViewModelReturn {
+export function useExperienceStepVM(): ExperienceStepViewModelReturn {
   const t = useTranslations("preQuestionnaire");
   const router = useRouter();
-  const pathname = usePathname();
-  const routePrefix = getJourneyRoutePrefix(pathname);
-  const journeyContext = useJourneyContext(journeyId);
+  const journeyContext = useJourneyContext();
+  const { journeyId } = journeyContext;
 
   const [selectedOption, setSelectedOption] =
     useState<ExperienceOptionId | null>(null);
@@ -52,31 +48,31 @@ export function useExperienceStepVM(
   // Busca dados previamente salvos da etapa experience
   const query = useQuery({
     queryKey: ["pre-questionnaire", journeyId, EXPERIENCE_STEP_ID],
-    queryFn: () => getPreQuestionnaireStep(journeyId, EXPERIENCE_STEP_ID),
+    queryFn: () => getPreQuestionnaireStep(journeyId as string, EXPERIENCE_STEP_ID),
     enabled: Boolean(journeyId),
     retry: 1,
   });
 
-  // Pré-seleciona a resposta apenas se ela foi salva na jornada em andamento;
-  // respostas de tentativas anteriores (jornadas concluídas) não são reaproveitadas
+  // Pré-seleciona a resposta salva na jornada em andamento; respostas de
+  // tentativas anteriores ficam em outras jornadas e não são reaproveitadas
   useEffect(() => {
-    if (!journeyContext.isOngoing || !query.data?.selectedOption) return;
+    if (!query.data?.selectedOption) return;
     const option = query.data.selectedOption as ExperienceOptionId;
     if (OPTION_IDS.includes(option)) {
       setSelectedOption(option);
     }
-  }, [journeyContext.isOngoing, query.data?.selectedOption]);
+  }, [query.data?.selectedOption]);
 
   // Mutation para persistir a resposta da etapa experience
   const mutation = useMutation({
     mutationFn: (option: ExperienceOptionId) =>
-      savePreQuestionnaireStep(journeyId, EXPERIENCE_STEP_ID, {
+      savePreQuestionnaireStep(journeyId as string, EXPERIENCE_STEP_ID, {
         selectedOption: option,
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Nível de Proficiência em Inglês
       if (NEXT_STEP) {
-        router.push(getJourneyStepUrl(routePrefix, journeyId, NEXT_STEP));
+        router.push(getCurrentJourneyStepUrl(NEXT_STEP));
       }
     },
   });
@@ -95,7 +91,7 @@ export function useExperienceStepVM(
 
   // Primeira etapa do pré-questionário: volta para o resumo da jornada
   const handleBack = () => {
-    router.push(getJourneySummaryUrl(routePrefix, journeyId));
+    router.push(journeyId ? getJourneySummaryUrl(journeyId) : JOURNEYS_HREF);
   };
 
   const handleExit = () => {
@@ -156,8 +152,8 @@ export function useExperienceStepVM(
     errorTitle: t("errorTitle"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
-    notFoundTitle: t("notFoundTitle"),
-    notFoundMessage: t("notFoundMessage"),
+    notFoundTitle: t("noOngoingJourneyTitle"),
+    notFoundMessage: t("noOngoingJourneyMessage"),
     backToJourneysLink: t("backToJourneysLink"),
   };
 
@@ -180,7 +176,6 @@ export function useExperienceStepVM(
         : null;
 
   return {
-    journeyId,
     journeyTitle: journeyContext.profileName ?? "",
     questionLabel,
     selectedOption,

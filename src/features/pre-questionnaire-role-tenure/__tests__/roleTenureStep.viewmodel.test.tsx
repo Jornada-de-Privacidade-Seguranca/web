@@ -16,19 +16,21 @@ vi.mock("@shared/i18n/navigation", () => ({
     replace: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => "/journey/data-governance/tempo-atuacao-perfil",
 }));
 
 let mockProfileName: string | null = null;
 
+let mockJourneyNotFound = false;
+
 vi.mock("@hooks/useJourneyContext", () => ({
   useJourneyContext: () => ({
+    journeyId: mockJourneyNotFound ? null : "data-governance",
+    profileId: mockJourneyNotFound ? null : "1",
     profileName: mockProfileName,
     domain: null,
-    isOngoing: true,
     isLoading: false,
-    isError: false,
-    isNotFound: false,
+    isError: mockJourneyNotFound,
+    isNotFound: mockJourneyNotFound,
     refetch: vi.fn(),
   }),
 }));
@@ -88,6 +90,7 @@ describe("useRoleTenureStepVM", () => {
     vi.restoreAllMocks();
     pushMock.mockReset();
     mockProfileName = null;
+    mockJourneyNotFound = false;
   });
 
   it("deve carregar os dados da etapa e expor as 5 opções configuradas", async () => {
@@ -98,7 +101,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -125,7 +128,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -141,7 +144,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: "4-6-years",
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -157,7 +160,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -180,7 +183,7 @@ describe("useRoleTenureStepVM", () => {
       .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
       .mockResolvedValue();
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -199,7 +202,7 @@ describe("useRoleTenureStepVM", () => {
         selectedOption: "1-3-years",
       });
       expect(pushMock).toHaveBeenCalledWith(
-        "/journey/data-governance/formacao-academica"
+        "/jornada/atual/formacao-academica"
       );
     });
   });
@@ -211,7 +214,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -222,7 +225,7 @@ describe("useRoleTenureStepVM", () => {
     });
 
     expect(pushMock).toHaveBeenCalledWith(
-      "/journey/data-governance/english"
+      "/jornada/atual/english"
     );
   });
 
@@ -233,7 +236,7 @@ describe("useRoleTenureStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -273,7 +276,7 @@ describe("useRoleTenureStepVM", () => {
       .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
       .mockResolvedValue();
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -311,7 +314,7 @@ describe("useRoleTenureStepVM", () => {
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce();
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -336,7 +339,7 @@ describe("useRoleTenureStepVM", () => {
     await waitFor(() => {
       expect(saveSpy).toHaveBeenCalledTimes(2);
       expect(result.current.error).toBeNull();
-      expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/formacao-academica");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/formacao-academica");
     });
     expect(getSpy).toHaveBeenCalledTimes(1);
   });
@@ -352,7 +355,7 @@ describe("useRoleTenureStepVM", () => {
         selectedOption: null,
       });
 
-    const { result } = renderHook(() => useRoleTenureStepVM("data-governance"), {
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -368,5 +371,19 @@ describe("useRoleTenureStepVM", () => {
 
     await waitFor(() => expect(result.current.error).toBeNull());
     expect(getSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it("sem jornada em andamento deve sinalizar isNotFound sem buscar a etapa", async () => {
+    mockJourneyNotFound = true;
+    const getSpy = vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep");
+
+    const { result } = renderHook(() => useRoleTenureStepVM(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isNotFound).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.journeysHref).toBe("/jornadas");
+    expect(getSpy).not.toHaveBeenCalled();
   });
 });

@@ -10,7 +10,6 @@ import { EXPERIENCE_STEP_ID } from "../experienceStep.types";
 
 const pushMock = vi.fn();
 const refetchJourneyMock = vi.fn();
-let mockPathname = "/jornada/10/experiencia-profissional";
 let mockJourneyContext: UseJourneyContextReturn;
 
 vi.mock("@shared/i18n/navigation", () => ({
@@ -20,7 +19,6 @@ vi.mock("@shared/i18n/navigation", () => ({
     replace: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => mockPathname,
 }));
 
 vi.mock("@hooks/useJourneyContext", () => ({
@@ -57,9 +55,10 @@ function buildJourneyContext(
   overrides?: Partial<UseJourneyContextReturn>
 ): UseJourneyContextReturn {
   return {
+    journeyId: "10",
+    profileId: "1",
     profileName: "Encarregado de Dados",
     domain: "privacy",
-    isOngoing: true,
     isLoading: false,
     isError: false,
     isNotFound: false,
@@ -93,14 +92,13 @@ describe("useExperienceStepVM", () => {
     vi.restoreAllMocks();
     pushMock.mockReset();
     refetchJourneyMock.mockReset();
-    mockPathname = "/jornada/10/experiencia-profissional";
     mockJourneyContext = buildJourneyContext();
   });
 
   it("deve expor as 6 opções e usar o nome do perfil como título da jornada", async () => {
     mockStep();
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -126,7 +124,7 @@ describe("useExperienceStepVM", () => {
     mockStep();
     mockJourneyContext = buildJourneyContext({ domain });
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -143,7 +141,7 @@ describe("useExperienceStepVM", () => {
       domain: null,
     });
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -156,23 +154,11 @@ describe("useExperienceStepVM", () => {
   it("deve pré-selecionar a resposta salva na jornada em andamento", async () => {
     mockStep("4-6-years");
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.selectedOption).toBe("4-6-years"));
-  });
-
-  it("não deve reaproveitar resposta de jornada que não está em andamento", async () => {
-    mockStep("4-6-years");
-    mockJourneyContext = buildJourneyContext({ isOngoing: false });
-
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.selectedOption).toBeNull();
   });
 
   it("handleContinue deve persistir com o id 'experience' e navegar para a etapa de inglês", async () => {
@@ -181,7 +167,7 @@ describe("useExperienceStepVM", () => {
       .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
       .mockResolvedValue();
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -202,14 +188,14 @@ describe("useExperienceStepVM", () => {
       expect(saveSpy).toHaveBeenCalledWith("10", "experience", {
         selectedOption: "less-than-1-year",
       });
-      expect(pushMock).toHaveBeenCalledWith("/jornada/10/english");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/english");
     });
   });
 
   it("handleBack deve voltar para o resumo da jornada", async () => {
     mockStep();
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -222,27 +208,10 @@ describe("useExperienceStepVM", () => {
     expect(pushMock).toHaveBeenCalledWith("/jornada/10");
   });
 
-  it("deve respeitar o prefixo /journey ao navegar", async () => {
-    mockPathname = "/journey/10/experiencia-profissional";
-    mockStep();
-
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    act(() => {
-      result.current.handleBack();
-    });
-
-    expect(pushMock).toHaveBeenCalledWith("/journey/10");
-  });
-
   it("deve controlar a abertura, cancelamento e confirmação do modal de saída", async () => {
     mockStep();
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -277,7 +246,7 @@ describe("useExperienceStepVM", () => {
       domain: null,
     });
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -311,7 +280,7 @@ describe("useExperienceStepVM", () => {
       domain: null,
     });
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -331,7 +300,7 @@ describe("useExperienceStepVM", () => {
       domain: null,
     });
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -348,7 +317,7 @@ describe("useExperienceStepVM", () => {
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce();
 
-    const { result } = renderHook(() => useExperienceStepVM("10"), {
+    const { result } = renderHook(() => useExperienceStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -373,7 +342,7 @@ describe("useExperienceStepVM", () => {
     await waitFor(() => {
       expect(saveSpy).toHaveBeenCalledTimes(2);
       expect(result.current.error).toBeNull();
-      expect(pushMock).toHaveBeenCalledWith("/jornada/10/english");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/english");
     });
   });
 });

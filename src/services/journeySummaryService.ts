@@ -4,6 +4,10 @@ import {
   type JourneyDetailApi,
 } from "@services/journeyService";
 import {
+  getJourneyProfile,
+  JourneyProfileRequestError,
+} from "@services/journeyProfileService";
+import {
   PRE_QUESTIONNAIRE_STEPS,
   type PreQuestionnaireStepSlug,
 } from "@shared/utils/journeyRoutes";
@@ -16,15 +20,19 @@ export interface JourneyProgress {
 }
 
 export interface JourneySummary {
-  id: string;
+  /** Id da jornada; null no resumo de um perfil (jornada ainda não criada) */
+  id: string | null;
+  /** Id do perfil da jornada, usado para criar uma nova jornada ao iniciar/refazer */
+  profileId: string | null;
   title: string;
   /** Total de etapas do fluxo (pré-questionário + competências) */
   stepsCount: number;
   /** Etapas com resposta registrada na jornada */
   completedStepsCount: number;
-  estimatedMinutes: number;
-  areasCount: number;
-  competenciesCount: number;
+  /** null quando o dado não está disponível (resumo de perfil) */
+  estimatedMinutes: number | null;
+  areasCount: number | null;
+  competenciesCount: number | null;
   status: JourneyStatus;
   progress: JourneyProgress;
 }
@@ -103,6 +111,7 @@ export function mapJourneyToSummary(
 
   return {
     id: String(journey.id),
+    profileId: profile?.id != null ? String(profile.id) : null,
     title: (locale === "en" ? profile?.name_en : profile?.name_pt) ?? "",
     stepsCount: PRE_QUESTIONNAIRE_STEPS.length,
     completedStepsCount:
@@ -137,3 +146,38 @@ export async function getJourneySummary(
     );
   }
 }
+
+/**
+ * Resumo de um perfil de jornada, exibido antes de a jornada ser criada.
+ * GET /journey-profiles não informa as competências do perfil, então duração,
+ * áreas e competências ficam indisponíveis (null) até a jornada existir.
+ */
+export async function getProfileSummary(
+  profileId: string,
+  locale: JourneySummaryLocale
+): Promise<JourneySummary> {
+  try {
+    const profile = await getJourneyProfile(profileId);
+    return {
+      id: null,
+      profileId: String(profile.id),
+      title: (locale === "en" ? profile.name_en : profile.name_pt) || profile.name_pt,
+      stepsCount: PRE_QUESTIONNAIRE_STEPS.length,
+      completedStepsCount: 0,
+      estimatedMinutes: null,
+      areasCount: null,
+      competenciesCount: null,
+      status: "not_started",
+      progress: { firstStepSlug: FIRST_STEP_SLUG, lastAnsweredStepSlug: null },
+    };
+  } catch (err: unknown) {
+    if (err instanceof JourneyProfileRequestError && err.type === "not_found") {
+      throw new JourneySummaryRequestError("not_found", "Perfil de jornada não encontrado.");
+    }
+    throw new JourneySummaryRequestError(
+      "server_error",
+      "Não foi possível carregar o resumo da jornada."
+    );
+  }
+}
+

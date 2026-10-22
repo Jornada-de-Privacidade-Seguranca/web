@@ -4,15 +4,17 @@ import { TranslateIcon } from "@hugeicons/core-free-icons";
 import { SingleChoiceQuestionStep } from "@features/pre-questionnaire/components/SingleChoiceQuestionStep";
 import { ExitConfirmationModal } from "@features/pre-questionnaire/components/ExitConfirmationModal";
 import { QuestionStepErrorBanner } from "@features/pre-questionnaire/components/QuestionStepErrorBanner";
+import { JourneyNotFoundState } from "@features/pre-questionnaire/components/JourneyNotFoundState";
 import { QuestionStepSkeleton } from "@features/pre-questionnaire/components/QuestionStepSkeleton";
 import { useEnglishStepVM } from "./englishStep.viewmodel";
-import type { EnglishStepViewProps } from "./englishStep.types";
 
-export function EnglishStepView({ journeySlug }: EnglishStepViewProps) {
+export function EnglishStepView() {
   const {
     journeyTitle,
     selectedOption,
     isLoading,
+    isNotFound,
+    journeysHref,
     isSubmitting,
     isExitModalOpen,
     error,
@@ -25,7 +27,18 @@ export function EnglishStepView({ journeySlug }: EnglishStepViewProps) {
     handleCancelExit,
     handleConfirmExit,
     handleRetry,
-  } = useEnglishStepVM(journeySlug);
+  } = useEnglishStepVM();
+
+  if (!isLoading && isNotFound) {
+    return (
+      <JourneyNotFoundState
+        title={labels.noOngoingJourneyTitle}
+        message={labels.noOngoingJourneyMessage}
+        backHref={journeysHref}
+        backLinkText={labels.backToJourneysLink}
+      />
+    );
+  }
 
   return (
     <>

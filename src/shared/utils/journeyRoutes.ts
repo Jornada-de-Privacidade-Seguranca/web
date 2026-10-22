@@ -1,5 +1,3 @@
-export type JourneyRoutePrefix = "jornada" | "journey";
-
 /**
  * Sequência oficial e ordenada de etapas do pré-questionário da jornada.
  * Conforme definido no "Como funciona" da jornada:
@@ -45,40 +43,29 @@ export function getPreviousPreQuestionnaireStep(
 }
 
 /**
- * Identifica o prefixo da rota baseado no pathname atual.
- * Suporta tanto as rotas em português (/jornada) quanto em inglês (/journey).
+ * Base das etapas do pré-questionário. As etapas sempre operam sobre a jornada
+ * em andamento do usuário (no máximo uma por vez), por isso a URL é fixa e não
+ * carrega o id da jornada.
  */
-export function getJourneyRoutePrefix(
-  pathname: string | null | undefined
-): JourneyRoutePrefix {
-  return pathname?.startsWith("/jornada") ? "jornada" : "journey";
+export const CURRENT_JOURNEY_BASE_PATH = "/jornada/atual";
+
+/**
+ * Monta o caminho de uma etapa do pré-questionário da jornada em andamento.
+ */
+export function getCurrentJourneyStepUrl(stepSlug: PreQuestionnaireStepSlug): string {
+  return `${CURRENT_JOURNEY_BASE_PATH}/${stepSlug}`;
 }
 
 /**
- * Monta o caminho relativo de uma etapa específica do pré-questionário.
+ * Monta o caminho do resumo de uma jornada já criada.
  */
-export function getJourneyStepUrl(
-  prefix: JourneyRoutePrefix,
-  journeySlug: string,
-  stepSlug: PreQuestionnaireStepSlug
-): string {
-  return `/${prefix}/${journeySlug}/${stepSlug}`;
+export function getJourneySummaryUrl(journeyId: string): string {
+  return `/jornada/${journeyId}`;
 }
 
 /**
- * Monta o caminho relativo do sumário/apresentação da jornada.
+ * Monta o caminho do resumo de um perfil de jornada, de onde a jornada é iniciada.
  */
-export function getJourneySummaryUrl(
-  prefix: JourneyRoutePrefix,
-  journeySlug: string
-): string {
-  return `/${prefix}/${journeySlug}`;
-}
-
-/**
- * Formata um slug com hífens para formato legível (Title Case).
- * Exemplo: "data-governance" -> "Data Governance"
- */
-export function formatJourneyTitleFromSlug(slug: string): string {
-  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+export function getProfileSummaryUrl(profileId: string): string {
+  return `/jornada/perfil/${profileId}`;
 }
