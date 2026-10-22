@@ -97,7 +97,8 @@ describe("preQuestionnaireService", () => {
 
       const result = await getPreQuestionnaireStep("novo-percurso-teste", "english");
       expect(result.slug).toBe("novo-percurso-teste");
-      expect(result.journeyTitle).toBe("Novo Percurso Teste");
+      // O identificador é o id da jornada, não um slug: não há título derivado
+      expect(result.journeyTitle).toBeUndefined();
       expect(result.selectedOption).toBeNull();
 
       // Chamada subsequente deve retornar a entrada recém-armazenada

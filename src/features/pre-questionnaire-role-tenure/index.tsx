@@ -4,15 +4,17 @@ import { UserTime01Icon } from "@hugeicons/core-free-icons";
 import { SingleChoiceQuestionStep } from "@features/pre-questionnaire/components/SingleChoiceQuestionStep";
 import { ExitConfirmationModal } from "@features/pre-questionnaire/components/ExitConfirmationModal";
 import { QuestionStepErrorBanner } from "@features/pre-questionnaire/components/QuestionStepErrorBanner";
+import { JourneyNotFoundState } from "@features/pre-questionnaire/components/JourneyNotFoundState";
 import { QuestionStepSkeleton } from "@features/pre-questionnaire/components/QuestionStepSkeleton";
 import { useRoleTenureStepVM } from "./roleTenureStep.viewmodel";
-import type { RoleTenureStepViewProps } from "./roleTenureStep.types";
 
-export function RoleTenureStepView({ journeySlug }: RoleTenureStepViewProps) {
+export function RoleTenureStepView() {
   const {
     journeyTitle,
     selectedOption,
     isLoading,
+    isNotFound,
+    journeysHref,
     isSubmitting,
     isExitModalOpen,
     error,
@@ -25,7 +27,18 @@ export function RoleTenureStepView({ journeySlug }: RoleTenureStepViewProps) {
     handleCancelExit,
     handleConfirmExit,
     handleRetry,
-  } = useRoleTenureStepVM(journeySlug);
+  } = useRoleTenureStepVM();
+
+  if (!isLoading && isNotFound) {
+    return (
+      <JourneyNotFoundState
+        title={labels.noOngoingJourneyTitle}
+        message={labels.noOngoingJourneyMessage}
+        backHref={journeysHref}
+        backLinkText={labels.backToJourneysLink}
+      />
+    );
+  }
 
   return (
     <>

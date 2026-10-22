@@ -100,7 +100,6 @@ describe("ExperienceStepView", () => {
     overrides?: Partial<ExperienceStepViewModelReturn>
   ): ExperienceStepViewModelReturn {
     return {
-      journeyId: "10",
       journeyTitle: "Encarregado de Dados",
       questionLabel: "Pergunta privacidade",
       selectedOption: null,
@@ -129,7 +128,7 @@ describe("ExperienceStepView", () => {
     vi.spyOn(viewModelModule, "useExperienceStepVM").mockReturnValue(vm);
     render(
       <AppProviders>
-        <ExperienceStepView journeyId="10" />
+        <ExperienceStepView />
       </AppProviders>
     );
     return vm;

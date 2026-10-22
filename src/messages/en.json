@@ -279,7 +279,14 @@
     "serverErrorTitle": "Unable to load the journey",
     "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
     "backToJourneysLink": "Back to the journeys list",
-    "loadingAriaLabel": "Loading journey summary"
+    "loadingAriaLabel": "Loading journey summary",
+    "notAvailable": "—",
+    "notAvailableAriaLabel": "{label}: not available",
+    "startingLabel": "Starting...",
+    "startErrorMessage": "Could not start the journey. Please try again.",
+    "resumeCurrentJourneyLabel": "Continue current journey",
+    "actionResume": "Resume journey",
+    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
   },
   "preQuestionnaire": {
     "header": {
@@ -349,6 +356,8 @@
     "saveError": "Could not save your answer. Please try again.",
     "notFoundTitle": "Journey not found",
     "notFoundMessage": "We couldn't find the journey you are trying to access. It may have been removed or the link is incorrect.",
-    "backToJourneysLink": "Back to journeys"
+    "backToJourneysLink": "Back to journeys",
+    "noOngoingJourneyTitle": "No journey in progress",
+    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list."
   }
 }

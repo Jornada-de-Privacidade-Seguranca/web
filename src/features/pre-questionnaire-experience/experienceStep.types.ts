@@ -48,7 +48,6 @@ export interface ExperienceStepLabels {
 }
 
 export interface ExperienceStepViewModelReturn {
-  journeyId: string;
   journeyTitle: string;
   questionLabel: string;
   selectedOption: ExperienceOptionId | null;
@@ -68,8 +67,4 @@ export interface ExperienceStepViewModelReturn {
   handleCancelExit: () => void;
   handleConfirmExit: () => void;
   handleRetry: () => void;
-}
-
-export interface ExperienceStepViewProps {
-  journeyId: string;
 }

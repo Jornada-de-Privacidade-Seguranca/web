@@ -1,5 +1,5 @@
 import axios from "axios";
-import { axiosInstance, type ApiResponse } from "@services/httpClient";
+import { apiRequest, axiosInstance, type ApiResponse } from "@services/httpClient";
 import { env } from "@shared/config/env";
 
 export type JourneyDomain = "privacy" | "security" | "joint";
@@ -179,3 +179,58 @@ export async function getJourney(journeyId: string): Promise<JourneyDetailApi> {
     );
   }
 }
+
+/** Item de GET /users/{user}/journeys usado para localizar a jornada em andamento. */
+interface OngoingJourneyListItemApi {
+  id: number;
+}
+
+/**
+ * Busca a jornada em andamento do usuário. O backend garante no máximo uma por
+ * vez, mas não expõe GET /journeys/current: localizamos o id pela listagem
+ * filtrada por status e então buscamos o detalhe em GET /journeys/{journey}.
+ * Sem jornada em andamento, lança JourneyRequestError("not_found").
+ */
+export async function getCurrentJourney(userId: number): Promise<JourneyDetailApi> {
+  let ongoing: OngoingJourneyListItemApi[];
+  try {
+    ongoing = await apiRequest<OngoingJourneyListItemApi[]>(
+      `/users/${userId}/journeys`,
+      { params: { status: "ongoing", page: 1, per_page: 1 } },
+      "Não foi possível carregar a jornada em andamento."
+    );
+  } catch {
+    throw new JourneyRequestError(
+      "server_error",
+      "Não foi possível carregar a jornada em andamento."
+    );
+  }
+
+  const current = Array.isArray(ongoing) ? ongoing[0] : undefined;
+  if (!current) {
+    throw new JourneyRequestError("not_found", "Nenhuma jornada em andamento.");
+  }
+  return getJourney(String(current.id));
+}
+
+/** Jornada recém-criada, como devolvida por POST /users/{user}/journeys. */
+export interface CreatedJourneyApi {
+  id: number;
+}
+
+/**
+ * Inicia uma jornada do perfil informado para o usuário. Erros chegam como
+ * ApiRequestError; 409 (JOURNEY_IN_PROGRESS) indica que já existe uma jornada
+ * em andamento.
+ */
+export async function createJourney(
+  userId: number,
+  journeyProfileId: number
+): Promise<CreatedJourneyApi> {
+  return apiRequest<CreatedJourneyApi>(
+    `/users/${userId}/journeys`,
+    { method: "post", data: { journey_profile_id: journeyProfileId }, withCsrf: true },
+    "Não foi possível iniciar a jornada."
+  );
+}
+

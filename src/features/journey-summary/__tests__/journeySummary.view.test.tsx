@@ -113,6 +113,11 @@ describe("JourneySummaryView Component", () => {
     serverErrorMessage: "Não foi possível completar a busca.",
     backToJourneysLink: "Voltar para a listagem de jornadas",
     loadingAriaLabel: "Carregando resumo da jornada",
+    notAvailable: "—",
+    notAvailableAriaLabel: (label) => `${label}: não disponível`,
+    startingLabel: "Iniciando...",
+    startErrorMessage: "Não foi possível iniciar a jornada. Tente novamente.",
+    resumeCurrentJourneyLabel: "Continuar jornada atual",
   };
 
   function createMockVMReturn(
@@ -121,7 +126,8 @@ describe("JourneySummaryView Component", () => {
     return {
       journey: {
         id: "1",
-            title: "Governança de Dados",
+        profileId: "1",
+        title: "Governança de Dados",
         stepsCount: 6,
         completedStepsCount: 0,
         estimatedMinutes: 23,
@@ -134,8 +140,12 @@ describe("JourneySummaryView Component", () => {
       error: null,
       ctaLabel: "Iniciar jornada",
       ctaAriaLabel: "Iniciar jornada — Governança de Dados",
-      resolvedStartUrl: "/jornada/1/experiencia-profissional",
+      isStarting: false,
+      isCtaDisabled: false,
+      startError: null,
+      journeyInProgressNotice: null,
       onStartJourney: vi.fn(),
+      onResumeCurrentJourney: vi.fn(),
       onDismiss: vi.fn(),
       labels: mockLabels,
       ...overrides,
@@ -156,11 +166,10 @@ describe("JourneySummaryView Component", () => {
 
   it("deve renderizar o resumo com CTA apontando para a rota resolvida e chamar onDismiss ao clicar em voltar", () => {
     const onDismissMock = vi.fn();
-    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
-      createMockVMReturn({
-        onDismiss: onDismissMock,
-      })
-    );
+    const vm = createMockVMReturn({
+      onDismiss: onDismissMock,
+    });
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(vm);
 
     renderView();
 
@@ -172,10 +181,72 @@ describe("JourneySummaryView Component", () => {
     fireEvent.click(screen.getByText("Agora não"));
     expect(onDismissMock).toHaveBeenCalled();
 
-    const ctaLink = screen.getByText("Iniciar jornada").closest("a");
-    expect(ctaLink?.getAttribute("href")).toBe(
-      "/jornada/1/experiencia-profissional"
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" }));
+    expect(vm.onStartJourney).toHaveBeenCalled();
+  });
+
+  it("deve exibir \"—\" nas caixas sem dado (resumo de perfil)", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({
+        journey: {
+          ...createMockVMReturn().journey!,
+          id: null,
+          estimatedMinutes: null,
+          areasCount: null,
+          competenciesCount: null,
+        },
+      })
     );
+
+    renderView();
+
+    expect(screen.getByLabelText("Duração: não disponível")).toBeDefined();
+    expect(screen.getByLabelText("Competências: não disponível")).toBeDefined();
+  });
+
+  it("deve exibir o aviso de jornada em andamento, com retomar, e bloquear o botão principal", () => {
+    const onResume = vi.fn();
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({
+        journeyInProgressNotice: "Você já possui uma jornada em andamento.",
+        isCtaDisabled: true,
+        onResumeCurrentJourney: onResume,
+      })
+    );
+
+    renderView();
+
+    expect(screen.getByRole("status").textContent).toContain(
+      "Você já possui uma jornada em andamento."
+    );
+    const cta = screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" });
+    expect((cta as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continuar jornada atual" }));
+    expect(onResume).toHaveBeenCalled();
+  });
+
+  it("deve exibir falhas ao iniciar como alerta", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({ startError: "Não foi possível iniciar a jornada. Tente novamente." })
+    );
+
+    renderView();
+
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Não foi possível iniciar a jornada. Tente novamente."
+    );
+  });
+
+  it("deve indicar o início em andamento no botão principal", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({ isStarting: true, isCtaDisabled: true })
+    );
+
+    renderView();
+
+    const cta = screen.getByText("Iniciando...").closest("button");
+    expect(cta?.disabled).toBe(true);
   });
 
   it("deve exibir o estado de não encontrado substituindo o conteúdo, com link de volta para /jornadas", () => {

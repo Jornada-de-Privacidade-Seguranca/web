@@ -7,9 +7,8 @@ import { JourneyNotFoundState } from "@features/pre-questionnaire/components/Jou
 import { QuestionStepErrorBanner } from "@features/pre-questionnaire/components/QuestionStepErrorBanner";
 import { QuestionStepSkeleton } from "@features/pre-questionnaire/components/QuestionStepSkeleton";
 import { useExperienceStepVM } from "./experienceStep.viewmodel";
-import type { ExperienceStepViewProps } from "./experienceStep.types";
 
-export function ExperienceStepView({ journeyId }: ExperienceStepViewProps) {
+export function ExperienceStepView() {
   const {
     journeyTitle,
     questionLabel,
@@ -30,7 +29,7 @@ export function ExperienceStepView({ journeyId }: ExperienceStepViewProps) {
     handleCancelExit,
     handleConfirmExit,
     handleRetry,
-  } = useExperienceStepVM(journeyId);
+  } = useExperienceStepVM();
 
   if (isLoading) {
     return (

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { axiosInstance, type ApiResponse } from "@services/httpClient";
 import { env } from "@shared/config/env";
-import { formatJourneyTitleFromSlug } from "@shared/utils/journeyRoutes";
 
 export interface PreQuestionnaireStepAnswer {
   selectedOption: string;
@@ -75,7 +74,6 @@ export async function getPreQuestionnaireStep(
       const fallback: PreQuestionnaireStepData = {
         slug,
         step,
-        journeyTitle: formatJourneyTitleFromSlug(slug),
         selectedOption: null,
       };
       DEV_MOCK_STORE[key] = fallback;

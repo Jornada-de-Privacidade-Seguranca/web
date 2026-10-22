@@ -1,26 +1,29 @@
 import {
-  getJourneySummaryUrl,
-  type JourneyRoutePrefix,
+  getCurrentJourneyStepUrl,
+  type PreQuestionnaireStepSlug,
 } from "@shared/utils/journeyRoutes";
 import type { JourneySummary } from "./journeySummary.types";
 
 /**
- * Resolve fills para status not_started/completed sempre a primeira etapa; jornadas
- * em andamento retomam da última resposta salva, caindo para a primeira etapa
- * quando ainda não houver nenhuma resposta registrada.
+ * Etapa de onde a jornada em andamento deve seguir: a última resposta salva,
+ * ou a primeira etapa quando ainda não houver resposta. As etapas usam a URL
+ * fixa da jornada em andamento.
  */
-export function resolveJourneyStartUrl(
-  journey: JourneySummary,
-  routePrefix: JourneyRoutePrefix = "jornada"
-): string {
-  const { id, status, progress } = journey;
+export function resolveJourneyStartUrl(journey: JourneySummary): string {
+  const { status, progress } = journey;
 
   const stepSlug =
     status === "in_progress" && progress.lastAnsweredStepSlug
       ? progress.lastAnsweredStepSlug
       : progress.firstStepSlug;
 
-  // As etapas são identificadas pelo id da jornada, o mesmo usado pela rota do
-  // resumo, para que o "Voltar" da primeira etapa retorne a esta tela.
-  return `${getJourneySummaryUrl(routePrefix, id)}/${stepSlug}`;
+  return getCurrentJourneyStepUrl(stepSlug as PreQuestionnaireStepSlug);
+}
+
+/**
+ * Iniciar a partir de um perfil ou refazer uma jornada concluída cria uma
+ * jornada nova no backend; jornadas em andamento apenas continuam.
+ */
+export function requiresJourneyCreation(journey: JourneySummary): boolean {
+  return journey.id === null || journey.status === "completed";
 }

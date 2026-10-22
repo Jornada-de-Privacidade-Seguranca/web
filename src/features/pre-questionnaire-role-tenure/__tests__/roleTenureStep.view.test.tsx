@@ -19,6 +19,11 @@ vi.mock("@shared/i18n/navigation", () => ({
     prefetch: vi.fn(),
   }),
   usePathname: () => "/journey/data-governance/tempo-atuacao-perfil",
+  Link: ({ href, children, ...rest }: React.ComponentProps<"a">) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 describe("RoleTenureStepView", () => {
@@ -72,6 +77,9 @@ describe("RoleTenureStepView", () => {
     },
     loadingText: "Carregando pergunta...",
     errorTitle: "Erro",
+    noOngoingJourneyTitle: "Nenhuma jornada em andamento",
+    noOngoingJourneyMessage: "Não encontramos uma jornada em andamento.",
+    backToJourneysLink: "Voltar para jornadas",
     errorMessage: "Falha ao carregar.",
     retryButton: "Tentar novamente",
   };
@@ -88,10 +96,11 @@ describe("RoleTenureStepView", () => {
     overrides?: Partial<RoleTenureStepViewModelReturn>
   ): RoleTenureStepViewModelReturn {
     return {
-      journeySlug: "data-governance",
       journeyTitle: "Governança de Dados",
       selectedOption: null,
       isLoading: false,
+      isNotFound: false,
+      journeysHref: "/jornadas",
       isSubmitting: false,
       isExitModalOpen: false,
       error: null,
@@ -115,7 +124,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -130,7 +139,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -156,7 +165,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -177,7 +186,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -195,7 +204,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -216,7 +225,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -243,7 +252,7 @@ describe("RoleTenureStepView", () => {
 
     render(
       <AppProviders>
-        <RoleTenureStepView journeySlug="data-governance" />
+        <RoleTenureStepView />
       </AppProviders>
     );
 
@@ -257,5 +266,22 @@ describe("RoleTenureStepView", () => {
     const confirmBtn = screen.getByText("Sair da jornada");
     fireEvent.click(confirmBtn);
     expect(handleConfirmExitMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve exibir o estado sem jornada em andamento com link para /jornadas", () => {
+    vi.spyOn(viewModelModule, "useRoleTenureStepVM").mockReturnValue(
+      createMockVMReturn({ isNotFound: true })
+    );
+
+    render(
+      <AppProviders>
+        <RoleTenureStepView />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Nenhuma jornada em andamento")).toBeDefined();
+    expect(screen.getByText("Voltar para jornadas").closest("a")?.getAttribute("href")).toBe(
+      "/jornadas"
+    );
   });
 });
