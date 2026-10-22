@@ -355,6 +355,19 @@
         "4": "stricto sensu"
       }
     },
+    "certifications": {
+      "stepTag": "PRE-QUESTIONNAIRE · PROFESSIONAL CERTIFICATIONS",
+      "title": "Professional certifications",
+      "description": "Select one or more certifications that are part of your résumé.",
+      "searchPlaceholder": "Search certification...",
+      "searchAriaLabel": "Search certification",
+      "groupsAriaLabel": "Knowledge domains",
+      "emptyLabel": "No certifications found.",
+      "counterLabel": "{count} certification(s) selected",
+      "limitReachedLabel": "You have reached the limit of {max} selected certifications.",
+      "removeCertificationAriaLabel": "Remove {certification}",
+      "otherGroupLabel": "Other"
+    },
     "actions": {
       "back": "Back",
       "continue": "Continue",

@@ -355,6 +355,19 @@
         "4": "stricto sensu"
       }
     },
+    "certifications": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · CERTIFICAÇÕES PROFISSIONAIS",
+      "title": "Certificações profissionais",
+      "description": "Selecione uma ou mais certificações que fazem parte do seu currículo.",
+      "searchPlaceholder": "Pesquisar certificação...",
+      "searchAriaLabel": "Pesquisar certificação",
+      "groupsAriaLabel": "Domínios de conhecimento",
+      "emptyLabel": "Nenhuma certificação encontrada.",
+      "counterLabel": "{count} certificação(ões) selecionada(s)",
+      "limitReachedLabel": "Você atingiu o limite de {max} certificações selecionadas.",
+      "removeCertificationAriaLabel": "Remover {certification}",
+      "otherGroupLabel": "Outras"
+    },
     "actions": {
       "back": "Voltar",
       "continue": "Continuar",
