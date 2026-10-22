@@ -57,6 +57,14 @@ export function getCurrentJourneyStepUrl(stepSlug: PreQuestionnaireStepSlug): st
 }
 
 /**
+ * Monta o caminho de uma área do questionário de competências da jornada em
+ * andamento (índice base 0).
+ */
+export function getCompetenciesAreaUrl(areaIndex: number): string {
+  return `${getCurrentJourneyStepUrl("competencias")}/${areaIndex}`;
+}
+
+/**
  * Monta o caminho do resumo de uma jornada já criada.
  */
 export function getJourneySummaryUrl(journeyId: string): string {

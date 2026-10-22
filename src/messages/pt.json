@@ -388,6 +388,40 @@
     "notFoundMessage": "Não encontramos a jornada que você está tentando acessar. Ela pode ter sido removida ou o link está incorreto.",
     "backToJourneysLink": "Voltar para jornadas",
     "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
-    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem."
+    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
+    "competenciesIntro": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · COMPETÊNCIAS",
+      "title": "Questionário de competências",
+      "subtitle": "Leia as instruções antes de iniciar o questionário.",
+      "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",
+      "domains": {
+        "privacy": "privacidade",
+        "security": "segurança da informação",
+        "joint": "privacidade e/ou segurança da informação"
+      },
+      "instructionsAriaLabel": "Instruções do questionário",
+      "items": {
+        "objective": {
+          "title": "Questões objetivas",
+          "description": "Cada pergunta possui uma única alternativa. Escolha a opção que melhor representa seu conhecimento."
+        },
+        "sincerity": {
+          "title": "Responda com sinceridade",
+          "description": "Não há penalidade por erro. O objetivo é mapear seu nível real de conhecimento."
+        },
+        "navigation": {
+          "title": "Navegação livre",
+          "description": "Você pode avançar e voltar entre as perguntas antes de finalizar a jornada."
+        },
+        "estimatedTime": {
+          "title": "Tempo estimado",
+          "description": "Reserve cerca de {minutes, plural, one {# minuto} other {# minutos}} em um ambiente sem interrupções para melhor concentração.",
+          "fallbackDescription": "Reserve um momento em um ambiente sem interrupções para melhor concentração."
+        }
+      },
+      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria.",
+      "startButton": "Iniciar questionário",
+      "loading": "Carregando instruções..."
+    }
   }
 }
