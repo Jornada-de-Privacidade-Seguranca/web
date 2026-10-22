@@ -130,41 +130,49 @@ describe("assessmentsService", () => {
     expect(result.total).toBe(0);
   });
 
-  it("deve buscar o catálogo de jornadas aplicando o filtro de busca", async () => {
-    const mockData = {
-      items: [
-        {
-          id: "j2",
-          title: "LGPD na Prática",
-          description: "Entenda a lei geral de proteção de dados",
-          totalQuestions: 8,
-          estimatedMinutes: 12,
-          status: "completed" as const,
+  it("deve buscar o catálogo em /journey-profiles e mapear perfis para cards que levam ao resumo do perfil", async () => {
+    const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 4,
+            name_pt: "Titular",
+            name_en: "Data Subject",
+            description_pt: "Perfil do titular",
+            description_en: "Data subject profile",
+            type: 1,
+          },
+        ],
+        meta: {
+          pagination: { current_page: 2, per_page: 6, total: 18, last_page: 3, has_next_page: true },
         },
-      ],
-      total: 1,
-      page: 1,
-      limit: 6,
-      totalPages: 1,
-    };
+      })
+    );
 
-    const requestSpy = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
-
-    const result = await getCatalogAssessments({
-      page: 1,
-      limit: 6,
-      search: "LGPD",
-    });
+    const result = await getCatalogAssessments({ page: 2, limit: 6, locale: "en" });
 
     expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/assessments",
-        params: { page: 1, limit: 6, search: "LGPD" },
+        url: "/journey-profiles",
+        params: { page: 2, per_page: 6 },
       })
     );
-    expect(result.items[0].title).toBe("LGPD na Prática");
+    expect(result).toEqual({
+      items: [
+        {
+          id: "4",
+          title: "Data Subject",
+          description: "Data subject profile",
+          status: "not_started",
+          href: "/jornada/perfil/4",
+        },
+      ],
+      total: 18,
+      page: 2,
+      limit: 6,
+      totalPages: 3,
+    });
   });
 
   it("deve lançar erro quando a resposta HTTP for status de erro (ex: 500)", async () => {

@@ -15,8 +15,27 @@ vi.mock("@hooks/useAuth", () => ({
   useAuth: () => mockAuth,
 }));
 
+// Jornada em andamento do usuário, usada para marcar o perfil dela no catálogo
+const mockCurrentJourney = vi.hoisted(() => ({
+  journeyId: null as string | null,
+  profileId: null as string | null,
+}));
+
+vi.mock("@hooks/useJourneyContext", () => ({
+  useJourneyContext: () => ({
+    ...mockCurrentJourney,
+    profileName: null,
+    domain: null,
+    isLoading: false,
+    isError: false,
+    isNotFound: !mockCurrentJourney.journeyId,
+    refetch: () => {},
+  }),
+}));
+
 // Mock next-intl
 vi.mock("next-intl", () => ({
+  useLocale: () => "pt",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (key === "questionsCount") return `${params?.count} perguntas`;
     if (key === "estimatedMinutes") return `${params?.minutes} min`;
@@ -86,6 +105,8 @@ describe("useAssessmentsVM", () => {
   };
 
   beforeEach(() => {
+    mockCurrentJourney.journeyId = null;
+    mockCurrentJourney.profileId = null;
     vi.restoreAllMocks();
     mockAuth.user = { id: 1 };
     mockAuth.isLoading = false;
@@ -172,7 +193,31 @@ describe("useAssessmentsVM", () => {
     expect(result.current.pendingError).toBe("Erro ao carregar dados do servidor.");
   });
 
-  it("deve atualizar o termo de busca no catálogo e chamar o serviço com o termo filtrado", async () => {
+  it("deve marcar o perfil da jornada em andamento como em andamento, levando ao resumo da jornada", async () => {
+    mockCurrentJourney.journeyId = "78";
+    mockCurrentJourney.profileId = "c2";
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
+      mockPendingJourneys
+    );
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue({
+      ...mockCatalogJourneys,
+      items: mockCatalogJourneys.items.map((j) => ({
+        ...j,
+        status: "not_started" as const,
+        href: `/jornada/perfil/${j.id}`,
+      })),
+    });
+
+    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isCatalogLoading).toBe(false));
+
+    const [other, current] = result.current.catalogJourneys;
+    expect(other).toMatchObject({ id: "c1", status: "not_started", href: "/jornada/perfil/c1" });
+    expect(current).toMatchObject({ id: "c2", status: "in_progress", href: "/jornada/78" });
+  });
+
+  it("deve filtrar o catálogo localmente pelo termo de busca, sem nova requisição", async () => {
     vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
       mockPendingJourneys
     );
@@ -186,18 +231,24 @@ describe("useAssessmentsVM", () => {
       expect(result.current.isCatalogLoading).toBe(false);
     });
 
+    expect(catalogSpy).toHaveBeenCalledWith({ page: 1, limit: 6, locale: "pt" });
+    expect(result.current.catalogJourneys).toHaveLength(2);
+
     act(() => {
-      result.current.handleSearchChange("LGPD");
+      // Sem acento e em minúsculas: a busca ignora acentos e maiúsculas
+      result.current.handleSearchChange("seguranca");
     });
 
-    expect(result.current.searchTerm).toBe("LGPD");
+    expect(result.current.searchTerm).toBe("seguranca");
 
     await waitFor(
       () => {
-        expect(catalogSpy).toHaveBeenCalledWith({ page: 1, limit: 6, search: "LGPD" });
+        expect(result.current.catalogJourneys.map((j) => j.id)).toEqual(["c2"]);
       },
       { timeout: 1000 }
     );
+    // A busca não refaz a requisição: o backend não tem busca por texto
+    expect(catalogSpy).toHaveBeenCalledTimes(1);
   });
 
   it("deve atualizar a página de pendentes e do catálogo chamando o serviço com a nova página", async () => {
@@ -227,7 +278,7 @@ describe("useAssessmentsVM", () => {
     });
 
     await waitFor(() => {
-      expect(catalogSpy).toHaveBeenCalledWith({ page: 3, limit: 6, search: "" });
+      expect(catalogSpy).toHaveBeenCalledWith({ page: 3, limit: 6, locale: "pt" });
     });
   });
 
