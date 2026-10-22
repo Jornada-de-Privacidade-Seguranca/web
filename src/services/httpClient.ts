@@ -11,6 +11,23 @@ export interface ApiResponse<T> {
   meta?: Record<string, unknown>;
 }
 
+/**
+ * Erro de requisição que preserva o status HTTP e o `code` do envelope de erro
+ * do backend, para que os services diferenciem 404, 422 e 5xx. A mensagem é a
+ * mesma que antes era lançada como `Error` simples.
+ */
+export class ApiRequestError extends Error {
+  readonly status?: number;
+  readonly code?: string;
+
+  constructor(message: string, status?: number, code?: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export interface ApiResponseWithMeta<T, M> {
   data: T;
   meta: M | undefined;
@@ -37,6 +54,16 @@ let cachedCsrfToken: string | null = null;
 function isMutatingMethod(method: AxiosRequestConfig["method"]): boolean {
   const normalized = (method ?? "get").toString().toUpperCase();
   return normalized !== "GET" && normalized !== "HEAD";
+}
+
+function toApiRequestError(error: unknown, defaultErrorMessage: string): ApiRequestError {
+  const message = extractErrorMessage(error, defaultErrorMessage);
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { code?: unknown } | undefined;
+    const code = typeof data?.code === "string" ? data.code : undefined;
+    return new ApiRequestError(message, error.response?.status, code);
+  }
+  return new ApiRequestError(message);
 }
 
 function extractErrorMessage(error: unknown, defaultErrorMessage: string): string {
@@ -126,10 +153,10 @@ async function sendRequest(
       try {
         response = await send();
       } catch (retryError) {
-        throw new Error(extractErrorMessage(retryError, defaultErrorMessage));
+        throw toApiRequestError(retryError, defaultErrorMessage);
       }
     } else {
-      throw new Error(extractErrorMessage(error, defaultErrorMessage));
+      throw toApiRequestError(error, defaultErrorMessage);
     }
   }
 
