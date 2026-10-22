@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -12,18 +14,17 @@ import { Button, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "@compon
 import { cn } from "@/shared/lib/utils";
 import { useMultiSelectSearchStepVM } from "./multiSelectSearchStep.viewmodel";
 import type {
-  MultiSelectItem,
+  MultiSelectItemListProps,
   MultiSelectSearchStepProps,
 } from "./multiSelectSearchStep.types";
 
-interface ItemListProps {
-  items: MultiSelectItem[];
-  selectedIds: Set<string>;
-  emptyLabel: string;
-  onToggleItem: (id: string) => void;
-}
-
-function ItemList({ items, selectedIds, emptyLabel, onToggleItem }: ItemListProps) {
+function ItemList({
+  items,
+  selectedIds,
+  emptyLabel,
+  isLimitReached,
+  onToggleItem,
+}: MultiSelectItemListProps) {
   if (items.length === 0) {
     return (
       <p role="status" className="py-8 text-center text-sm text-muted-foreground">
@@ -36,6 +37,10 @@ function ItemList({ items, selectedIds, emptyLabel, onToggleItem }: ItemListProp
     <ul className="grid max-h-[360px] gap-3 overflow-y-auto pr-1">
       {items.map((item) => {
         const isSelected = selectedIds.has(item.id);
+        // Com o limite atingido, só os selecionados podem ser alterados. O item
+        // continua focável (aria-disabled em vez de disabled) para o leitor de
+        // tela informar que ele existe
+        const isDisabled = isLimitReached && !isSelected;
         const inputId = `multi-select-item-${item.id}`;
 
         return (
@@ -43,18 +48,23 @@ function ItemList({ items, selectedIds, emptyLabel, onToggleItem }: ItemListProp
             <label
               htmlFor={inputId}
               className={cn(
-                "group flex w-full cursor-pointer select-none items-center gap-3.5 rounded-2xl border p-4 text-left transition-all duration-150",
+                "group flex w-full select-none items-center gap-3.5 rounded-2xl border p-4 text-left transition-all duration-150",
                 "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary",
                 isSelected
-                  ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/30"
-                  : "border-border/60 bg-muted/20 text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground"
+                  ? "cursor-pointer border-primary bg-primary/10 text-foreground ring-1 ring-primary/30"
+                  : isDisabled
+                    ? "cursor-not-allowed border-border/40 bg-muted/10 text-muted-foreground opacity-50"
+                    : "cursor-pointer border-border/60 bg-muted/20 text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground"
               )}
             >
               <input
                 id={inputId}
                 type="checkbox"
                 checked={isSelected}
-                onChange={() => onToggleItem(item.id)}
+                aria-disabled={isDisabled || undefined}
+                onChange={() => {
+                  if (!isDisabled) onToggleItem(item.id);
+                }}
                 className="sr-only"
               />
               <span
@@ -113,6 +123,9 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
     onExit,
     isSubmitting,
     canContinue,
+    isLimitReached,
+    limitReachedLabel,
+    groupColumns,
     backLabel = "Voltar",
     backAriaLabel,
     continueLabel = "Continuar",
@@ -122,12 +135,23 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
   } = useMultiSelectSearchStepVM(props);
 
   const itemList = (
-    <ItemList
-      items={items}
-      selectedIds={selectedIds}
-      emptyLabel={emptyLabel}
-      onToggleItem={onToggleItem}
-    />
+    <>
+      {isLimitReached && limitReachedLabel && (
+        <p
+          role="status"
+          className="mb-3 rounded-xl border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground"
+        >
+          {limitReachedLabel}
+        </p>
+      )}
+      <ItemList
+        items={items}
+        selectedIds={selectedIds}
+        emptyLabel={emptyLabel}
+        isLimitReached={isLimitReached}
+        onToggleItem={onToggleItem}
+      />
+    </>
   );
 
   return (
@@ -195,9 +219,13 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
             />
           </div>
 
-          {/* Chips dos selecionados (todas as abas) */}
+          {/* Chips dos selecionados (todas as abas), com altura máxima e rolagem
+              própria para que muitas seleções não empurrem a lista para fora da tela */}
           {selectedItems.length > 0 && (
-            <ul className="mb-6 flex flex-wrap gap-2">
+            <ul
+              data-testid="multi-select-chips"
+              className="mb-6 flex max-h-36 flex-wrap content-start gap-2 overflow-y-auto pr-1"
+            >
               {selectedItems.map((item) => (
                 <li key={item.id}>
                   <button
@@ -219,7 +247,9 @@ export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
             <Tabs value={activeGroupId} onValueChange={onGroupChange}>
               <TabsList
                 aria-label={groupsAriaLabel}
-                className="grid h-auto w-full grid-cols-2 items-stretch gap-1 bg-muted/30 sm:grid-cols-4"
+                // Uma coluna por aba em telas maiores (2 abas não deixam espaço vazio)
+                style={{ "--tab-columns": groupColumns } as React.CSSProperties}
+                className="grid h-auto w-full grid-cols-2 items-stretch gap-1 bg-muted/30 sm:[grid-template-columns:repeat(var(--tab-columns),minmax(0,1fr))]"
               >
                 {groups.map((group) => (
                   <TabsTrigger

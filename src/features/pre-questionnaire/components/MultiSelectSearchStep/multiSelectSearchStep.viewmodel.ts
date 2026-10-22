@@ -16,6 +16,8 @@ export function useMultiSelectSearchStepVM(
   // Continuar sem seleção é permitido; o botão só trava durante o salvamento
   // ou quando a etapa indicar que ainda não é seguro salvar
   const canContinue = !props.isSubmitting && !props.isContinueDisabled;
+  const isLimitReached =
+    props.maxSelectable !== undefined && props.selectedItems.length >= props.maxSelectable;
 
   return {
     ...props,
@@ -23,5 +25,7 @@ export function useMultiSelectSearchStepVM(
     hasGroups,
     selectedIds,
     canContinue,
+    isLimitReached,
+    groupColumns: Math.max(groups?.length ?? 0, 1),
   };
 }

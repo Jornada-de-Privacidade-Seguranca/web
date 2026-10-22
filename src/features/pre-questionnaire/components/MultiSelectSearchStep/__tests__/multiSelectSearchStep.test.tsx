@@ -149,4 +149,62 @@ describe("MultiSelectSearchStep", () => {
     expect(props.onBack).toHaveBeenCalled();
     expect(props.onExit).toHaveBeenCalled();
   });
+
+  it("com o limite atingido, deve exibir o aviso e desabilitar só os itens não selecionados", () => {
+    const props = createProps({
+      maxSelectable: 1,
+      limitReachedLabel: "Você atingiu o limite de 1 certificação.",
+      selectedItems: [{ id: "10", label: "Direito" }],
+    });
+    render(<MultiSelectSearchStep {...props} />);
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "Você atingiu o limite de 1 certificação."
+    );
+
+    const notSelected = screen.getByRole("checkbox", { name: /Ciência da Computação/ });
+    expect(notSelected.getAttribute("aria-disabled")).toBe("true");
+    // Continua focável para o leitor de tela, mas não altera a seleção
+    expect((notSelected as HTMLInputElement).disabled).toBe(false);
+    fireEvent.click(screen.getByText("Ciência da Computação"));
+    expect(props.onToggleItem).not.toHaveBeenCalled();
+
+    // O selecionado continua podendo ser desmarcado
+    const selected = screen.getByRole("checkbox", { name: /Direito/ });
+    expect(selected.getAttribute("aria-disabled")).toBeNull();
+    fireEvent.click(selected);
+    expect(props.onToggleItem).toHaveBeenCalledWith("10");
+  });
+
+  it("abaixo do limite, não deve exibir o aviso nem desabilitar itens", () => {
+    render(
+      <MultiSelectSearchStep
+        {...createProps({ maxSelectable: 5, limitReachedLabel: "Limite atingido." })}
+      />
+    );
+
+    expect(screen.queryByText("Limite atingido.")).toBeNull();
+    for (const checkbox of screen.getAllByRole("checkbox")) {
+      expect(checkbox.getAttribute("aria-disabled")).toBeNull();
+    }
+  });
+
+  it("deve usar uma coluna por aba em telas maiores", () => {
+    render(<MultiSelectSearchStep {...createProps()} />);
+
+    const tablist = screen.getByRole("tablist");
+    expect(tablist.style.getPropertyValue("--tab-columns")).toBe("2");
+  });
+
+  it("deve limitar a altura da área de chips, com rolagem própria", () => {
+    render(
+      <MultiSelectSearchStep
+        {...createProps({ selectedItems: [{ id: "10", label: "Direito" }] })}
+      />
+    );
+
+    const chips = screen.getByTestId("multi-select-chips");
+    expect(chips.className).toContain("max-h-36");
+    expect(chips.className).toContain("overflow-y-auto");
+  });
 });
