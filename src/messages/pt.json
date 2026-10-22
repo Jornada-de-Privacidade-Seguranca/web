@@ -338,6 +338,23 @@
         "10-plus-years": "Mais de 10 anos"
       }
     },
+    "academic": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · FORMAÇÃO ACADÊMICA",
+      "title": "Formação acadêmica",
+      "description": "Selecione um ou mais cursos que fazem parte do seu currículo.",
+      "searchPlaceholder": "Pesquisar curso...",
+      "searchAriaLabel": "Pesquisar curso",
+      "groupsAriaLabel": "Níveis de formação",
+      "emptyLabel": "Nenhum curso encontrado.",
+      "counterLabel": "{count} curso(s) selecionado(s)",
+      "removeCourseAriaLabel": "Remover {course}",
+      "typeLegends": {
+        "1": "Bacharelado/Licenciatura/Tecnólogo",
+        "2": "lato sensu",
+        "3": "stricto sensu",
+        "4": "stricto sensu"
+      }
+    },
     "actions": {
       "back": "Voltar",
       "continue": "Continuar",
