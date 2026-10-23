@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   CURRENT_JOURNEY_BASE_PATH,
   getCompetenciesAreaUrl,
+  getJourneyResultUrl,
   getCurrentJourneyStepUrl,
   getJourneySummaryUrl,
   getProfileSummaryUrl,
@@ -27,6 +28,12 @@ describe("journeyRoutes utils", () => {
     it("deve montar a URL fixa de uma área do questionário de competências", () => {
       expect(getCompetenciesAreaUrl(0)).toBe("/jornada/atual/competencias/0");
       expect(getCompetenciesAreaUrl(3)).toBe("/jornada/atual/competencias/3");
+    });
+  });
+
+  describe("getJourneyResultUrl", () => {
+    it("deve montar a URL do resultado de uma jornada concluída, com o id", () => {
+      expect(getJourneyResultUrl("78")).toBe("/jornada/78/resultado");
     });
   });
 

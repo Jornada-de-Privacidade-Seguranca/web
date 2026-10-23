@@ -72,6 +72,14 @@ export function getJourneySummaryUrl(journeyId: string): string {
 }
 
 /**
+ * Monta o caminho do resultado de uma jornada concluída. O resultado é de uma
+ * jornada específica, então a URL carrega o id (diferente das etapas em andamento).
+ */
+export function getJourneyResultUrl(journeyId: string): string {
+  return `/jornada/${journeyId}/resultado`;
+}
+
+/**
  * Monta o caminho do resumo de um perfil de jornada, de onde a jornada é iniciada.
  */
 export function getProfileSummaryUrl(profileId: string): string {
