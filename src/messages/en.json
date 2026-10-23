@@ -445,6 +445,28 @@
       "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement.",
       "startButton": "Start questionnaire",
       "loading": "Loading instructions..."
+    },
+    "competenciesQuestionnaire": {
+      "areaIndicator": "Area {current} / {total}",
+      "progressAriaLabel": "Competencies questionnaire progress",
+      "areaDescriptionPlaceholder": "(knowledge area description goes here)",
+      "instruction": "For each competency below, select Yes if you have it or No if you have not mastered it yet.",
+      "areaCounter": "{answered} / {total} answered in this area",
+      "yes": "Yes",
+      "no": "No",
+      "difficultyPrefix": "Level",
+      "otherAreaLabel": "Other competencies",
+      "emptyLabel": "No competencies found for this journey.",
+      "nextAreaButton": "Next area",
+      "finishButton": "Finish",
+      "finishing": "Finishing...",
+      "finalizeError": "We could not finish the journey. Please try again.",
+      "summaryLink": "View journey summary",
+      "alreadyFinishedTitle": "Journey already finished",
+      "alreadyFinishedMessage": "This journey has already been finished. You can check the result on the Results page.",
+      "goToResultsLink": "Go to Results",
+      "exitModalDescription": "Answers already saved will be kept. Answers selected in this area and not yet saved will be discarded.",
+      "loading": "Loading competencies..."
     }
   }
 }

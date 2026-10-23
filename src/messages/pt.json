@@ -445,6 +445,28 @@
       "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria.",
       "startButton": "Iniciar questionário",
       "loading": "Carregando instruções..."
+    },
+    "competenciesQuestionnaire": {
+      "areaIndicator": "Área {current} / {total}",
+      "progressAriaLabel": "Progresso do questionário de competências",
+      "areaDescriptionPlaceholder": "(descrição da área de conhecimento vai aqui)",
+      "instruction": "Para cada competência abaixo, marque Sim se você a possui ou Não caso ainda não a domine.",
+      "areaCounter": "{answered} / {total} respondidas nesta área",
+      "yes": "Sim",
+      "no": "Não",
+      "difficultyPrefix": "Nível",
+      "otherAreaLabel": "Outras competências",
+      "emptyLabel": "Nenhuma competência encontrada para esta jornada.",
+      "nextAreaButton": "Próxima área",
+      "finishButton": "Finalizar",
+      "finishing": "Finalizando...",
+      "finalizeError": "Não foi possível finalizar a jornada. Tente novamente.",
+      "summaryLink": "Ver resumo da jornada",
+      "alreadyFinishedTitle": "Jornada já finalizada",
+      "alreadyFinishedMessage": "Esta jornada já foi finalizada. Você pode consultar o resultado na tela de Resultados.",
+      "goToResultsLink": "Ir para Resultados",
+      "exitModalDescription": "As respostas já salvas serão mantidas. As marcadas nesta área e ainda não salvas serão descartadas.",
+      "loading": "Carregando competências..."
     }
   }
 }
