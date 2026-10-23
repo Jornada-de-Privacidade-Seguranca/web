@@ -37,13 +37,13 @@ vi.mock("@hooks/useJourneyContext", () => ({
 
 vi.mock("next-intl", () => {
   const messages: Record<string, string> = {
-    "competenciesQuestionnaire.areaIndicator": "Área {current} / {total}",
-    "competenciesQuestionnaire.areaCounter": "{answered} / {total} respondidas nesta área",
-    "competenciesQuestionnaire.otherAreaLabel": "Outras competências",
-    "competenciesQuestionnaire.nextAreaButton": "Próxima área",
-    "competenciesQuestionnaire.finishButton": "Finalizar",
-    "competenciesQuestionnaire.finalizeError": "Falha ao finalizar.",
-    "competenciesQuestionnaire.summaryLink": "Ver resumo da jornada",
+    "areas.areaIndicator": "Área {current} / {total}",
+    "areas.areaCounter": "{answered} / {total} respondidas nesta área",
+    "areas.otherAreaLabel": "Outras competências",
+    "areas.nextAreaButton": "Próxima área",
+    "areas.finishButton": "Finalizar",
+    "areas.finalizeError": "Falha ao finalizar.",
+    "areas.summaryLink": "Ver resumo da jornada",
     errorMessage: "Falha ao carregar.",
     saveError: "Falha ao salvar resposta.",
   };

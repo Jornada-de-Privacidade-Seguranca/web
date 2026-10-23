@@ -63,9 +63,9 @@ function createVM(
       nextLabel: "Próxima área",
       savingLabel: "Salvando...",
       exitLabel: "Sair",
-      exitAriaLabel: "Sair do pré-questionário",
+      exitAriaLabel: "Sair do questionário",
       exitModal: {
-        title: "Deseja sair do pré-questionário?",
+        title: "Deseja sair do questionário?",
         description: "As respostas já salvas serão mantidas.",
         cancelButton: "Continuar respondendo",
         confirmButton: "Sair",

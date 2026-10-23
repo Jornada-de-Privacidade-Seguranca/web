@@ -7,7 +7,7 @@ import type { AreaProgressHeaderProps } from "./areaProgressHeader.types";
 
 /**
  * Barra superior do questionário: "Sair", indicador da área e progresso geral.
- * Substitui a tag da etapa usada no cabeçalho do pré-questionário.
+ * Substitui a tag da etapa usada no cabeçalho das demais etapas da jornada.
  */
 export function AreaProgressHeader(props: AreaProgressHeaderProps) {
   const { areaIndicator, clampedPercent, progressAriaLabel, onExit, exitLabel, exitAriaLabel } =

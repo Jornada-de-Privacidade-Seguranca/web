@@ -13,7 +13,7 @@ describe("AreaProgressHeader", () => {
         progressAriaLabel="Progresso do questionário de competências"
         onExit={vi.fn()}
         exitLabel="Sair"
-        exitAriaLabel="Sair do pré-questionário"
+        exitAriaLabel="Sair do questionário"
       />
     );
 
@@ -33,12 +33,12 @@ describe("AreaProgressHeader", () => {
         progressAriaLabel="Progresso"
         onExit={onExit}
         exitLabel="Sair"
-        exitAriaLabel="Sair do pré-questionário"
+        exitAriaLabel="Sair do questionário"
       />
     );
 
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("100");
-    fireEvent.click(screen.getByRole("button", { name: "Sair do pré-questionário" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sair do questionário" }));
     expect(onExit).toHaveBeenCalledTimes(1);
   });
 });

@@ -38,8 +38,8 @@ const RESULTS_HREF = "/resultados";
 /** Área das competências sem área de conhecimento (sempre a última). */
 const OTHER_AREA_ID = "other";
 
-const OPTIONS_QUERY_KEY = ["pre-questionnaire", "current", "competencies", "options"];
-const SAVED_QUERY_KEY = ["pre-questionnaire", "current", "competencies", "saved"];
+const OPTIONS_QUERY_KEY = ["questionnaire", "current", "competencies", "options"];
+const SAVED_QUERY_KEY = ["questionnaire", "current", "competencies", "saved"];
 
 type SubmitMode = "next" | "finish";
 type SubmitStep = "save" | "finalize";
@@ -69,7 +69,7 @@ function answersFromSaved(saved: CompetencyAnswerResponse[]): CompetencyAnswers 
 export function useCompetenciesQuestionnaireVM(
   areaIndexParam: string
 ): CompetenciesQuestionnaireViewModelReturn {
-  const t = useTranslations("preQuestionnaire");
+  const t = useTranslations("questionnaire");
   const isEnglish = useLocale() === "en";
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -116,7 +116,7 @@ export function useCompetenciesQuestionnaireVM(
   }, [journeyId, savedQuery.data, storeJourneyId, hydrate]);
 
   // Áreas ordenadas pelo id da área; competências sem área vão para a última
-  const otherAreaLabel = t("competenciesQuestionnaire.otherAreaLabel");
+  const otherAreaLabel = t("areas.otherAreaLabel");
   const areas: CompetencyArea[] = useMemo(() => {
     const byArea = new Map<string, CompetencyArea & { sortId: number }>();
     const localized = (pt?: string | null, en?: string | null) =>
@@ -302,58 +302,58 @@ export function useCompetenciesQuestionnaireVM(
     } else {
       error =
         failedStep === "finalize"
-          ? t("competenciesQuestionnaire.finalizeError")
+          ? t("areas.finalizeError")
           : t("saveError");
     }
   }
 
   const errorLink =
     isIncompleteJourney && journeyId
-      ? { label: t("competenciesQuestionnaire.summaryLink"), href: getJourneySummaryUrl(journeyId) }
+      ? { label: t("areas.summaryLink"), href: getJourneySummaryUrl(journeyId) }
       : null;
 
   const labels: CompetenciesQuestionnaireLabels = {
     journeyLabel: profileName ?? "",
-    areaIndicator: t("competenciesQuestionnaire.areaIndicator", {
+    areaIndicator: t("areas.areaIndicator", {
       current: totalAreas > 0 ? areaIndex + 1 : 0,
       total: totalAreas,
     }),
-    progressAriaLabel: t("competenciesQuestionnaire.progressAriaLabel"),
-    areaDescriptionPlaceholder: t("competenciesQuestionnaire.areaDescriptionPlaceholder"),
-    instruction: t("competenciesQuestionnaire.instruction"),
-    areaCounter: t("competenciesQuestionnaire.areaCounter", {
+    progressAriaLabel: t("areas.progressAriaLabel"),
+    areaDescriptionPlaceholder: t("areas.areaDescriptionPlaceholder"),
+    instruction: t("areas.instruction"),
+    areaCounter: t("areas.areaCounter", {
       answered: areaAnsweredCount,
       total: areaTotalCount,
     }),
-    yesLabel: t("competenciesQuestionnaire.yes"),
-    noLabel: t("competenciesQuestionnaire.no"),
-    difficultyPrefix: t("competenciesQuestionnaire.difficultyPrefix"),
-    emptyLabel: t("competenciesQuestionnaire.emptyLabel"),
+    yesLabel: t("areas.yes"),
+    noLabel: t("areas.no"),
+    difficultyPrefix: t("areas.difficultyPrefix"),
+    emptyLabel: t("areas.emptyLabel"),
     backLabel: t("actions.back"),
     backAriaLabel: t("header.backAriaLabel"),
     nextLabel: isLastArea
-      ? t("competenciesQuestionnaire.finishButton")
-      : t("competenciesQuestionnaire.nextAreaButton"),
+      ? t("areas.finishButton")
+      : t("areas.nextAreaButton"),
     savingLabel: isLastArea
-      ? t("competenciesQuestionnaire.finishing")
+      ? t("areas.finishing")
       : t("actions.saving"),
     exitLabel: t("header.exitButton"),
     exitAriaLabel: t("header.exitAriaLabel"),
     exitModal: {
       title: t("exitModal.title"),
-      description: t("competenciesQuestionnaire.exitModalDescription"),
+      description: t("areas.exitModalDescription"),
       cancelButton: t("exitModal.cancelButton"),
       confirmButton: t("exitModal.confirmButton"),
     },
-    loadingText: t("competenciesQuestionnaire.loading"),
+    loadingText: t("areas.loading"),
     retryButton: t("retryButton"),
-    summaryLink: t("competenciesQuestionnaire.summaryLink"),
+    summaryLink: t("areas.summaryLink"),
     noOngoingJourneyTitle: t("noOngoingJourneyTitle"),
     noOngoingJourneyMessage: t("noOngoingJourneyMessage"),
     backToJourneysLink: t("backToJourneysLink"),
-    alreadyFinishedTitle: t("competenciesQuestionnaire.alreadyFinishedTitle"),
-    alreadyFinishedMessage: t("competenciesQuestionnaire.alreadyFinishedMessage"),
-    goToResultsLink: t("competenciesQuestionnaire.goToResultsLink"),
+    alreadyFinishedTitle: t("areas.alreadyFinishedTitle"),
+    alreadyFinishedMessage: t("areas.alreadyFinishedMessage"),
+    goToResultsLink: t("areas.goToResultsLink"),
   };
 
   return {

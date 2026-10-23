@@ -446,7 +446,7 @@
       "startButton": "Iniciar questionário",
       "loading": "Carregando instruções..."
     },
-    "competenciesQuestionnaire": {
+    "areas": {
       "areaIndicator": "Área {current} / {total}",
       "progressAriaLabel": "Progresso do questionário de competências",
       "areaDescriptionPlaceholder": "(descrição da área de conhecimento vai aqui)",
