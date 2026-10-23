@@ -32,7 +32,7 @@ function createVM(
   return {
     journeyTitle: "Encarregado pelo Tratamento de Dados Pessoais",
     labels: {
-      stepTag: "PRÉ-QUESTIONÁRIO · COMPETÊNCIAS",
+      stepTag: "QUESTIONÁRIO · COMPETÊNCIAS",
       title: "Questionário de competências",
       subtitle: "Leia as instruções antes de iniciar o questionário.",
       intro: "A seguir, você responderá perguntas sobre privacidade.",
@@ -42,9 +42,9 @@ function createVM(
       backLabel: "Voltar",
       backAriaLabel: "Voltar para a etapa anterior",
       exitLabel: "Sair",
-      exitAriaLabel: "Sair do pré-questionário",
+      exitAriaLabel: "Sair do questionário",
       exitModal: {
-        title: "Deseja sair do pré-questionário?",
+        title: "Deseja sair do questionário?",
         description: "Suas respostas anteriores já foram salvas.",
         cancelButton: "Continuar respondendo",
         confirmButton: "Sair",
@@ -113,7 +113,7 @@ describe("CompetenciesIntroView", () => {
     mockVM();
     render(<CompetenciesIntroView />);
 
-    expect(screen.getByText("PRÉ-QUESTIONÁRIO · COMPETÊNCIAS")).toBeDefined();
+    expect(screen.getByText("QUESTIONÁRIO · COMPETÊNCIAS")).toBeDefined();
     expect(
       screen
         .getByText("Encarregado pelo Tratamento de Dados Pessoais")
@@ -197,7 +197,7 @@ describe("CompetenciesIntroView", () => {
       screen.getByRole("button", { name: "Voltar para a etapa anterior" }),
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Sair do pré-questionário" }),
+      screen.getByRole("button", { name: "Sair do questionário" }),
     );
 
     expect(vm.handleStart).toHaveBeenCalledTimes(1);
@@ -209,6 +209,6 @@ describe("CompetenciesIntroView", () => {
     mockVM({ isExitModalOpen: true });
     render(<CompetenciesIntroView />);
 
-    expect(screen.getByText("Deseja sair do pré-questionário?")).toBeDefined();
+    expect(screen.getByText("Deseja sair do questionário?")).toBeDefined();
   });
 });

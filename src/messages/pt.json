@@ -388,9 +388,32 @@
     "notFoundMessage": "Não encontramos a jornada que você está tentando acessar. Ela pode ter sido removida ou o link está incorreto.",
     "backToJourneysLink": "Voltar para jornadas",
     "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
+    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Sair",
+      "exitAriaLabel": "Sair do questionário",
+      "backAriaLabel": "Voltar para a etapa anterior"
+    },
+    "exitModal": {
+      "title": "Deseja sair do questionário?",
+      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
+      "cancelButton": "Continuar respondendo",
+      "confirmButton": "Sair da jornada"
+    },
+    "actions": {
+      "back": "Voltar",
+      "saving": "Salvando..."
+    },
+    "retryButton": "Tentar novamente",
+    "errorMessage": "Ocorreu um erro ao buscar os dados do questionário. Tente novamente.",
+    "saveError": "Não foi possível salvar suas respostas. Tente novamente.",
+    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
     "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
-    "competenciesIntro": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · COMPETÊNCIAS",
+    "backToJourneysLink": "Voltar para jornadas",
+    "intro": {
+      "stepTag": "QUESTIONÁRIO · COMPETÊNCIAS",
       "title": "Questionário de competências",
       "subtitle": "Leia as instruções antes de iniciar o questionário.",
       "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",

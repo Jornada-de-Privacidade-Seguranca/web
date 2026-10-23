@@ -8,14 +8,14 @@ describe("StepHeader", () => {
   it("deve exibir a tag da etapa e o nome do perfil cortados com reticências e com title", () => {
     render(
       <StepHeader
-        stepTag="PRÉ-QUESTIONÁRIO · COMPETÊNCIAS"
+        stepTag="QUESTIONÁRIO · COMPETÊNCIAS"
         journeyTitle="Encarregado pelo Tratamento de Dados Pessoais"
         onExit={vi.fn()}
       />,
     );
 
     for (const text of [
-      "PRÉ-QUESTIONÁRIO · COMPETÊNCIAS",
+      "QUESTIONÁRIO · COMPETÊNCIAS",
       "Encarregado pelo Tratamento de Dados Pessoais",
     ]) {
       const element = screen.getByText(text);

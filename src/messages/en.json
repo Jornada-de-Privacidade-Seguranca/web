@@ -388,9 +388,32 @@
     "notFoundMessage": "We couldn't find the journey you are trying to access. It may have been removed or the link is incorrect.",
     "backToJourneysLink": "Back to journeys",
     "noOngoingJourneyTitle": "No journey in progress",
+    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Exit",
+      "exitAriaLabel": "Exit questionnaire",
+      "backAriaLabel": "Go back to previous step"
+    },
+    "exitModal": {
+      "title": "Do you want to leave the questionnaire?",
+      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
+      "cancelButton": "Keep answering",
+      "confirmButton": "Exit journey"
+    },
+    "actions": {
+      "back": "Back",
+      "saving": "Saving..."
+    },
+    "retryButton": "Try again",
+    "errorMessage": "An error occurred while fetching questionnaire data. Please try again.",
+    "saveError": "Could not save your answers. Please try again.",
+    "noOngoingJourneyTitle": "No journey in progress",
     "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list.",
-    "competenciesIntro": {
-      "stepTag": "PRE-QUESTIONNAIRE · COMPETENCIES",
+    "backToJourneysLink": "Back to journeys",
+    "intro": {
+      "stepTag": "QUESTIONNAIRE · COMPETENCIES",
       "title": "Competencies questionnaire",
       "subtitle": "Read the instructions before starting the questionnaire.",
       "intro": "Next, you will answer a set of questions that assess your knowledge of {domain}. Each answer helps build your competency profile and identify strengths and development opportunities.",

@@ -1,4 +1,4 @@
-import CompetenciesIntroView from "@features/pre-questionnaire-competencies-intro";
+import CompetenciesIntroView from "@features/competencies-intro";
 
 export default function CompetenciesIntroPage() {
   return <CompetenciesIntroView />;

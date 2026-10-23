@@ -39,15 +39,15 @@ vi.mock("@hooks/useJourneyContext", () => ({
 
 vi.mock("next-intl", () => {
   const messages: Record<string, string> = {
-    "competenciesIntro.intro":
+    "intro.intro":
       "Perguntas sobre seus conhecimentos em {domain}.",
-    "competenciesIntro.domains.privacy": "privacidade",
-    "competenciesIntro.domains.security": "segurança da informação",
-    "competenciesIntro.domains.joint":
+    "intro.domains.privacy": "privacidade",
+    "intro.domains.security": "segurança da informação",
+    "intro.domains.joint":
       "privacidade e/ou segurança da informação",
-    "competenciesIntro.items.estimatedTime.description":
+    "intro.items.estimatedTime.description":
       "Reserve cerca de {minutes} minutos.",
-    "competenciesIntro.items.estimatedTime.fallbackDescription":
+    "intro.items.estimatedTime.fallbackDescription":
       "Reserve um momento.",
   };
   const t = (key: string, params?: Record<string, unknown>) => {

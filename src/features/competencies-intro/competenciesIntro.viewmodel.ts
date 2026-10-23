@@ -28,7 +28,7 @@ const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("competencias");
 const JOURNEYS_HREF = "/jornadas";
 
 export function useCompetenciesIntroVM(): CompetenciesIntroViewModelReturn {
-  const t = useTranslations("preQuestionnaire");
+  const t = useTranslations("questionnaire");
   const locale = useLocale() === "en" ? "en" : "pt";
   const router = useRouter();
   const {
@@ -53,41 +53,41 @@ export function useCompetenciesIntroVM(): CompetenciesIntroViewModelReturn {
   const estimatedMinutes = summaryQuery.data?.estimatedMinutes ?? null;
 
   // Sem domínio (falha ao carregar o contexto), usa o texto da jornada conjunta
-  const domainText = t(`competenciesIntro.domains.${domain ?? "joint"}`);
+  const domainText = t(`intro.domains.${domain ?? "joint"}`);
 
   const instructionItems: InstructionItem[] = [
     {
       id: "objective",
       icon: CheckListIcon,
-      title: t("competenciesIntro.items.objective.title"),
-      description: t("competenciesIntro.items.objective.description"),
+      title: t("intro.items.objective.title"),
+      description: t("intro.items.objective.description"),
       isLoading: false,
     },
     {
       id: "sincerity",
       icon: BookOpen01Icon,
-      title: t("competenciesIntro.items.sincerity.title"),
-      description: t("competenciesIntro.items.sincerity.description"),
+      title: t("intro.items.sincerity.title"),
+      description: t("intro.items.sincerity.description"),
       isLoading: false,
     },
     {
       id: "navigation",
       icon: CheckmarkCircle02Icon,
-      title: t("competenciesIntro.items.navigation.title"),
-      description: t("competenciesIntro.items.navigation.description"),
+      title: t("intro.items.navigation.title"),
+      description: t("intro.items.navigation.description"),
       isLoading: false,
     },
     {
       id: "estimatedTime",
       icon: Timer02Icon,
-      title: t("competenciesIntro.items.estimatedTime.title"),
+      title: t("intro.items.estimatedTime.title"),
       // Sem a duração (falha ao carregar), o card mostra o texto sem o tempo
       description:
         estimatedMinutes !== null
-          ? t("competenciesIntro.items.estimatedTime.description", {
+          ? t("intro.items.estimatedTime.description", {
               minutes: estimatedMinutes,
             })
-          : t("competenciesIntro.items.estimatedTime.fallbackDescription"),
+          : t("intro.items.estimatedTime.fallbackDescription"),
       isLoading,
     },
   ];
@@ -117,13 +117,13 @@ export function useCompetenciesIntroVM(): CompetenciesIntroViewModelReturn {
   };
 
   const labels: CompetenciesIntroLabels = {
-    stepTag: t("competenciesIntro.stepTag"),
-    title: t("competenciesIntro.title"),
-    subtitle: t("competenciesIntro.subtitle"),
-    intro: t("competenciesIntro.intro", { domain: domainText }),
-    tip: t("competenciesIntro.tip"),
-    instructionsAriaLabel: t("competenciesIntro.instructionsAriaLabel"),
-    startLabel: t("competenciesIntro.startButton"),
+    stepTag: t("intro.stepTag"),
+    title: t("intro.title"),
+    subtitle: t("intro.subtitle"),
+    intro: t("intro.intro", { domain: domainText }),
+    tip: t("intro.tip"),
+    instructionsAriaLabel: t("intro.instructionsAriaLabel"),
+    startLabel: t("intro.startButton"),
     backLabel: t("actions.back"),
     backAriaLabel: t("header.backAriaLabel"),
     exitLabel: t("header.exitButton"),
@@ -134,7 +134,7 @@ export function useCompetenciesIntroVM(): CompetenciesIntroViewModelReturn {
       cancelButton: t("exitModal.cancelButton"),
       confirmButton: t("exitModal.confirmButton"),
     },
-    loadingText: t("competenciesIntro.loading"),
+    loadingText: t("intro.loading"),
     noOngoingJourneyTitle: t("noOngoingJourneyTitle"),
     noOngoingJourneyMessage: t("noOngoingJourneyMessage"),
     backToJourneysLink: t("backToJourneysLink"),

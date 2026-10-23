@@ -1,5 +1,5 @@
 export interface StepHeaderProps {
-  /** Rótulo da etapa em caixa alta (ex.: "PRÉ-QUESTIONÁRIO · COMPETÊNCIAS") */
+  /** Rótulo da etapa em caixa alta (ex.: "QUESTIONÁRIO · COMPETÊNCIAS") */
   stepTag?: string;
   /** Nome do perfil da jornada em andamento */
   journeyTitle?: string;
