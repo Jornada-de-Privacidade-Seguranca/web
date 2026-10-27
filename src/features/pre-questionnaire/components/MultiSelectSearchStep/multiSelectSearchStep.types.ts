@@ -53,6 +53,10 @@ export interface MultiSelectSearchStepProps {
   onExit: () => void;
   isSubmitting?: boolean;
   isContinueDisabled?: boolean;
+  /** Quantidade máxima de itens selecionados; ausente = sem limite */
+  maxSelectable?: number;
+  /** Aviso exibido acima da lista quando o limite é atingido */
+  limitReachedLabel?: string;
   backLabel?: string;
   backAriaLabel?: string;
   continueLabel?: string;
@@ -65,4 +69,16 @@ export interface MultiSelectSearchStepViewModelReturn extends MultiSelectSearchS
   hasGroups: boolean;
   selectedIds: Set<string>;
   canContinue: boolean;
+  /** A seleção alcançou `maxSelectable`: itens não selecionados ficam desabilitados */
+  isLimitReached: boolean;
+  /** Quantidade de colunas das abas em telas maiores (uma por aba) */
+  groupColumns: number;
+}
+
+export interface MultiSelectItemListProps {
+  items: MultiSelectItem[];
+  selectedIds: Set<string>;
+  emptyLabel: string;
+  isLimitReached: boolean;
+  onToggleItem: (id: string) => void;
 }

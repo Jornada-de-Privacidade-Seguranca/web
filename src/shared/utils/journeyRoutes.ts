@@ -57,10 +57,26 @@ export function getCurrentJourneyStepUrl(stepSlug: PreQuestionnaireStepSlug): st
 }
 
 /**
+ * Monta o caminho de uma área do questionário de competências da jornada em
+ * andamento (índice base 0).
+ */
+export function getCompetenciesAreaUrl(areaIndex: number): string {
+  return `${getCurrentJourneyStepUrl("competencias")}/${areaIndex}`;
+}
+
+/**
  * Monta o caminho do resumo de uma jornada já criada.
  */
 export function getJourneySummaryUrl(journeyId: string): string {
   return `/jornada/${journeyId}`;
+}
+
+/**
+ * Monta o caminho do resultado de uma jornada concluída. O resultado é de uma
+ * jornada específica, então a URL carrega o id (diferente das etapas em andamento).
+ */
+export function getJourneyResultUrl(journeyId: string): string {
+  return `/jornada/${journeyId}/resultado`;
 }
 
 /**

@@ -355,6 +355,19 @@
         "4": "stricto sensu"
       }
     },
+    "certifications": {
+      "stepTag": "PRE-QUESTIONNAIRE · PROFESSIONAL CERTIFICATIONS",
+      "title": "Professional certifications",
+      "description": "Select one or more certifications that are part of your résumé.",
+      "searchPlaceholder": "Search certification...",
+      "searchAriaLabel": "Search certification",
+      "groupsAriaLabel": "Knowledge domains",
+      "emptyLabel": "No certifications found.",
+      "counterLabel": "{count} certification(s) selected",
+      "limitReachedLabel": "You have reached the limit of {max} selected certifications.",
+      "removeCertificationAriaLabel": "Remove {certification}",
+      "otherGroupLabel": "Other"
+    },
     "actions": {
       "back": "Back",
       "continue": "Continue",
@@ -376,5 +389,84 @@
     "backToJourneysLink": "Back to journeys",
     "noOngoingJourneyTitle": "No journey in progress",
     "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Exit",
+      "exitAriaLabel": "Exit questionnaire",
+      "backAriaLabel": "Go back to previous step"
+    },
+    "exitModal": {
+      "title": "Do you want to leave the questionnaire?",
+      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
+      "cancelButton": "Keep answering",
+      "confirmButton": "Exit journey"
+    },
+    "actions": {
+      "back": "Back",
+      "saving": "Saving..."
+    },
+    "retryButton": "Try again",
+    "errorMessage": "An error occurred while fetching questionnaire data. Please try again.",
+    "saveError": "Could not save your answers. Please try again.",
+    "noOngoingJourneyTitle": "No journey in progress",
+    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list.",
+    "backToJourneysLink": "Back to journeys",
+    "intro": {
+      "stepTag": "QUESTIONNAIRE · COMPETENCIES",
+      "title": "Competencies questionnaire",
+      "subtitle": "Read the instructions before starting the questionnaire.",
+      "intro": "Next, you will answer a set of questions that assess your knowledge of {domain}. Each answer helps build your competency profile and identify strengths and development opportunities.",
+      "domains": {
+        "privacy": "privacy",
+        "security": "information security",
+        "joint": "privacy and/or information security"
+      },
+      "instructionsAriaLabel": "Questionnaire instructions",
+      "items": {
+        "objective": {
+          "title": "Objective questions",
+          "description": "Each question has a single answer. Choose the option that best represents your knowledge."
+        },
+        "sincerity": {
+          "title": "Answer honestly",
+          "description": "There is no penalty for mistakes. The goal is to map your actual level of knowledge."
+        },
+        "navigation": {
+          "title": "Free navigation",
+          "description": "You can move back and forth between questions before finishing the journey."
+        },
+        "estimatedTime": {
+          "title": "Estimated time",
+          "description": "Set aside about {minutes, plural, one {# minute} other {# minutes}} in a distraction-free environment for better focus.",
+          "fallbackDescription": "Set aside some time in a distraction-free environment for better focus."
+        }
+      },
+      "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement.",
+      "startButton": "Start questionnaire",
+      "loading": "Loading instructions..."
+    },
+    "areas": {
+      "areaIndicator": "Area {current} / {total}",
+      "progressAriaLabel": "Competencies questionnaire progress",
+      "areaDescriptionPlaceholder": "(knowledge area description goes here)",
+      "instruction": "For each competency below, select Yes if you have it or No if you have not mastered it yet.",
+      "areaCounter": "{answered} / {total} answered in this area",
+      "yes": "Yes",
+      "no": "No",
+      "difficultyPrefix": "Level",
+      "otherAreaLabel": "Other competencies",
+      "emptyLabel": "No competencies found for this journey.",
+      "nextAreaButton": "Next area",
+      "finishButton": "Finish",
+      "finishing": "Finishing...",
+      "finalizeError": "We could not finish the journey. Please try again.",
+      "summaryLink": "View journey summary",
+      "alreadyFinishedTitle": "Journey already finished",
+      "alreadyFinishedMessage": "This journey has already been finished. You can check the result on the Results page.",
+      "goToResultsLink": "Go to Results",
+      "exitModalDescription": "Answers already saved will be kept. Answers selected in this area and not yet saved will be discarded.",
+      "loading": "Loading competencies..."
+    }
   }
 }

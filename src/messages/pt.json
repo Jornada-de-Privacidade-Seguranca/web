@@ -355,6 +355,19 @@
         "4": "stricto sensu"
       }
     },
+    "certifications": {
+      "stepTag": "PRÉ-QUESTIONÁRIO · CERTIFICAÇÕES PROFISSIONAIS",
+      "title": "Certificações profissionais",
+      "description": "Selecione uma ou mais certificações que fazem parte do seu currículo.",
+      "searchPlaceholder": "Pesquisar certificação...",
+      "searchAriaLabel": "Pesquisar certificação",
+      "groupsAriaLabel": "Domínios de conhecimento",
+      "emptyLabel": "Nenhuma certificação encontrada.",
+      "counterLabel": "{count} certificação(ões) selecionada(s)",
+      "limitReachedLabel": "Você atingiu o limite de {max} certificações selecionadas.",
+      "removeCertificationAriaLabel": "Remover {certification}",
+      "otherGroupLabel": "Outras"
+    },
     "actions": {
       "back": "Voltar",
       "continue": "Continuar",
@@ -376,5 +389,84 @@
     "backToJourneysLink": "Voltar para jornadas",
     "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
     "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Sair",
+      "exitAriaLabel": "Sair do questionário",
+      "backAriaLabel": "Voltar para a etapa anterior"
+    },
+    "exitModal": {
+      "title": "Deseja sair do questionário?",
+      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
+      "cancelButton": "Continuar respondendo",
+      "confirmButton": "Sair da jornada"
+    },
+    "actions": {
+      "back": "Voltar",
+      "saving": "Salvando..."
+    },
+    "retryButton": "Tentar novamente",
+    "errorMessage": "Ocorreu um erro ao buscar os dados do questionário. Tente novamente.",
+    "saveError": "Não foi possível salvar suas respostas. Tente novamente.",
+    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
+    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
+    "backToJourneysLink": "Voltar para jornadas",
+    "intro": {
+      "stepTag": "QUESTIONÁRIO · COMPETÊNCIAS",
+      "title": "Questionário de competências",
+      "subtitle": "Leia as instruções antes de iniciar o questionário.",
+      "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",
+      "domains": {
+        "privacy": "privacidade",
+        "security": "segurança da informação",
+        "joint": "privacidade e/ou segurança da informação"
+      },
+      "instructionsAriaLabel": "Instruções do questionário",
+      "items": {
+        "objective": {
+          "title": "Questões objetivas",
+          "description": "Cada pergunta possui uma única alternativa. Escolha a opção que melhor representa seu conhecimento."
+        },
+        "sincerity": {
+          "title": "Responda com sinceridade",
+          "description": "Não há penalidade por erro. O objetivo é mapear seu nível real de conhecimento."
+        },
+        "navigation": {
+          "title": "Navegação livre",
+          "description": "Você pode avançar e voltar entre as perguntas antes de finalizar a jornada."
+        },
+        "estimatedTime": {
+          "title": "Tempo estimado",
+          "description": "Reserve cerca de {minutes, plural, one {# minuto} other {# minutos}} em um ambiente sem interrupções para melhor concentração.",
+          "fallbackDescription": "Reserve um momento em um ambiente sem interrupções para melhor concentração."
+        }
+      },
+      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria.",
+      "startButton": "Iniciar questionário",
+      "loading": "Carregando instruções..."
+    },
+    "areas": {
+      "areaIndicator": "Área {current} / {total}",
+      "progressAriaLabel": "Progresso do questionário de competências",
+      "areaDescriptionPlaceholder": "(descrição da área de conhecimento vai aqui)",
+      "instruction": "Para cada competência abaixo, marque Sim se você a possui ou Não caso ainda não a domine.",
+      "areaCounter": "{answered} / {total} respondidas nesta área",
+      "yes": "Sim",
+      "no": "Não",
+      "difficultyPrefix": "Nível",
+      "otherAreaLabel": "Outras competências",
+      "emptyLabel": "Nenhuma competência encontrada para esta jornada.",
+      "nextAreaButton": "Próxima área",
+      "finishButton": "Finalizar",
+      "finishing": "Finalizando...",
+      "finalizeError": "Não foi possível finalizar a jornada. Tente novamente.",
+      "summaryLink": "Ver resumo da jornada",
+      "alreadyFinishedTitle": "Jornada já finalizada",
+      "alreadyFinishedMessage": "Esta jornada já foi finalizada. Você pode consultar o resultado na tela de Resultados.",
+      "goToResultsLink": "Ir para Resultados",
+      "exitModalDescription": "As respostas já salvas serão mantidas. As marcadas nesta área e ainda não salvas serão descartadas.",
+      "loading": "Carregando competências..."
+    }
   }
 }
