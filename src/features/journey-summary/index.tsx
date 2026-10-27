@@ -2,6 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  AlertCircleIcon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Mortarboard01Icon,
@@ -10,26 +11,28 @@ import { Link } from "@shared/i18n/navigation";
 import { Button } from "@components/ui";
 import { PageShell } from "@components/layout/PageShell";
 import { useJourneySummaryVM } from "./journeySummary.viewmodel";
+import type { JourneySummaryViewProps } from "./journeySummary.types";
 import { JourneySummarySkeleton } from "./components/JourneySummarySkeleton";
 import { JourneyStatsGrid } from "./components/JourneyStatsGrid";
 import { HowItWorksSection } from "./components/HowItWorksSection";
 import { JourneySummaryErrorState } from "./components/JourneySummaryErrorState";
 
-export interface JourneySummaryViewProps {
-  journeyId: string;
-}
-
-export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
+export function JourneySummaryView(props: JourneySummaryViewProps) {
   const {
     journey,
     isLoading,
     error,
     ctaLabel,
     ctaAriaLabel,
-    resolvedStartUrl,
+    isStarting,
+    isCtaDisabled,
+    startError,
+    journeyInProgressNotice,
+    onStartJourney,
+    onResumeCurrentJourney,
     onDismiss,
     labels,
-  } = useJourneySummaryVM(journeyId);
+  } = useJourneySummaryVM(props);
 
   const pageTitle = error
     ? error === "not_found"
@@ -98,6 +101,40 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
             )}
           </div>
 
+          {journeyInProgressNotice && (
+            <div
+              role="status"
+              className="flex flex-col gap-3 rounded-2xl border border-warning/60 bg-warning/15 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="flex items-start gap-2">
+                <HugeiconsIcon
+                  icon={AlertCircleIcon}
+                  size={18}
+                  aria-hidden="true"
+                  className="mt-px shrink-0 text-warning"
+                />
+                {journeyInProgressNotice}
+              </span>
+              <Button
+                variant="outline"
+                onClick={onResumeCurrentJourney}
+                disabled={isStarting}
+                className="shrink-0"
+              >
+                {labels.resumeCurrentJourneyLabel}
+              </Button>
+            </div>
+          )}
+
+          {startError && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+            >
+              {startError}
+            </div>
+          )}
+
           {!isLoading && journey && (
             <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card/60 p-5 sm:flex-row">
               <p className="text-sm text-muted-foreground">{labels.footerNote}</p>
@@ -109,11 +146,13 @@ export function JourneySummaryView({ journeyId }: JourneySummaryViewProps) {
                 >
                   {labels.dismissLabel}
                 </Button>
-                <Button asChild aria-label={ctaAriaLabel}>
-                  <Link href={resolvedStartUrl}>
-                    <span>{ctaLabel}</span>
-                    <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
-                  </Link>
+                <Button
+                  onClick={onStartJourney}
+                  disabled={isCtaDisabled}
+                  aria-label={ctaAriaLabel}
+                >
+                  <span>{isStarting ? labels.startingLabel : ctaLabel}</span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
                 </Button>
               </div>
             </div>

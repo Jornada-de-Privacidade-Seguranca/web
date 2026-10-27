@@ -229,11 +229,13 @@
     "backToJourneys": "Back to journeys",
     "backToJourneysAriaLabel": "Back to the journeys list",
     "badgeLabel": "Journey summary",
-    "questionsLabel": "Questions",
+    "stepsCountLabel": "Steps",
     "durationLabel": "Duration",
     "areasLabel": "Areas",
     "competenciesLabel": "Competencies",
-    "questionsAriaLabel": "{count} questions",
+    "stepsCountAriaLabel": "{count} steps",
+    "stepsProgressText": "{completed} of {total}",
+    "stepsProgressAriaLabel": "{completed} of {total} steps completed",
     "durationAriaLabel": "{minutes} minutes long",
     "areasAriaLabel": "{count} areas",
     "competenciesAriaLabel": "{count} competencies",
@@ -277,13 +279,39 @@
     "serverErrorTitle": "Unable to load the journey",
     "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
     "backToJourneysLink": "Back to the journeys list",
-    "loadingAriaLabel": "Loading journey summary"
+    "loadingAriaLabel": "Loading journey summary",
+    "notAvailable": "—",
+    "notAvailableAriaLabel": "{label}: not available",
+    "startingLabel": "Starting...",
+    "startErrorMessage": "Could not start the journey. Please try again.",
+    "resumeCurrentJourneyLabel": "Continue current journey",
+    "actionResume": "Resume journey",
+    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
   },
   "preQuestionnaire": {
     "header": {
       "exitButton": "Exit",
       "exitAriaLabel": "Exit pre-questionnaire",
-      "backAriaLabel": "Go back to previous step"
+      "backAriaLabel": "Go back to previous step",
+      "backToSummaryAriaLabel": "Go back to the journey summary"
+    },
+    "experience": {
+      "stepTag": "PRE-QUESTIONNAIRE · PROFESSIONAL EXPERIENCE",
+      "title": "Tell us about your professional experience",
+      "description": "Time of professional experience in privacy and/or information security.",
+      "questionLabel": {
+        "privacy": "How long is your professional experience in privacy areas?",
+        "security": "How long is your professional experience in information security areas?",
+        "joint": "How long is your professional experience in privacy or information security areas? Consider the sum of both."
+      },
+      "options": {
+        "none": "None",
+        "less-than-1-year": "Less than 1 year",
+        "1-3-years": "Between 1 and 3 years",
+        "4-6-years": "Between 4 and 6 years",
+        "7-10-years": "Between 7 and 10 years",
+        "10-plus-years": "More than 10 years"
+      }
     },
     "english": {
       "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
@@ -310,6 +338,23 @@
         "10-plus-years": "More than 10 years"
       }
     },
+    "academic": {
+      "stepTag": "PRE-QUESTIONNAIRE · ACADEMIC BACKGROUND",
+      "title": "Academic background",
+      "description": "Select one or more courses that are part of your résumé.",
+      "searchPlaceholder": "Search course...",
+      "searchAriaLabel": "Search course",
+      "groupsAriaLabel": "Degree levels",
+      "emptyLabel": "No courses found.",
+      "counterLabel": "{count} course(s) selected",
+      "removeCourseAriaLabel": "Remove {course}",
+      "typeLegends": {
+        "1": "Bachelor's/Teaching degree/Technologist",
+        "2": "lato sensu",
+        "3": "stricto sensu",
+        "4": "stricto sensu"
+      }
+    },
     "actions": {
       "back": "Back",
       "continue": "Continue",
@@ -325,6 +370,11 @@
     "errorTitle": "Unable to load pre-questionnaire",
     "errorMessage": "An error occurred while fetching step data. Please try again.",
     "retryButton": "Try again",
-    "saveError": "Could not save your answer. Please try again."
+    "saveError": "Could not save your answer. Please try again.",
+    "notFoundTitle": "Journey not found",
+    "notFoundMessage": "We couldn't find the journey you are trying to access. It may have been removed or the link is incorrect.",
+    "backToJourneysLink": "Back to journeys",
+    "noOngoingJourneyTitle": "No journey in progress",
+    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list."
   }
 }

@@ -3,17 +3,16 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRouter, usePathname } from "@shared/i18n/navigation";
+import { useRouter } from "@shared/i18n/navigation";
+import { useJourneyContext } from "@hooks/useJourneyContext";
 import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
 } from "@services/preQuestionnaireService";
 import {
-  getJourneyRoutePrefix,
-  getJourneyStepUrl,
+  getCurrentJourneyStepUrl,
   getNextPreQuestionnaireStep,
   getPreviousPreQuestionnaireStep,
-  formatJourneyTitleFromSlug,
 } from "@shared/utils/journeyRoutes";
 import {
   ROLE_TENURE_STEP_ID,
@@ -34,13 +33,11 @@ const OPTION_IDS: RoleTenureOptionId[] = [
 const NEXT_STEP = getNextPreQuestionnaireStep("tempo-atuacao-perfil");
 const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("tempo-atuacao-perfil");
 
-export function useRoleTenureStepVM(
-  journeySlug: string
-): RoleTenureStepViewModelReturn {
+export function useRoleTenureStepVM(): RoleTenureStepViewModelReturn {
   const t = useTranslations("preQuestionnaire");
   const router = useRouter();
-  const pathname = usePathname();
-  const routePrefix = getJourneyRoutePrefix(pathname);
+  const journeyContext = useJourneyContext();
+  const { journeyId, profileName } = journeyContext;
 
   const [selectedOption, setSelectedOption] = useState<RoleTenureOptionId | null>(
     null
@@ -49,9 +46,9 @@ export function useRoleTenureStepVM(
 
   // Busca dados previamente salvos da etapa role-tenure
   const query = useQuery({
-    queryKey: ["pre-questionnaire", journeySlug, ROLE_TENURE_STEP_ID],
-    queryFn: () => getPreQuestionnaireStep(journeySlug, ROLE_TENURE_STEP_ID),
-    enabled: Boolean(journeySlug),
+    queryKey: ["pre-questionnaire", journeyId, ROLE_TENURE_STEP_ID],
+    queryFn: () => getPreQuestionnaireStep(journeyId as string, ROLE_TENURE_STEP_ID),
+    enabled: Boolean(journeyId),
     retry: 1,
   });
 
@@ -68,13 +65,13 @@ export function useRoleTenureStepVM(
   // Mutation para persistir a resposta da etapa role-tenure
   const mutation = useMutation({
     mutationFn: (option: RoleTenureOptionId) =>
-      savePreQuestionnaireStep(journeySlug, ROLE_TENURE_STEP_ID, {
+      savePreQuestionnaireStep(journeyId as string, ROLE_TENURE_STEP_ID, {
         selectedOption: option,
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Formação Acadêmica
       if (NEXT_STEP) {
-        router.push(getJourneyStepUrl(routePrefix, journeySlug, NEXT_STEP));
+        router.push(getCurrentJourneyStepUrl(NEXT_STEP));
       }
     },
   });
@@ -91,7 +88,7 @@ export function useRoleTenureStepVM(
   const handleBack = () => {
     // Retorna para a etapa anterior: Nível de Proficiência em Inglês
     if (PREVIOUS_STEP) {
-      router.push(getJourneyStepUrl(routePrefix, journeySlug, PREVIOUS_STEP));
+      router.push(getCurrentJourneyStepUrl(PREVIOUS_STEP));
     }
   };
 
@@ -110,6 +107,10 @@ export function useRoleTenureStepVM(
 
   // Reexecuta a operação que falhou: a busca da etapa ou o salvamento da resposta
   const handleRetry = () => {
+    if (journeyContext.isError && !journeyContext.isNotFound) {
+      journeyContext.refetch();
+      return;
+    }
     if (query.isError) {
       query.refetch();
       return;
@@ -145,6 +146,9 @@ export function useRoleTenureStepVM(
     },
     loadingText: t("loading"),
     errorTitle: t("errorTitle"),
+    noOngoingJourneyTitle: t("noOngoingJourneyTitle"),
+    noOngoingJourneyMessage: t("noOngoingJourneyMessage"),
+    backToJourneysLink: t("backToJourneysLink"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
   };
@@ -154,20 +158,21 @@ export function useRoleTenureStepVM(
     label: labels.options[id],
   }));
 
-  const journeyTitle =
-    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
+  const journeyTitle = profileName ?? query.data?.journeyTitle ?? "";
 
-  const error = query.isError
-    ? labels.errorMessage
-    : mutation.isError
-      ? t("saveError")
-      : null;
+  const error =
+    (journeyContext.isError && !journeyContext.isNotFound) || query.isError
+      ? labels.errorMessage
+      : mutation.isError
+        ? t("saveError")
+        : null;
 
   return {
-    journeySlug,
     journeyTitle,
     selectedOption,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || journeyContext.isLoading,
+    isNotFound: journeyContext.isNotFound,
+    journeysHref: "/jornadas",
     isSubmitting: mutation.isPending,
     isExitModalOpen,
     error,

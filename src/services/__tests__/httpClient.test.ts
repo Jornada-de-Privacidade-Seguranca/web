@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { apiRequest, axiosInstance, clearCsrfToken } from "../httpClient";
+import {
+  ApiRequestError,
+  apiRequest,
+  apiRequestWithMeta,
+  axiosInstance,
+  clearCsrfToken,
+} from "../httpClient";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
   return {
@@ -161,5 +167,73 @@ describe("httpClient", () => {
     await expect(
       apiRequest("/auth/register", { method: "post", data: {} })
     ).rejects.toThrow("Já existe uma conta cadastrada com este e-mail.");
+  });
+
+  it("should expose the HTTP status and backend code on ApiRequestError", async () => {
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(404, {
+        success: false,
+        message: "Nao existe jornada em andamento para este usuario.",
+        code: "ONGOING_JOURNEY_NOT_FOUND",
+      })
+    );
+
+    const error = await apiRequest<never>("/journeys/current/courses").catch(
+      (e: ApiRequestError) => e
+    );
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toBe("Nao existe jornada em andamento para este usuario.");
+    expect(error.status).toBe(404);
+    expect(error.code).toBe("ONGOING_JOURNEY_NOT_FOUND");
+  });
+
+  it("should throw ApiRequestError without status on network failures", async () => {
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(new Error("Network Error"));
+
+    const error = await apiRequest<never>("/journeys/current/courses", {}, "Falha padrão.").catch(
+      (e: ApiRequestError) => e
+    );
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect(error.message).toBe("Falha padrão.");
+    expect(error.status).toBeUndefined();
+  });
+
+  it("should return data and meta when using apiRequestWithMeta", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [{ id: 1 }],
+        meta: { pagination: { total: 1 } },
+      })
+    );
+
+    const result = await apiRequestWithMeta<
+      Array<{ id: number }>,
+      { pagination: { total: number } }
+    >("/test-endpoint");
+
+    expect(result).toEqual({
+      data: [{ id: 1 }],
+      meta: { pagination: { total: 1 } },
+    });
+  });
+
+  it("should return meta as undefined when response has no meta", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: { message: "ok" },
+      })
+    );
+
+    const result = await apiRequestWithMeta<{ message: string }>("/test-endpoint");
+
+    expect(result).toEqual({
+      data: { message: "ok" },
+      meta: undefined,
+    });
   });
 });

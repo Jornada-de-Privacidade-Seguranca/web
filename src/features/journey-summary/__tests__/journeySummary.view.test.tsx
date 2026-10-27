@@ -85,11 +85,14 @@ describe("JourneySummaryView Component", () => {
     backToJourneysText: "Voltar para jornadas",
     backToJourneysAriaLabel: "Voltar para a listagem de jornadas",
     badgeLabel: "Resumo da jornada",
-    questionsLabel: "Perguntas",
+    stepsCountLabel: "Etapas",
     durationLabel: "Duração",
     areasLabel: "Áreas",
     competenciesLabel: "Competências",
-    questionsAriaLabel: (count) => `${count} perguntas`,
+    stepsCountAriaLabel: (count) => `${count} etapas`,
+    stepsProgressText: (completed, total) => `${completed} de ${total}`,
+    stepsProgressAriaLabel: (completed, total) =>
+      `${completed} de ${total} etapas concluídas`,
     durationAriaLabel: (minutes) => `${minutes} minutos de duração`,
     areasAriaLabel: (count) => `${count} áreas`,
     competenciesAriaLabel: (count) => `${count} competências`,
@@ -110,6 +113,11 @@ describe("JourneySummaryView Component", () => {
     serverErrorMessage: "Não foi possível completar a busca.",
     backToJourneysLink: "Voltar para a listagem de jornadas",
     loadingAriaLabel: "Carregando resumo da jornada",
+    notAvailable: "—",
+    notAvailableAriaLabel: (label) => `${label}: não disponível`,
+    startingLabel: "Iniciando...",
+    startErrorMessage: "Não foi possível iniciar a jornada. Tente novamente.",
+    resumeCurrentJourneyLabel: "Continuar jornada atual",
   };
 
   function createMockVMReturn(
@@ -118,21 +126,26 @@ describe("JourneySummaryView Component", () => {
     return {
       journey: {
         id: "1",
-        slug: "data-governance",
+        profileId: "1",
         title: "Governança de Dados",
-        questionsCount: 12,
-        estimatedMinutes: 18,
+        stepsCount: 6,
+        completedStepsCount: 0,
+        estimatedMinutes: 23,
         areasCount: 13,
         competenciesCount: 39,
         status: "not_started",
-        progress: { firstStepSlug: "pre-questionario", lastAnsweredStepSlug: null },
+        progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
       },
       isLoading: false,
       error: null,
       ctaLabel: "Iniciar jornada",
       ctaAriaLabel: "Iniciar jornada — Governança de Dados",
-      resolvedStartUrl: "/journey/data-governance/pre-questionario",
+      isStarting: false,
+      isCtaDisabled: false,
+      startError: null,
+      journeyInProgressNotice: null,
       onStartJourney: vi.fn(),
+      onResumeCurrentJourney: vi.fn(),
       onDismiss: vi.fn(),
       labels: mockLabels,
       ...overrides,
@@ -153,25 +166,87 @@ describe("JourneySummaryView Component", () => {
 
   it("deve renderizar o resumo com CTA apontando para a rota resolvida e chamar onDismiss ao clicar em voltar", () => {
     const onDismissMock = vi.fn();
-    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
-      createMockVMReturn({
-        onDismiss: onDismissMock,
-      })
-    );
+    const vm = createMockVMReturn({
+      onDismiss: onDismissMock,
+    });
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(vm);
 
     renderView();
 
     expect(screen.getAllByText("Governança de Dados").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("12 perguntas")).toBeDefined();
+    expect(screen.getByLabelText("6 etapas")).toBeDefined();
+    expect(screen.getByLabelText("23 minutos de duração")).toBeDefined();
     expect(screen.getByText("Como funciona")).toBeDefined();
 
     fireEvent.click(screen.getByText("Agora não"));
     expect(onDismissMock).toHaveBeenCalled();
 
-    const ctaLink = screen.getByText("Iniciar jornada").closest("a");
-    expect(ctaLink?.getAttribute("href")).toBe(
-      "/journey/data-governance/pre-questionario"
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" }));
+    expect(vm.onStartJourney).toHaveBeenCalled();
+  });
+
+  it("deve exibir \"—\" nas caixas sem dado (resumo de perfil)", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({
+        journey: {
+          ...createMockVMReturn().journey!,
+          id: null,
+          estimatedMinutes: null,
+          areasCount: null,
+          competenciesCount: null,
+        },
+      })
     );
+
+    renderView();
+
+    expect(screen.getByLabelText("Duração: não disponível")).toBeDefined();
+    expect(screen.getByLabelText("Competências: não disponível")).toBeDefined();
+  });
+
+  it("deve exibir o aviso de jornada em andamento, com retomar, e bloquear o botão principal", () => {
+    const onResume = vi.fn();
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({
+        journeyInProgressNotice: "Você já possui uma jornada em andamento.",
+        isCtaDisabled: true,
+        onResumeCurrentJourney: onResume,
+      })
+    );
+
+    renderView();
+
+    expect(screen.getByRole("status").textContent).toContain(
+      "Você já possui uma jornada em andamento."
+    );
+    const cta = screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" });
+    expect((cta as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continuar jornada atual" }));
+    expect(onResume).toHaveBeenCalled();
+  });
+
+  it("deve exibir falhas ao iniciar como alerta", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({ startError: "Não foi possível iniciar a jornada. Tente novamente." })
+    );
+
+    renderView();
+
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Não foi possível iniciar a jornada. Tente novamente."
+    );
+  });
+
+  it("deve indicar o início em andamento no botão principal", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({ isStarting: true, isCtaDisabled: true })
+    );
+
+    renderView();
+
+    const cta = screen.getByText("Iniciando...").closest("button");
+    expect(cta?.disabled).toBe(true);
   });
 
   it("deve exibir o estado de não encontrado substituindo o conteúdo, com link de volta para /jornadas", () => {

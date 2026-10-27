@@ -4,8 +4,10 @@ export interface Journey {
   id: string;
   title: string;
   description: string;
-  totalQuestions: number;
-  estimatedMinutes: number;
+  /** Ausente quando o backend não fornece o dado (ex.: GET /users/{user}/journeys). */
+  totalQuestions?: number;
+  /** Ausente quando o backend não fornece o dado (ex.: GET /users/{user}/journeys). */
+  estimatedMinutes?: number;
   status: JourneyStatus;
   score?: number;
   href?: string;
@@ -17,6 +19,47 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+/** Situação da jornada como retornada por GET /users/{user}/journeys. */
+export type UserJourneyApiStatus = "ongoing" | "completed";
+
+export interface UserJourneyProfileSummaryApi {
+  id: number | null;
+  name?: string | null;
+  description: string | null;
+  knowledge_domain: {
+    id: number | null;
+    name: string | null;
+  };
+}
+
+/** Item bruto de GET /users/{user}/journeys, antes do mapeamento para Journey. */
+export interface UserJourneyListItemApi {
+  id: number;
+  user_id: number;
+  user_name: string | null;
+  journey_profile: UserJourneyProfileSummaryApi;
+  started_at: string | null;
+  finished_at: string | null;
+  status: UserJourneyApiStatus;
+  is_completed: boolean;
+  summary: {
+    acquired_knowledges_count: number;
+    professional_certifications_count: number;
+  };
+}
+
+export interface PaginationMetaApi {
+  current_page: number;
+  per_page: number;
+  total: number;
+  last_page: number;
+  has_next_page: boolean;
+}
+
+export interface UserJourneyListMetaApi {
+  pagination: PaginationMetaApi;
 }
 
 export interface AssessmentsLabels {
@@ -48,6 +91,7 @@ export interface AssessmentsLabels {
 
 export interface AssessmentsViewModelReturn {
   pendingJourneys: Journey[];
+  pendingTotal: number;
   pendingPage: number;
   pendingTotalPages: number;
   isPendingLoading: boolean;

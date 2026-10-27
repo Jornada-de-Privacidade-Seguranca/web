@@ -71,15 +71,15 @@ export function SingleChoiceQuestionStep<T extends string = string>(
   const hasSelectedOption = options.some((opt) => opt.id === selectedOption);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
-      {/* Barra superior de navegação / contexto */}
-      <header className="fixed top-0 right-0 left-0 z-20 flex h-16 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
+    <div className="flex min-h-full w-full flex-col bg-background text-foreground">
+      {/* Barra superior de navegação / contexto, fixa no topo da área de conteúdo */}
+      <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8">
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={onExit}
             aria-label={exitAriaLabel}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary cursor-pointer"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={16} />
             <span>{exitLabel}</span>
@@ -103,7 +103,7 @@ export function SingleChoiceQuestionStep<T extends string = string>(
       </header>
 
       {/* Conteúdo principal */}
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 pt-24 pb-12">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-12">
         {/* Título com ícone */}
         <div className="mb-6 flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/25">
@@ -117,9 +117,11 @@ export function SingleChoiceQuestionStep<T extends string = string>(
         {/* Card de pergunta e opções */}
         <section className="rounded-[2rem] border border-border bg-card/90 p-6 shadow-md backdrop-blur-xl md:p-8">
           <div className="mb-6">
-            <h2 className="font-heading text-base font-semibold text-card-foreground md:text-lg">
-              {questionLabel}
-            </h2>
+            {questionLabel && (
+              <h2 className="font-heading text-base font-semibold text-card-foreground md:text-lg">
+                {questionLabel}
+              </h2>
+            )}
             {description && (
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 {description}
@@ -129,7 +131,7 @@ export function SingleChoiceQuestionStep<T extends string = string>(
 
           <div
             role="radiogroup"
-            aria-label={questionLabel}
+            aria-label={questionLabel || title}
             className="space-y-3"
           >
             {options.map((option, index) => {
@@ -209,7 +211,7 @@ export function SingleChoiceQuestionStep<T extends string = string>(
             <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
           </Button>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

@@ -15,7 +15,23 @@ vi.mock("@shared/i18n/navigation", () => ({
     replace: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => "/journey/data-governance/english",
+}));
+
+let mockProfileName: string | null = null;
+
+let mockJourneyNotFound = false;
+
+vi.mock("@hooks/useJourneyContext", () => ({
+  useJourneyContext: () => ({
+    journeyId: mockJourneyNotFound ? null : "data-governance",
+    profileId: mockJourneyNotFound ? null : "1",
+    profileName: mockProfileName,
+    domain: null,
+    isLoading: false,
+    isError: mockJourneyNotFound,
+    isNotFound: mockJourneyNotFound,
+    refetch: vi.fn(),
+  }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -70,6 +86,8 @@ describe("useEnglishStepVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     pushMock.mockReset();
+    mockProfileName = null;
+    mockJourneyNotFound = false;
   });
 
   it("deve carregar os dados da etapa e expor as 4 opções configuradas", async () => {
@@ -80,7 +98,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -97,6 +115,23 @@ describe("useEnglishStepVM", () => {
     ]);
   });
 
+  it("deve usar o nome do perfil da jornada como título quando disponível", async () => {
+    mockProfileName = "Encarregado de Dados";
+    vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
+      slug: "data-governance",
+      step: "english",
+      journeyTitle: "Governança de Dados",
+      selectedOption: null,
+    });
+
+    const { result } = renderHook(() => useEnglishStepVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.journeyTitle).toBe("Encarregado de Dados");
+  });
+
   it("deve pré-selecionar a opção caso venha preenchida do backend", async () => {
     vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
       slug: "data-governance",
@@ -105,7 +140,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: "basic-reading",
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -121,7 +156,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -144,7 +179,7 @@ describe("useEnglishStepVM", () => {
       .spyOn(preQuestionnaireService, "savePreQuestionnaireStep")
       .mockResolvedValue();
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -163,25 +198,31 @@ describe("useEnglishStepVM", () => {
         selectedOption: "intermediate-reading-writing",
       });
       expect(pushMock).toHaveBeenCalledWith(
-        "/journey/data-governance/tempo-atuacao-perfil"
+        "/jornada/atual/tempo-atuacao-perfil"
       );
     });
   });
 
-  it("handleBack deve ser undefined nesta primeira etapa ativa para evitar rota inexistente 404", async () => {
+  it("handleBack deve navegar para a etapa anterior (experiencia-profissional)", async () => {
     vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep").mockResolvedValue({
       slug: "data-governance",
       step: "english",
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.handleBack).toBeUndefined();
+    act(() => {
+      result.current.handleBack();
+    });
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/jornada/atual/experiencia-profissional"
+    );
     expect(result.current.labels.backAriaLabel).toBe("Voltar para a etapa anterior");
   });
 
@@ -192,7 +233,7 @@ describe("useEnglishStepVM", () => {
       selectedOption: null,
     });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -232,7 +273,7 @@ describe("useEnglishStepVM", () => {
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce();
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -257,7 +298,7 @@ describe("useEnglishStepVM", () => {
     await waitFor(() => {
       expect(saveSpy).toHaveBeenCalledTimes(2);
       expect(result.current.error).toBeNull();
-      expect(pushMock).toHaveBeenCalledWith("/journey/data-governance/tempo-atuacao-perfil");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/tempo-atuacao-perfil");
     });
     expect(getSpy).toHaveBeenCalledTimes(1);
   });
@@ -273,7 +314,7 @@ describe("useEnglishStepVM", () => {
         selectedOption: null,
       });
 
-    const { result } = renderHook(() => useEnglishStepVM("data-governance"), {
+    const { result } = renderHook(() => useEnglishStepVM(), {
       wrapper: createWrapper(),
     });
 
@@ -289,5 +330,19 @@ describe("useEnglishStepVM", () => {
 
     await waitFor(() => expect(result.current.error).toBeNull());
     expect(getSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it("sem jornada em andamento deve sinalizar isNotFound sem buscar a etapa", async () => {
+    mockJourneyNotFound = true;
+    const getSpy = vi.spyOn(preQuestionnaireService, "getPreQuestionnaireStep");
+
+    const { result } = renderHook(() => useEnglishStepVM(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isNotFound).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.journeysHref).toBe("/jornadas");
+    expect(getSpy).not.toHaveBeenCalled();
   });
 });

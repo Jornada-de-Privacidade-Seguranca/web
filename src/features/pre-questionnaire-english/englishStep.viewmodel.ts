@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRouter, usePathname } from "@shared/i18n/navigation";
+import { useRouter } from "@shared/i18n/navigation";
+import { useJourneyContext } from "@hooks/useJourneyContext";
 import {
   getPreQuestionnaireStep,
   savePreQuestionnaireStep,
 } from "@services/preQuestionnaireService";
 import {
-  getJourneyRoutePrefix,
-  getJourneyStepUrl,
+  getCurrentJourneyStepUrl,
   getNextPreQuestionnaireStep,
-  formatJourneyTitleFromSlug,
+  getPreviousPreQuestionnaireStep,
 } from "@shared/utils/journeyRoutes";
 import type {
   EnglishOptionId,
@@ -29,14 +29,13 @@ const OPTION_IDS: EnglishOptionId[] = [
 ];
 
 const NEXT_STEP = getNextPreQuestionnaireStep("english");
+const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("english");
 
-export function useEnglishStepVM(
-  journeySlug: string
-): EnglishStepViewModelReturn {
+export function useEnglishStepVM(): EnglishStepViewModelReturn {
   const t = useTranslations("preQuestionnaire");
   const router = useRouter();
-  const pathname = usePathname();
-  const routePrefix = getJourneyRoutePrefix(pathname);
+  const journeyContext = useJourneyContext();
+  const { journeyId, profileName } = journeyContext;
 
   const [selectedOption, setSelectedOption] = useState<EnglishOptionId | null>(
     null
@@ -45,9 +44,9 @@ export function useEnglishStepVM(
 
   // Busca dados previamente salvos da etapa
   const query = useQuery({
-    queryKey: ["pre-questionnaire", journeySlug, "english"],
-    queryFn: () => getPreQuestionnaireStep(journeySlug, "english"),
-    enabled: Boolean(journeySlug),
+    queryKey: ["pre-questionnaire", journeyId, "english"],
+    queryFn: () => getPreQuestionnaireStep(journeyId as string, "english"),
+    enabled: Boolean(journeyId),
     retry: 1,
   });
 
@@ -64,13 +63,13 @@ export function useEnglishStepVM(
   // Mutation para persistir a resposta
   const mutation = useMutation({
     mutationFn: (option: EnglishOptionId) =>
-      savePreQuestionnaireStep(journeySlug, "english", {
+      savePreQuestionnaireStep(journeyId as string, "english", {
         selectedOption: option,
       }),
     onSuccess: () => {
       // Navega para a próxima etapa: Tempo de Atuação no Perfil (introduzida no PR #68)
       if (NEXT_STEP) {
-        router.push(getJourneyStepUrl(routePrefix, journeySlug, NEXT_STEP));
+        router.push(getCurrentJourneyStepUrl(NEXT_STEP));
       }
     },
   });
@@ -84,10 +83,12 @@ export function useEnglishStepVM(
     mutation.mutate(selectedOption);
   };
 
-  // Nota: A etapa de inglês é a primeira etapa ativa do pré-questionário.
-  // Não há etapa anterior implementada no repositório; portanto handleBack não
-  // é repassado para a View a fim de não renderizar botão com rota 404.
-  const handleBack = undefined;
+  const handleBack = () => {
+    // Retorna para a etapa anterior: Tempo de Experiência Profissional
+    if (PREVIOUS_STEP) {
+      router.push(getCurrentJourneyStepUrl(PREVIOUS_STEP));
+    }
+  };
 
   const handleExit = () => {
     setIsExitModalOpen(true);
@@ -104,6 +105,10 @@ export function useEnglishStepVM(
 
   // Reexecuta a operação que falhou: a busca da etapa ou o salvamento da resposta
   const handleRetry = () => {
+    if (journeyContext.isError && !journeyContext.isNotFound) {
+      journeyContext.refetch();
+      return;
+    }
     if (query.isError) {
       query.refetch();
       return;
@@ -138,6 +143,9 @@ export function useEnglishStepVM(
     },
     loadingText: t("loading"),
     errorTitle: t("errorTitle"),
+    noOngoingJourneyTitle: t("noOngoingJourneyTitle"),
+    noOngoingJourneyMessage: t("noOngoingJourneyMessage"),
+    backToJourneysLink: t("backToJourneysLink"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
   };
@@ -147,20 +155,21 @@ export function useEnglishStepVM(
     label: labels.options[id],
   }));
 
-  const journeyTitle =
-    query.data?.journeyTitle ?? formatJourneyTitleFromSlug(journeySlug);
+  const journeyTitle = profileName ?? query.data?.journeyTitle ?? "";
 
-  const error = query.isError
-    ? labels.errorMessage
-    : mutation.isError
-      ? t("saveError")
-      : null;
+  const error =
+    (journeyContext.isError && !journeyContext.isNotFound) || query.isError
+      ? labels.errorMessage
+      : mutation.isError
+        ? t("saveError")
+        : null;
 
   return {
-    journeySlug,
     journeyTitle,
     selectedOption,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || journeyContext.isLoading,
+    isNotFound: journeyContext.isNotFound,
+    journeysHref: "/jornadas",
     isSubmitting: mutation.isPending,
     isExitModalOpen,
     error,

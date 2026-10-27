@@ -1,63 +1,36 @@
 import { describe, it, expect } from "vitest";
 import {
-  getJourneyRoutePrefix,
-  getJourneyStepUrl,
+  CURRENT_JOURNEY_BASE_PATH,
+  getCurrentJourneyStepUrl,
   getJourneySummaryUrl,
-  formatJourneyTitleFromSlug,
+  getProfileSummaryUrl,
   getNextPreQuestionnaireStep,
   getPreviousPreQuestionnaireStep,
   PRE_QUESTIONNAIRE_STEPS,
 } from "../journeyRoutes";
 
 describe("journeyRoutes utils", () => {
-  describe("getJourneyRoutePrefix", () => {
-    it("deve retornar 'jornada' quando o pathname inicia com /jornada", () => {
-      expect(getJourneyRoutePrefix("/jornada/123/english")).toBe("jornada");
-      expect(getJourneyRoutePrefix("/jornada/slug")).toBe("jornada");
-    });
-
-    it("deve retornar 'journey' quando o pathname inicia com /journey ou outro caminho", () => {
-      expect(getJourneyRoutePrefix("/journey/123/english")).toBe("journey");
-      expect(getJourneyRoutePrefix("/en/journey/123")).toBe("journey");
-      expect(getJourneyRoutePrefix(null)).toBe("journey");
-      expect(getJourneyRoutePrefix(undefined)).toBe("journey");
-    });
-  });
-
-  describe("getJourneyStepUrl", () => {
-    it("deve montar corretamente a URL da etapa para prefixo jornada", () => {
-      expect(
-        getJourneyStepUrl("jornada", "data-governance", "tempo-atuacao-perfil")
-      ).toBe("/jornada/data-governance/tempo-atuacao-perfil");
-    });
-
-    it("deve montar corretamente a URL da etapa para prefixo journey", () => {
-      expect(
-        getJourneyStepUrl("journey", "data-governance", "tempo-atuacao-perfil")
-      ).toBe("/journey/data-governance/tempo-atuacao-perfil");
+  describe("getCurrentJourneyStepUrl", () => {
+    it("deve montar a URL fixa da etapa da jornada em andamento, sem id", () => {
+      expect(CURRENT_JOURNEY_BASE_PATH).toBe("/jornada/atual");
+      expect(getCurrentJourneyStepUrl("tempo-atuacao-perfil")).toBe(
+        "/jornada/atual/tempo-atuacao-perfil"
+      );
+      expect(getCurrentJourneyStepUrl("formacao-academica")).toBe(
+        "/jornada/atual/formacao-academica"
+      );
     });
   });
 
   describe("getJourneySummaryUrl", () => {
-    it("deve montar a URL do sumário da jornada", () => {
-      expect(getJourneySummaryUrl("jornada", "data-governance")).toBe(
-        "/jornada/data-governance"
-      );
-      expect(getJourneySummaryUrl("journey", "data-governance")).toBe(
-        "/journey/data-governance"
-      );
+    it("deve montar a URL do resumo de uma jornada criada", () => {
+      expect(getJourneySummaryUrl("78")).toBe("/jornada/78");
     });
   });
 
-  describe("formatJourneyTitleFromSlug", () => {
-    it("deve formatar slugs em Title Case", () => {
-      expect(formatJourneyTitleFromSlug("data-governance")).toBe(
-        "Data Governance"
-      );
-      expect(formatJourneyTitleFromSlug("lgpd-basics")).toBe("Lgpd Basics");
-      expect(formatJourneyTitleFromSlug("seguranca-da-informacao")).toBe(
-        "Seguranca Da Informacao"
-      );
+  describe("getProfileSummaryUrl", () => {
+    it("deve montar a URL do resumo de um perfil de jornada", () => {
+      expect(getProfileSummaryUrl("4")).toBe("/jornada/perfil/4");
     });
   });
 

@@ -23,6 +23,7 @@ export function JourneyCard(props: JourneyCardProps) {
     badgeText,
     questionsText,
     timeText,
+    hasMeta,
     ctaAriaLabel,
   } = useJourneyCardVM(props);
 
@@ -57,24 +58,30 @@ export function JourneyCard(props: JourneyCardProps) {
           {journey.description}
         </p>
 
-        <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <HugeiconsIcon
-              icon={CheckListIcon}
-              size={16}
-              className="text-primary shrink-0"
-            />
-            <span>{questionsText}</span>
+        {hasMeta && (
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+            {questionsText && (
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={CheckListIcon}
+                  size={16}
+                  className="text-primary shrink-0"
+                />
+                <span>{questionsText}</span>
+              </div>
+            )}
+            {timeText && (
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={Clock01Icon}
+                  size={16}
+                  className="text-primary shrink-0"
+                />
+                <span>{timeText}</span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <HugeiconsIcon
-              icon={Clock01Icon}
-              size={16}
-              className="text-primary shrink-0"
-            />
-            <span>{timeText}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-8 border-t border-border/50 pt-4">

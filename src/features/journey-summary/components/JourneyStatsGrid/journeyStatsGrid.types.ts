@@ -8,7 +8,7 @@ export interface JourneyStatsGridProps {
   labels: JourneySummaryLabels;
 }
 
-export type StatKey = "questions" | "duration" | "areas" | "competencies";
+export type StatKey = "steps" | "duration" | "areas" | "competencies";
 
 export interface JourneyStatItem {
   key: StatKey;

@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useJourneyContext } from "@hooks/useJourneyContext";
+import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useAuth } from "@hooks/useAuth";
 import {
   getPendingAssessments,
   getCatalogAssessments,
@@ -30,8 +33,21 @@ function formatErrorMessage(err: unknown, defaultMsg: string): string {
   return defaultMsg;
 }
 
+/** Normaliza para busca: sem acentos, em minúsculas e sem espaços nas pontas. */
+function normalizeSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
+  const locale = useLocale() === "en" ? "en" : "pt";
+  const currentJourney = useJourneyContext();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
 
   // Pagination & Search States
   const [pendingPage, setPendingPage] = useState<number>(1);
@@ -47,9 +63,10 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
+    // A busca filtra apenas a página do catálogo já carregada (o backend não
+    // tem busca por texto), então não reinicia a paginação
     debounceTimerRef.current = setTimeout(() => {
       setDebouncedSearchTerm(term);
-      setCatalogPage(1);
     }, 300);
   }, []);
 
@@ -63,20 +80,22 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Pending Journeys
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", pendingPage],
-    queryFn: () => getPendingAssessments({ page: pendingPage, limit: 6 }),
+    queryKey: ["assessments", "pending", userId, pendingPage],
+    queryFn: () =>
+      getPendingAssessments({ userId: userId as number, page: pendingPage, perPage: 6 }),
+    enabled: Boolean(userId),
     retry: false,
     placeholderData: keepPreviousData,
   });
 
   // TanStack Query - Catalog Journeys
   const catalogQuery = useQuery({
-    queryKey: ["assessments", "catalog", catalogPage, debouncedSearchTerm],
+    queryKey: ["assessments", "catalog", catalogPage, locale],
     queryFn: () =>
       getCatalogAssessments({
         page: catalogPage,
         limit: 6,
-        search: debouncedSearchTerm,
+        locale,
       }),
     placeholderData: keepPreviousData,
     retry: false,
@@ -105,14 +124,34 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const catalogData = catalogQuery.data ?? catalogLastSuccess;
 
   const pendingJourneys = pendingData?.items ?? [];
+  const pendingTotal = pendingData?.total ?? 0;
   const pendingTotalPages = pendingData?.totalPages ?? 1;
-  const isPendingLoading = pendingQuery.isLoading;
+  // Enquanto a sessão carrega a query fica desabilitada (isLoading = false);
+  // mantém o skeleton em vez de ocultar a seção e reexibi-la em seguida.
+  const isPendingLoading = pendingQuery.isLoading || (!userId && isAuthLoading);
   const pendingError =
     pendingQuery.isError && !pendingLastSuccess
       ? formatErrorMessage(pendingQuery.error, t("errorMessage"))
       : null;
 
-  const catalogJourneys = catalogData?.items ?? [];
+  const normalizedSearch = normalizeSearch(debouncedSearchTerm);
+  const catalogJourneys = (catalogData?.items ?? [])
+    .map((journey) =>
+      // O perfil da jornada em andamento continua a jornada atual em vez de
+      // levar ao resumo do perfil (que tentaria criar outra jornada)
+      currentJourney.journeyId && journey.id === currentJourney.profileId
+        ? {
+            ...journey,
+            status: "in_progress" as const,
+            href: getJourneySummaryUrl(currentJourney.journeyId),
+          }
+        : journey
+    )
+    .filter(
+      (journey) =>
+        !normalizedSearch ||
+        normalizeSearch(`${journey.title} ${journey.description}`).includes(normalizedSearch)
+    );
   const catalogTotalPages = catalogData?.totalPages ?? 1;
   const isCatalogLoading = catalogQuery.isLoading;
   const catalogError =
@@ -217,6 +256,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   return {
     pendingJourneys,
+    pendingTotal,
     pendingPage,
     pendingTotalPages,
     isPendingLoading,

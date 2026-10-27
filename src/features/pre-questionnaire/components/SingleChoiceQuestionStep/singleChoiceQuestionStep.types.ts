@@ -29,6 +29,8 @@ export interface SingleChoiceQuestionStepProps<T extends string = string> {
   onExit: () => void;
   /** Indica se está salvando/enviando */
   isSubmitting?: boolean;
+  /** Mantém "Continuar" desabilitado mesmo com opção selecionada (ex: pergunta ainda indisponível) */
+  isContinueDisabled?: boolean;
   /** Título da jornada exibido no cabeçalho */
   journeyTitle?: string;
   /** Tag do cabeçalho (ex: PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS) */

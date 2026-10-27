@@ -105,6 +105,7 @@ describe("AssessmentsView Component", () => {
           status: "in_progress",
         },
       ],
+      pendingTotal: 1,
       pendingPage: 1,
       pendingTotalPages: 1,
       isPendingLoading: false,
