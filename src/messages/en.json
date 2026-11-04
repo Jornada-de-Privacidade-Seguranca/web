@@ -468,5 +468,69 @@
       "exitModalDescription": "Answers already saved will be kept. Answers selected in this area and not yet saved will be discarded.",
       "loading": "Loading competencies..."
     }
+  },
+  "journeyResult": {
+    "pageTitle": "Your knowledge profile",
+    "loadingAriaLabel": "Loading the journey result",
+    "overallLabel": "Overall score",
+    "declaredCount": "{declared} of {total, plural, one {# competency declared} other {# competencies declared}}",
+    "retakeButton": "Retake questionnaire",
+    "backButton": "Back",
+    "scoreAriaLabel": "{name}: {band}, {score} out of 100",
+    "bands": {
+      "strong": "Strong",
+      "medium": "Medium",
+      "weak": "To develop"
+    },
+    "categories": {
+      "eyebrow": "Weighted score",
+      "title": "Score by Category"
+    },
+    "areas": {
+      "eyebrow": "Breakdown by knowledge area",
+      "title": "Acquired knowledge",
+      "recommendation": "At least 60% knowledge in each area is recommended.",
+      "count": "{declared} of {total, plural, one {# competency} other {# competencies}}",
+      "markerAriaLabel": "Recommended minimum: {value}",
+      "otherAreaLabel": "Other competencies",
+      "otherDomainLabel": "Other domains"
+    },
+    "profile": {
+      "eyebrow": "Professional profile",
+      "title": "Data provided in the pre-questionnaire",
+      "professionalExperience": "Length of professional experience",
+      "englishProficiency": "English proficiency level",
+      "profileExperience": "Time working in the profile",
+      "coursesTitle": "Academic background",
+      "certificationsTitle": "Professional certifications",
+      "otherCourses": "Other courses",
+      "notProvided": "Not provided",
+      "noCourses": "No courses provided",
+      "noCertifications": "No certifications provided"
+    },
+    "competencies": {
+      "eyebrow": "Questionnaire responses",
+      "declaredTitle": "Declared competencies",
+      "undeclaredTitle": "Undeclared competencies",
+      "emptyGroup": "No competencies in this group.",
+      "groupCount": "{count, plural, one {# competency} other {# competencies}}",
+      "difficultyPrefix": "Level",
+      "domainPrefix": "Domain"
+    },
+    "errors": {
+      "notFoundTitle": "Journey not found",
+      "notFoundMessage": "We couldn't find the journey for this result. It may have been removed, or the link may be incorrect.",
+      "forbiddenTitle": "Access not allowed",
+      "forbiddenMessage": "You don't have access to this result.",
+      "notCompletedTitle": "Journey in progress",
+      "notCompletedMessage": "This journey hasn't been finished yet. Complete the questionnaire to see the result.",
+      "incompleteTitle": "Result unavailable",
+      "incompleteMessage": "We couldn't build the result for this journey, because required data is missing.",
+      "serverErrorTitle": "Error loading the result",
+      "serverErrorMessage": "We couldn't load the journey result. Please try again.",
+      "backToResultsLink": "Back to Results",
+      "goToSummaryLink": "Go to the journey overview",
+      "retryButton": "Try again"
+    }
   }
 }

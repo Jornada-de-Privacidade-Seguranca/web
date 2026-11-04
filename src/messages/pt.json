@@ -468,5 +468,69 @@
       "exitModalDescription": "As respostas já salvas serão mantidas. As marcadas nesta área e ainda não salvas serão descartadas.",
       "loading": "Carregando competências..."
     }
+  },
+  "journeyResult": {
+    "pageTitle": "Seu perfil de conhecimento",
+    "loadingAriaLabel": "Carregando o resultado da jornada",
+    "overallLabel": "Nota geral",
+    "declaredCount": "{declared} de {total, plural, one {# competência declarada} other {# competências declaradas}}",
+    "retakeButton": "Refazer questionário",
+    "backButton": "Voltar",
+    "scoreAriaLabel": "{name}: {band}, {score} de 100",
+    "bands": {
+      "strong": "Forte",
+      "medium": "Médio",
+      "weak": "A desenvolver"
+    },
+    "categories": {
+      "eyebrow": "Pontuação ponderada",
+      "title": "Pontuação por Categoria"
+    },
+    "areas": {
+      "eyebrow": "Detalhamento por área de conhecimento",
+      "title": "Conhecimentos adquiridos",
+      "recommendation": "Recomenda-se no mínimo 60% de conhecimento na área.",
+      "count": "{declared} de {total, plural, one {# competência} other {# competências}}",
+      "markerAriaLabel": "Mínimo recomendado: {value}",
+      "otherAreaLabel": "Outras competências",
+      "otherDomainLabel": "Outros domínios"
+    },
+    "profile": {
+      "eyebrow": "Perfil profissional",
+      "title": "Dados informados no pré-questionário",
+      "professionalExperience": "Tempo de experiência profissional",
+      "englishProficiency": "Nível de proficiência em inglês",
+      "profileExperience": "Tempo de atuação no perfil",
+      "coursesTitle": "Formação acadêmica",
+      "certificationsTitle": "Certificações profissionais",
+      "otherCourses": "Outros cursos",
+      "notProvided": "Não informado",
+      "noCourses": "Nenhum curso informado",
+      "noCertifications": "Nenhuma certificação informada"
+    },
+    "competencies": {
+      "eyebrow": "Respostas do questionário",
+      "declaredTitle": "Competências declaradas",
+      "undeclaredTitle": "Competências não declaradas",
+      "emptyGroup": "Nenhuma competência neste grupo.",
+      "groupCount": "{count, plural, one {# competência} other {# competências}}",
+      "difficultyPrefix": "Nível",
+      "domainPrefix": "Domínio"
+    },
+    "errors": {
+      "notFoundTitle": "Jornada não encontrada",
+      "notFoundMessage": "Não encontramos a jornada deste resultado. Ela pode ter sido removida, ou o link pode estar incorreto.",
+      "forbiddenTitle": "Acesso não permitido",
+      "forbiddenMessage": "Você não tem acesso a este resultado.",
+      "notCompletedTitle": "Jornada em andamento",
+      "notCompletedMessage": "Esta jornada ainda não foi finalizada. Conclua o questionário para ver o resultado.",
+      "incompleteTitle": "Resultado indisponível",
+      "incompleteMessage": "Não foi possível montar o resultado desta jornada, porque faltam dados obrigatórios.",
+      "serverErrorTitle": "Erro ao carregar o resultado",
+      "serverErrorMessage": "Não foi possível carregar o resultado da jornada. Tente novamente.",
+      "backToResultsLink": "Voltar para Resultados",
+      "goToSummaryLink": "Ir para o resumo da jornada",
+      "retryButton": "Tentar novamente"
+    }
   }
 }
