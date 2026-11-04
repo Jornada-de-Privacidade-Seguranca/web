@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { getJourneyResult, JourneyResultRequestError } from "@services/journeyResultService";
-import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
+import { getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
 import { buildJourneyResultModel, buildScoreValue } from "./journeyResult.utils";
 import type {
   JourneyResultErrorLabels,
@@ -80,15 +80,22 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
     [journey, isCompleted, formatters]
   );
 
+  // Durante a nova tentativa a query segue em erro; a tela mostra o carregamento
+  const isRetrying = query.isError && query.isFetching;
+
   let error: JourneyResultErrorType | null = null;
-  if (query.isError) {
+  if (!journeyId) {
+    error = "not_found";
+  } else if (query.isError && !isRetrying) {
     error =
       query.error instanceof JourneyResultRequestError ? query.error.type : "server_error";
   } else if (journey && !isCompleted) {
     error = "not_completed";
   }
 
-  const retakeUrl = getJourneySummaryUrl(journeyId);
+  // Refazer (ou continuar) parte do resumo do perfil, de onde a jornada é iniciada
+  const profileId = journey?.journey_profile?.id;
+  const retakeUrl = profileId ? getProfileSummaryUrl(String(profileId)) : RESULTS_HREF;
 
   const labels: JourneyResultLabels = {
     pageTitle: t("pageTitle"),
@@ -143,7 +150,7 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
     retakeUrl,
     resultsUrl: RESULTS_HREF,
     recommendedAreaScore: RECOMMENDED_AREA_SCORE,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || isRetrying,
     error,
     labels,
     handleRetry,
@@ -151,7 +158,7 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
 }
 
 /**
- * Mensagem de cada erro. A jornada em andamento leva ao resumo da jornada; a
+ * Mensagem de cada erro. A jornada em andamento leva ao resumo do perfil; a
  * falha de servidor oferece nova tentativa; os demais voltam para Resultados.
  */
 function buildErrorLabels(

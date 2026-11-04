@@ -57,7 +57,7 @@ describe("useJourneyResultVM", () => {
     expect(result.current.isJointJourney).toBe(true);
     expect(result.current.areaScoreGroups).toHaveLength(2);
     expect(result.current.categoryScores).toBeNull();
-    expect(result.current.retakeUrl).toBe("/jornada/10");
+    expect(result.current.retakeUrl).toBe("/jornada/perfil/2");
     expect(result.current.resultsUrl).toBe("/resultados");
     expect(result.current.recommendedAreaScore).toBe(60);
   });
@@ -99,7 +99,7 @@ describe("useJourneyResultVM", () => {
     expect(result.current.error).toBe("not_completed");
     expect(result.current.labels.errors).toMatchObject({
       title: "errors.notCompletedTitle",
-      linkHref: "/jornada/10",
+      linkHref: "/jornada/perfil/2",
       retryButton: null,
     });
   });
@@ -124,10 +124,14 @@ describe("useJourneyResultVM", () => {
   });
 
   it("deve oferecer nova tentativa após erro de servidor", async () => {
+    let resolveRetry: (journey: ReturnType<typeof buildJourney>) => void = () => {};
+    const retryResponse = new Promise<ReturnType<typeof buildJourney>>((resolve) => {
+      resolveRetry = resolve;
+    });
     const spy = vi
       .spyOn(journeyResultService, "getJourneyResult")
       .mockRejectedValueOnce(new JourneyResultRequestError("server_error", "Erro"))
-      .mockResolvedValueOnce(buildJourney());
+      .mockReturnValueOnce(retryResponse);
 
     const { result } = renderVM();
     await waitFor(() => expect(result.current.error).toBe("server_error"));
@@ -137,9 +141,37 @@ describe("useJourneyResultVM", () => {
       result.current.handleRetry();
     });
 
-    await waitFor(() => expect(result.current.error).toBeNull());
+    // Enquanto a nova tentativa roda, a tela sai do erro e mostra o carregamento
+    await waitFor(() => expect(result.current.isLoading).toBe(true));
+    expect(result.current.error).toBeNull();
+
+    resolveRetry(buildJourney());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBeNull();
     expect(spy).toHaveBeenCalledTimes(2);
     expect(result.current.journeyTitle).toBe("Encarregado de Dados");
+  });
+
+  it("deve voltar para Resultados quando a jornada não tem perfil", async () => {
+    vi.spyOn(journeyResultService, "getJourneyResult").mockResolvedValue(
+      buildJourney({ journey_profile: null })
+    );
+
+    const { result } = renderVM();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.retakeUrl).toBe("/resultados");
+  });
+
+  it("deve tratar a rota sem id como jornada inexistente, sem buscar na API", () => {
+    const spy = vi.spyOn(journeyResultService, "getJourneyResult");
+
+    const { result } = renderVM("");
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBe("not_found");
+    expect(result.current.labels.errors?.title).toBe("errors.notFoundTitle");
   });
 
   it("deve tratar erro inesperado como erro de servidor", async () => {

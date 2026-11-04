@@ -16,9 +16,6 @@ import type {
   ScoreValue,
 } from "./journeyResult.types";
 
-/** `knowledge_domain.id` do perfil de jornadas conjuntas (Privacidade/Segurança). */
-export const JOINT_KNOWLEDGE_DOMAIN_ID = 3;
-
 /** Área das competências sem área de conhecimento (sempre a última). */
 const OTHER_AREA_ID = "other";
 const OTHER_GROUP_ID = "other";
@@ -300,6 +297,18 @@ export function buildCategoryScores(
   });
 }
 
+/**
+ * A jornada é conjunta quando as competências avaliadas são de mais de um
+ * domínio, sem depender do id do domínio do perfil no banco.
+ */
+export function isJointJourney(competencies: JourneyResultCompetencyApi[]): boolean {
+  const domainIds = new Set<number>();
+  for (const competency of competencies) {
+    if (competency.knowledge_domain) domainIds.add(competency.knowledge_domain.id);
+  }
+  return domainIds.size > 1;
+}
+
 /** Monta todos os dados da tela a partir da jornada concluída. */
 export function buildJourneyResultModel(
   journey: JourneyResultApi,
@@ -309,7 +318,7 @@ export function buildJourneyResultModel(
   const competencies = collectCompetencies(journey);
   const declaredIds = collectDeclaredIds(journey);
   const buckets = groupCompetenciesByArea(competencies, formatters);
-  const isJointJourney = profile?.knowledge_domain?.id === JOINT_KNOWLEDGE_DOMAIN_ID;
+  const isJoint = isJointJourney(competencies);
 
   return {
     journeyTitle: profile ? formatters.localize(profile.name_pt, profile.name_en) : "",
@@ -317,8 +326,8 @@ export function buildJourneyResultModel(
     declaredCount: competencies.filter((competency) => declaredIds.has(competency.id)).length,
     totalCompetencies: competencies.length,
     categoryScores: buildCategoryScores(journey, formatters),
-    isJointJourney,
-    areaScoreGroups: buildAreaScoreGroups(buckets, declaredIds, isJointJourney, formatters),
+    isJointJourney: isJoint,
+    areaScoreGroups: buildAreaScoreGroups(buckets, declaredIds, isJoint, formatters),
     professionalProfile: buildProfessionalProfile(journey, formatters),
     declaredCompetencies: buildCompetencyAreaGroups(buckets, declaredIds, true, formatters),
     undeclaredCompetencies: buildCompetencyAreaGroups(buckets, declaredIds, false, formatters),

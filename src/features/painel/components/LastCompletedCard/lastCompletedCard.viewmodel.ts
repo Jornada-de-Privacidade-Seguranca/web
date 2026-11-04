@@ -1,4 +1,5 @@
 import { useFormatter, useTranslations } from "next-intl";
+import { getJourneyResultUrl } from "@shared/utils/journeyRoutes";
 import type {
   LastCompletedCardProps,
   LastCompletedCardViewModelReturn,
@@ -25,7 +26,7 @@ export function useLastCompletedCardVM(
     }
   }
 
-  const resultHref = assessment ? `/resultados/${assessment.id}` : "#";
+  const resultHref = assessment ? getJourneyResultUrl(assessment.id) : "#";
 
   return {
     assessment,

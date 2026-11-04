@@ -5,6 +5,7 @@ import {
   buildScoreValue,
   calculateAreaScore,
   collectCompetencies,
+  isJointJourney,
 } from "../journeyResult.utils";
 import type { JourneyResultFormatters } from "../journeyResult.types";
 import { buildCompetency, buildJourney, c1, c2, c3 } from "./journeyResult.fixtures";
@@ -78,6 +79,17 @@ describe("journeyResult.utils", () => {
     });
   });
 
+  describe("isJointJourney", () => {
+    it("deve considerar conjunta a jornada com competências de mais de um domínio", () => {
+      expect(isJointJourney([c1, c3])).toBe(true);
+    });
+
+    it("não deve considerar conjunta a jornada de um só domínio ou sem domínio", () => {
+      expect(isJointJourney([c1, c2])).toBe(false);
+      expect(isJointJourney([buildCompetency({ id: 9, knowledge_domain: null })])).toBe(false);
+    });
+  });
+
   describe("buildJourneyResultModel", () => {
     const model = buildJourneyResultModel(buildJourney(), formatters);
 
@@ -115,7 +127,10 @@ describe("journeyResult.utils", () => {
 
     it("deve formar um único grupo sem título em jornadas de um só domínio", () => {
       const journey = buildJourney();
-      journey.journey_profile!.knowledge_domain = { id: 1, name_pt: "Privacidade", name_en: "Privacy" };
+      journey.journey_profile!.knowledge_domain = c1.knowledge_domain;
+      journey.journey_profile!.competencies = journey.journey_profile!.competencies.map(
+        (competency) => ({ ...competency, knowledge_domain: c1.knowledge_domain })
+      );
 
       const groups = buildJourneyResultModel(journey, formatters).areaScoreGroups;
 
