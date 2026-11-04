@@ -13,6 +13,11 @@
   },
   "sidebar": {
     "navigation": "Navigation",
+    "drawerLabel": "Navigation menu",
+    "toggle": {
+      "open": "Open navigation menu",
+      "close": "Close navigation menu"
+    },
     "dashboard": "Dashboard",
     "journeys": "Journeys",
     "results": "Results",

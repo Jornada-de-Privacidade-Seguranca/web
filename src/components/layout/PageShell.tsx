@@ -5,8 +5,11 @@ import { Button } from "../ui";
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons";
 import { SwitchThemeButton } from "./SwitchThemeButton";
 import { IdiomSwitch } from "./IdiomSwitch";
+import { SIDEBAR_ID } from "./AuthenticatedUserSidebar";
 import { useSidebarStore } from "@/store/sidebar.store";
+import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/shared/lib/utils";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 export interface PageShellProps {
@@ -19,7 +22,15 @@ export interface PageShellProps {
 export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
   const toggleSidebar = useSidebarStore((state) => state.toggle);
   const isSidebarExpanded = useSidebarStore((state) => state.isExpanded);
+  const toggleMobileSidebar = useSidebarStore((state) => state.toggleMobile);
+  const isMobileSidebarOpen = useSidebarStore((state) => state.isMobileOpen);
+  const isMobile = useIsMobile();
+  const t = useTranslations("sidebar.toggle");
   const headerRef = useRef<HTMLElement | null>(null);
+
+  // Abaixo de `md` o botão abre o drawer; a partir dele, expande/recolhe a barra
+  const isSidebarOpen = isMobile ? isMobileSidebarOpen : isSidebarExpanded;
+  const handleToggleSidebar = isMobile ? toggleMobileSidebar : toggleSidebar;
   const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
@@ -51,8 +62,8 @@ export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
       <header
         ref={headerRef}
         className={cn(
-          "fixed top-0 right-0 left-18 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8",
-          isSidebarExpanded ? "left-64" : "left-18",
+          "fixed top-0 right-0 left-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur md:px-8",
+          isSidebarExpanded ? "md:left-64" : "md:left-18",
           "transition-[left] duration-300 ease-in-out",
         )}
       >
@@ -60,7 +71,10 @@ export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
           variant="ghost"
           size="icon"
           data-sidebar="trigger"
-          onClick={toggleSidebar}
+          aria-label={isSidebarOpen ? t("close") : t("open")}
+          aria-expanded={isSidebarOpen}
+          aria-controls={SIDEBAR_ID}
+          onClick={handleToggleSidebar}
         >
           <HugeiconsIcon icon={SidebarLeftIcon} />
         </Button>
@@ -73,7 +87,10 @@ export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
           </h1>
         </div>
         {subtitle && (
-          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+          // Em telas pequenas o subtítulo some, para o título não ser espremido
+          <p className="hidden min-w-0 max-w-[40%] truncate text-xs text-muted-foreground sm:block">
+            {subtitle}
+          </p>
         )}
 
         <div className="ml-auto flex items-center space-x-2">

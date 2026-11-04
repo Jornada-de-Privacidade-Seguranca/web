@@ -19,8 +19,9 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       <main
         className={cn(
           "relative flex h-full min-w-0 flex-1 flex-col overflow-y-auto bg-background",
-          "pl-18 md:pl-64",
-          "peer-data-[state=collapsed]:pl-18 peer-data-[state=expanded]:pl-64 transition-[padding-left] duration-300 ease-in-out",
+          // Abaixo de `md` a barra vira drawer sobreposto e o conteúdo ocupa a largura toda
+          "pl-0 md:pl-64",
+          "md:peer-data-[state=collapsed]:pl-18 md:peer-data-[state=expanded]:pl-64 transition-[padding-left] duration-300 ease-in-out",
         )}
       >
         {children}
