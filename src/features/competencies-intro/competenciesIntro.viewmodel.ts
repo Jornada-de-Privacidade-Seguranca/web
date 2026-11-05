@@ -12,18 +12,12 @@ import {
 import { useRouter } from "@shared/i18n/navigation";
 import { useJourneyContext } from "@hooks/useJourneyContext";
 import { getJourneySummary } from "@services/journeySummaryService";
-import {
-  getCompetenciesAreaUrl,
-  getCurrentJourneyStepUrl,
-  getPreviousPreQuestionnaireStep,
-} from "@shared/utils/journeyRoutes";
+import { getCompetenciesAreaUrl, getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
 import type {
   CompetenciesIntroLabels,
   CompetenciesIntroViewModelReturn,
   InstructionItem,
 } from "./competenciesIntro.types";
-
-const PREVIOUS_STEP = getPreviousPreQuestionnaireStep("competencias");
 
 const JOURNEYS_HREF = "/jornadas";
 
@@ -97,10 +91,8 @@ export function useCompetenciesIntroVM(): CompetenciesIntroViewModelReturn {
   };
 
   const handleBack = () => {
-    // Retorna para a etapa anterior: Certificações Profissionais
-    if (PREVIOUS_STEP) {
-      router.push(getCurrentJourneyStepUrl(PREVIOUS_STEP));
-    }
+    // As instruções são a primeira tela da jornada: volta para o resumo dela
+    router.push(journeyId ? getJourneySummaryUrl(journeyId) : JOURNEYS_HREF);
   };
 
   const handleExit = () => {

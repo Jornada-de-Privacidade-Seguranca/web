@@ -194,7 +194,7 @@ describe("useCompetenciesIntroVM", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("deve navegar pela rota fixa: iniciar na área 0 e voltar para Certificações", async () => {
+  it("deve navegar pela rota fixa: iniciar na área 0 e voltar para o resumo da jornada", async () => {
     vi.spyOn(journeySummaryService, "getJourneySummary").mockResolvedValue(
       summary(5),
     );
@@ -207,9 +207,7 @@ describe("useCompetenciesIntroVM", () => {
     expect(pushMock).toHaveBeenLastCalledWith("/jornada/atual/competencias/0");
 
     act(() => result.current.handleBack());
-    expect(pushMock).toHaveBeenLastCalledWith(
-      "/jornada/atual/certificacoes-profissionais",
-    );
+    expect(pushMock).toHaveBeenLastCalledWith("/jornada/78");
   });
 
   it("deve abrir o modal ao sair, fechar ao cancelar e ir para /jornadas ao confirmar", async () => {

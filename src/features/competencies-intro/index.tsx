@@ -7,9 +7,9 @@ import {
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@components/ui";
-import { ExitConfirmationModal } from "@features/pre-questionnaire/components/ExitConfirmationModal";
-import { JourneyNotFoundState } from "@features/pre-questionnaire/components/JourneyNotFoundState";
-import { StepHeader } from "@features/pre-questionnaire/components/StepHeader";
+import { ExitConfirmationModal } from "@features/questionnaire/components/ExitConfirmationModal";
+import { JourneyNotFoundState } from "@features/questionnaire/components/JourneyNotFoundState";
+import { StepHeader } from "@features/questionnaire/components/StepHeader";
 import { useCompetenciesIntroVM } from "./competenciesIntro.viewmodel";
 
 export function CompetenciesIntroView() {

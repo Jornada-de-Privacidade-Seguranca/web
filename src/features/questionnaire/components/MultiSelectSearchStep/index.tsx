@@ -95,6 +95,9 @@ function ItemList({
   );
 }
 
+/**
+ * @deprecated Etapa de múltipla seleção com busca usada pelas telas do pré-questionário (formação acadêmica e certificações profissionais), que saíram do fluxo da jornada. Mantida para reaproveitamento futuro; não é usada por nenhuma tela.
+ */
 export function MultiSelectSearchStep(props: MultiSelectSearchStepProps) {
   const {
     icon,

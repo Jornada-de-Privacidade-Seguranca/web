@@ -11,7 +11,7 @@ describe("ExitConfirmationModal", () => {
   ): ExitConfirmationModalProps {
     return {
       isOpen: true,
-      title: "Deseja sair do pré-questionário?",
+      title: "Deseja sair do questionário?",
       description: "Suas respostas anteriores já foram salvas.",
       cancelLabel: "Continuar respondendo",
       confirmLabel: "Sair da jornada",
@@ -31,7 +31,7 @@ describe("ExitConfirmationModal", () => {
     const props = createProps({ isOpen: true });
     render(<ExitConfirmationModal {...props} />);
 
-    expect(screen.getByText("Deseja sair do pré-questionário?")).toBeDefined();
+    expect(screen.getByText("Deseja sair do questionário?")).toBeDefined();
     expect(screen.getByText("Suas respostas anteriores já foram salvas.")).toBeDefined();
 
     const cancelButton = screen.getByText("Continuar respondendo");

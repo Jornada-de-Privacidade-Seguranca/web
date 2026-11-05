@@ -13,6 +13,9 @@ import { StepHeader } from "../StepHeader";
 import { useSingleChoiceQuestionStepVM } from "./singleChoiceQuestionStep.viewmodel";
 import type { SingleChoiceQuestionStepProps } from "./singleChoiceQuestionStep.types";
 
+/**
+ * @deprecated Etapa de escolha única usada pelas telas do pré-questionário (experiência profissional, inglês e tempo de atuação no perfil), que saíram do fluxo da jornada. Mantida para reaproveitamento futuro; não é usada por nenhuma tela.
+ */
 export function SingleChoiceQuestionStep<T extends string = string>(
   props: SingleChoiceQuestionStepProps<T>
 ) {

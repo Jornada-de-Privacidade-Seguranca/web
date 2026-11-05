@@ -51,20 +51,17 @@ describe("journeySummaryService", () => {
         areasCount: 2,
         stepsCount: 6,
         completedStepsCount: 0,
-        // (5 perguntas do pré-questionário + 3 competências) × 20 s = 160 s → 3 min
-        estimatedMinutes: 3,
+        // 3 competências × 20 s = 60 s → 1 min
+        estimatedMinutes: 1,
         status: "not_started",
-        progress: {
-          firstStepSlug: "experiencia-profissional",
-          lastAnsweredStepSlug: null,
-        },
       });
+      expect(summary).not.toHaveProperty("progress");
       expect(mapJourneyToSummary(buildJourney(), "en").title).toBe(
         "Data Protection Officer"
       );
     });
 
-    it("deve considerar em andamento a jornada com respostas e apontar a última etapa respondida", () => {
+    it("deve considerar em andamento a jornada com respostas", () => {
       const summary = mapJourneyToSummary(
         buildJourney({
           answers: {
@@ -79,7 +76,6 @@ describe("journeySummaryService", () => {
 
       expect(summary.status).toBe("in_progress");
       expect(summary.completedStepsCount).toBe(2);
-      expect(summary.progress.lastAnsweredStepSlug).toBe("english");
     });
 
     it("deve marcar como concluída a jornada com status completed", () => {
@@ -90,18 +86,17 @@ describe("journeySummaryService", () => {
 
       expect(summary.status).toBe("completed");
       expect(summary.completedStepsCount).toBe(6);
-      expect(summary.progress.lastAnsweredStepSlug).toBe("competencias");
     });
   });
 
   describe("estimateJourneyMinutes", () => {
-    it("deve somar 20 s por pergunta do pré-questionário e por competência, arredondando para cima", () => {
-      // (5 + 39) × 20 s = 880 s ≈ 14,7 min → 15 min
-      expect(estimateJourneyMinutes(39)).toBe(15);
-      // (5 + 4) × 20 s = 180 s = 3 min
-      expect(estimateJourneyMinutes(4)).toBe(3);
-      // (5 + 0) × 20 s = 100 s ≈ 1,7 min → 2 min
-      expect(estimateJourneyMinutes(0)).toBe(2);
+    it("deve somar 20 s por competência, arredondando para cima, com mínimo de 1 min", () => {
+      // 39 × 20 s = 780 s = 13 min
+      expect(estimateJourneyMinutes(39)).toBe(13);
+      // 4 × 20 s = 80 s ≈ 1,3 min → 2 min
+      expect(estimateJourneyMinutes(4)).toBe(2);
+      // sem competências, o mínimo é 1 min
+      expect(estimateJourneyMinutes(0)).toBe(1);
     });
   });
 

@@ -6,6 +6,7 @@ import { Mortarboard02Icon } from "@hugeicons/core-free-icons";
 import { MultiSelectSearchStep } from "../index";
 import type { MultiSelectSearchStepProps } from "../multiSelectSearchStep.types";
 
+// MultiSelectSearchStep está deprecado (sem uso nas telas), mas segue coberto por testes enquanto existir.
 describe("MultiSelectSearchStep", () => {
   beforeEach(() => {
     global.ResizeObserver = class ResizeObserver {

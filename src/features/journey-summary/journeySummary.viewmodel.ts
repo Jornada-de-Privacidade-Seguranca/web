@@ -6,15 +6,14 @@ import { useRouter } from "@shared/i18n/navigation";
 import { useAuth } from "@hooks/useAuth";
 import { CURRENT_JOURNEY_QUERY_KEY, useJourneyContext } from "@hooks/useJourneyContext";
 import { ApiRequestError } from "@services/httpClient";
-import { createJourney, getCurrentJourney } from "@services/journeyService";
+import { createJourney } from "@services/journeyService";
 import {
   getJourneySummary,
   getProfileSummary,
-  mapJourneyToSummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
-import { getCurrentJourneyStepUrl } from "@shared/utils/journeyRoutes";
-import { requiresJourneyCreation, resolveJourneyStartUrl } from "./journeySummary.utils";
+import { getCompetenciesIntroUrl } from "@shared/utils/journeyRoutes";
+import { requiresJourneyCreation } from "./journeySummary.utils";
 import type {
   JourneySummaryViewModelReturn,
   JourneySummaryErrorType,
@@ -23,7 +22,8 @@ import type {
   HowItWorksStep,
 } from "./journeySummary.types";
 
-const FIRST_STEP_URL = getCurrentJourneyStepUrl("experiencia-profissional");
+// A jornada começa (e é retomada) pelas instruções do questionário de competências
+const START_URL = getCompetenciesIntroUrl();
 
 function isJourneyInProgressError(error: unknown): boolean {
   return error instanceof ApiRequestError && error.status === 409;
@@ -80,18 +80,8 @@ export function useJourneySummaryVM(
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CURRENT_JOURNEY_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ["assessments"] });
-      router.push(FIRST_STEP_URL);
+      router.push(START_URL);
     },
-  });
-
-  // Leva à etapa em que a jornada em andamento parou (usado após o 409)
-  const resumeMutation = useMutation({
-    mutationFn: async () => {
-      if (!userId) throw new Error("Usuário indisponível.");
-      const current = await getCurrentJourney(userId);
-      return resolveJourneyStartUrl(mapJourneyToSummary(current, locale));
-    },
-    onSuccess: (url) => router.push(url),
   });
 
   // O resumo é da própria jornada em andamento (ou do perfil dela): o botão
@@ -105,7 +95,7 @@ export function useJourneySummaryVM(
   const hasOtherJourneyInProgress = Boolean(currentJourney.journeyId) && !isCurrentJourney;
   const hasConflictOnStart = isJourneyInProgressError(startMutation.error);
 
-  const isStarting = startMutation.isPending || resumeMutation.isPending;
+  const isStarting = startMutation.isPending;
   const isCtaDisabled =
     currentJourney.isLoading || hasOtherJourneyInProgress || hasConflictOnStart || isStarting;
 
@@ -121,22 +111,17 @@ export function useJourneySummaryVM(
 
   const onStartJourney = () => {
     if (!journey || isCtaDisabled) return;
-    // No resumo do perfil não há o progresso da jornada: busca a jornada em
-    // andamento para seguir da etapa em que ela parou
-    if (isCurrentJourney && isProfileSummary) {
-      resumeMutation.mutate();
-      return;
-    }
-    if (requiresJourneyCreation(journey)) {
+    // A jornada em andamento apenas continua, sem criar outra
+    if (!isCurrentJourney && requiresJourneyCreation(journey)) {
       startMutation.mutate();
       return;
     }
-    router.push(resolveJourneyStartUrl(journey));
+    router.push(START_URL);
   };
 
+  // Retoma a jornada que já está em andamento (aviso exibido após o 409)
   const onResumeCurrentJourney = () => {
-    if (resumeMutation.isPending) return;
-    resumeMutation.mutate();
+    router.push(START_URL);
   };
 
   const onDismiss = () => {
@@ -149,8 +134,7 @@ export function useJourneySummaryVM(
     hasOtherJourneyInProgress || hasConflictOnStart ? t("journeyInProgressMessage") : null;
 
   const startError =
-    (startMutation.isError && !hasConflictOnStart) || resumeMutation.isError
-      ? t("startErrorMessage")
+    startMutation.isError && !hasConflictOnStart ? t("startErrorMessage")
       : null;
 
   const rawSteps = t.raw("steps");

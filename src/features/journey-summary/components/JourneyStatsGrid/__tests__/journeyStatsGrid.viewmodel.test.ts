@@ -33,7 +33,6 @@ function buildJourney(overrides?: Partial<JourneySummary>): JourneySummary {
     areasCount: 13,
     competenciesCount: 39,
     status: "not_started",
-    progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
     ...overrides,
   };
 }

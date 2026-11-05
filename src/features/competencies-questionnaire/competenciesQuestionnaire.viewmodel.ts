@@ -15,7 +15,7 @@ import {
 import { resolveDifficultyLevel } from "@shared/utils/difficultyLevel";
 import {
   getCompetenciesAreaUrl,
-  getCurrentJourneyStepUrl,
+  getCompetenciesIntroUrl,
   getJourneyResultUrl,
   getJourneySummaryUrl,
 } from "@shared/utils/journeyRoutes";
@@ -247,7 +247,7 @@ export function useCompetenciesQuestionnaireVM(
     // "Voltar" não salva: na primeira área volta para a introdução
     router.push(
       areaIndex === 0
-        ? getCurrentJourneyStepUrl("competencias")
+        ? getCompetenciesIntroUrl()
         : getCompetenciesAreaUrl(areaIndex - 1)
     );
   };

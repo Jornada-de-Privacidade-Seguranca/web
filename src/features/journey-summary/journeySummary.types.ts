@@ -1,13 +1,11 @@
 import type {
   JourneyStatus,
-  JourneyProgress,
   JourneySummary,
   JourneySummaryErrorType,
 } from "@services/journeySummaryService";
 
 export type {
   JourneyStatus,
-  JourneyProgress,
   JourneySummary,
   JourneySummaryErrorType,
 };

@@ -3,24 +3,16 @@ import {
   CURRENT_JOURNEY_BASE_PATH,
   getCompetenciesAreaUrl,
   getJourneyResultUrl,
-  getCurrentJourneyStepUrl,
+  getCompetenciesIntroUrl,
   getJourneySummaryUrl,
   getProfileSummaryUrl,
-  getNextPreQuestionnaireStep,
-  getPreviousPreQuestionnaireStep,
-  PRE_QUESTIONNAIRE_STEPS,
 } from "../journeyRoutes";
 
 describe("journeyRoutes utils", () => {
-  describe("getCurrentJourneyStepUrl", () => {
-    it("deve montar a URL fixa da etapa da jornada em andamento, sem id", () => {
+  describe("getCompetenciesIntroUrl", () => {
+    it("deve montar a URL fixa das instruções de competências da jornada em andamento, sem id", () => {
       expect(CURRENT_JOURNEY_BASE_PATH).toBe("/jornada/atual");
-      expect(getCurrentJourneyStepUrl("tempo-atuacao-perfil")).toBe(
-        "/jornada/atual/tempo-atuacao-perfil"
-      );
-      expect(getCurrentJourneyStepUrl("formacao-academica")).toBe(
-        "/jornada/atual/formacao-academica"
-      );
+      expect(getCompetenciesIntroUrl()).toBe("/jornada/atual/competencias");
     });
   });
 
@@ -46,46 +38,6 @@ describe("journeyRoutes utils", () => {
   describe("getProfileSummaryUrl", () => {
     it("deve montar a URL do resumo de um perfil de jornada", () => {
       expect(getProfileSummaryUrl("4")).toBe("/jornada/perfil/4");
-    });
-  });
-
-  describe("PRE_QUESTIONNAIRE_STEPS", () => {
-    it("deve conter a sequência de etapas correta da jornada", () => {
-      expect(PRE_QUESTIONNAIRE_STEPS).toEqual([
-        "experiencia-profissional",
-        "english",
-        "tempo-atuacao-perfil",
-        "formacao-academica",
-        "certificacoes-profissionais",
-        "competencias",
-      ]);
-    });
-  });
-
-  describe("getNextPreQuestionnaireStep", () => {
-    it("deve retornar a etapa seguinte da sequência", () => {
-      expect(getNextPreQuestionnaireStep("english")).toBe("tempo-atuacao-perfil");
-      expect(getNextPreQuestionnaireStep("tempo-atuacao-perfil")).toBe(
-        "formacao-academica"
-      );
-    });
-
-    it("deve retornar null para a última etapa", () => {
-      expect(getNextPreQuestionnaireStep("competencias")).toBeNull();
-    });
-  });
-
-  describe("getPreviousPreQuestionnaireStep", () => {
-    it("deve retornar a etapa anterior da sequência", () => {
-      expect(getPreviousPreQuestionnaireStep("tempo-atuacao-perfil")).toBe(
-        "english"
-      );
-    });
-
-    it("deve retornar null para a primeira etapa", () => {
-      expect(
-        getPreviousPreQuestionnaireStep("experiencia-profissional")
-      ).toBeNull();
     });
   });
 });

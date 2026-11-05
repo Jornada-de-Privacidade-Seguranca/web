@@ -134,7 +134,6 @@ describe("JourneySummaryView Component", () => {
         areasCount: 13,
         competenciesCount: 39,
         status: "not_started",
-        progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
       },
       isLoading: false,
       error: null,

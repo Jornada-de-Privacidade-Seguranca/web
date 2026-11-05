@@ -6,6 +6,7 @@ import { TranslateIcon } from "@hugeicons/core-free-icons";
 import { SingleChoiceQuestionStep } from "../index";
 import type { SingleChoiceQuestionStepProps } from "../singleChoiceQuestionStep.types";
 
+// SingleChoiceQuestionStep está deprecado (sem uso nas telas), mas segue coberto por testes enquanto existir.
 describe("SingleChoiceQuestionStep", () => {
   const defaultOptions = [
     { id: "opt-1", label: "Opção 1" },
