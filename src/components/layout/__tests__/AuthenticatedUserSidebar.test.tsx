@@ -139,9 +139,35 @@ describe("AuthenticatedUserSidebar", () => {
       const last = focusables[focusables.length - 1];
       last.focus();
 
-      fireEvent.keyDown(drawer, { key: "Tab" });
+      fireEvent.keyDown(last, { key: "Tab" });
 
       expect(document.activeElement).toBe(focusables[0]);
+    });
+
+    it("deve manter o foco dentro do drawer ao navegar pelo menu do usuário em portal", () => {
+      renderLayout();
+      fireEvent.click(getToggle());
+
+      fireEvent.click(screen.getByRole("button", { name: /Maria Oliveira/ }));
+      const logoutButton = screen.getByRole("button", {
+        name: "sidebar.userMenu.logout",
+      });
+      const firstDrawerFocusable = screen
+        .getByRole("dialog", { name: "sidebar.drawerLabel" })
+        .querySelector<HTMLElement>('a[href]')!;
+
+      logoutButton.focus();
+      fireEvent.keyDown(logoutButton, { key: "Tab" });
+      expect(document.activeElement).toBe(firstDrawerFocusable);
+
+      const drawerFocusables = screen
+        .getByRole("dialog", { name: "sidebar.drawerLabel" })
+        .querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+      const lastDrawerFocusable = drawerFocusables[drawerFocusables.length - 1];
+      fireEvent.keyDown(firstDrawerFocusable, { key: "Tab", shiftKey: true });
+      expect(document.activeElement).toBe(lastDrawerFocusable);
     });
 
     it("deve deixar o conteúdo sem o recuo da barra", () => {

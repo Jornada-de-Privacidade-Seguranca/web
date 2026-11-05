@@ -63,10 +63,62 @@ function useSidebarVM() {
     if (!isDrawerOpen) return;
 
     previousFocusRef.current = document.activeElement as HTMLElement | null;
-    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    (firstFocusable ?? drawerRef.current)?.focus();
+    const getFocusableElements = () => {
+      const drawerElements = drawerRef.current?.querySelectorAll<HTMLElement>(
+        FOCUSABLE_SELECTOR
+      );
+      const portaledElements = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-sidebar-dialog-focus][data-state="open"]'
+        )
+      ).flatMap((content) =>
+        Array.from(content.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+      );
+
+      return [...(drawerElements ?? []), ...portaledElements];
+    };
+    const focusFirstElement = () => {
+      const firstFocusable = getFocusableElements()[0];
+      (firstFocusable ?? drawerRef.current)?.focus();
+    };
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusables = getFocusableElements();
+      if (focusables.length === 0) return;
+
+      const activeIndex = focusables.indexOf(document.activeElement as HTMLElement);
+      if (event.shiftKey && activeIndex <= 0) {
+        event.preventDefault();
+        focusables[focusables.length - 1].focus();
+      } else if (!event.shiftKey && activeIndex === -1) {
+        event.preventDefault();
+        focusables[0].focus();
+      } else if (!event.shiftKey && activeIndex === focusables.length - 1) {
+        event.preventDefault();
+        focusables[0].focus();
+      }
+    };
+    const handleDocumentFocusIn = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (
+        drawerRef.current?.contains(target) ||
+        target.closest('[data-sidebar-dialog-focus][data-state="open"]')
+      ) {
+        return;
+      }
+
+      focusFirstElement();
+    };
+
+    document.addEventListener("keydown", handleDocumentKeyDown, true);
+    document.addEventListener("focusin", handleDocumentFocusIn);
+    focusFirstElement();
 
     return () => {
+      document.removeEventListener("keydown", handleDocumentKeyDown, true);
+      document.removeEventListener("focusin", handleDocumentFocusIn);
       previousFocusRef.current?.focus();
       previousFocusRef.current = null;
     };
@@ -76,31 +128,11 @@ function useSidebarVM() {
     setMobileOpen(false);
   }
 
-  /** Esc fecha o drawer, e o Tab circula só entre os itens dele. */
+  /** Esc fecha o drawer. */
   function handleDrawerKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (!isDrawerOpen) return;
-
-    if (event.key === "Escape") {
+    if (isDrawerOpen && event.key === "Escape") {
       event.preventDefault();
       closeDrawer();
-      return;
-    }
-
-    if (event.key !== "Tab" || !drawerRef.current) return;
-
-    const focusables = Array.from(
-      drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-    );
-    if (focusables.length === 0) return;
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
     }
   }
 
@@ -385,6 +417,7 @@ export const AuthenticatedUserSidebar = () => {
                 side="top"
                 align="start"
                 sideOffset={8}
+                data-sidebar-dialog-focus
                 className="z-50 w-56 rounded-xl border border-sidebar-border bg-popover p-1.5 text-popover-foreground shadow-lg outline-none"
               >
                 <button
