@@ -8,6 +8,7 @@ const routerReplaceMock = vi.fn();
 
 vi.mock("@/shared/i18n/navigation", () => ({
   useRouter: () => ({ replace: routerReplaceMock }),
+  usePathname: () => "/jornadas",
 }));
 
 function mockUseAuth(overrides: Partial<ReturnType<typeof useAuthModule.useAuth>>) {
@@ -15,7 +16,9 @@ function mockUseAuth(overrides: Partial<ReturnType<typeof useAuthModule.useAuth>
     user: null,
     isAuthenticated: false,
     isLoading: false,
+    sessionExpired: false,
     setAuth: vi.fn(),
+    expireSession: vi.fn(),
     clearAuth: vi.fn(),
     logout: vi.fn(),
     ...overrides,
@@ -51,6 +54,25 @@ describe("useRequireAuth", () => {
 
     expect(routerReplaceMock).not.toHaveBeenCalled();
   });
+  it("should not redirect by itself when the session expired, leaving it to the notice", () => {
+    mockUseAuth({ isLoading: false, isAuthenticated: false, sessionExpired: true });
+
+    const { result } = renderHook(() => useRequireAuth());
+
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+    expect(result.current.sessionExpired).toBe(true);
+  });
+
+  it("should go to /login with the reason and the current page when goToLogin is called", () => {
+    window.history.replaceState(null, "", "/pt/jornadas?page=2");
+    mockUseAuth({ isLoading: false, isAuthenticated: false, sessionExpired: true });
+
+    const { result } = renderHook(() => useRequireAuth());
+    result.current.goToLogin();
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/login?reason=session_expired&redirect=%2Fjornadas%3Fpage%3D2");
+    window.history.replaceState(null, "", "/");
+  });
 });
 
 describe("useRequireGuest", () => {
@@ -81,5 +103,24 @@ describe("useRequireGuest", () => {
     renderHook(() => useRequireGuest());
 
     expect(routerReplaceMock).not.toHaveBeenCalled();
+  });
+  it("should return to the page given in the login URL after authenticating", () => {
+    window.history.replaceState(null, "", "/pt/login?redirect=%2Fresultados");
+    mockUseAuth({ isLoading: false, isAuthenticated: true });
+
+    renderHook(() => useRequireGuest());
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/resultados");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("should ignore an external redirect and go to /painel", () => {
+    window.history.replaceState(null, "", "/pt/login?redirect=https%3A%2F%2Fsite-malicioso.com");
+    mockUseAuth({ isLoading: false, isAuthenticated: true });
+
+    renderHook(() => useRequireGuest());
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/painel");
+    window.history.replaceState(null, "", "/");
   });
 });

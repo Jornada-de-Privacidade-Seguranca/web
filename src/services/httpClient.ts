@@ -51,6 +51,32 @@ export const axiosInstance = axios.create({
 
 let cachedCsrfToken: string | null = null;
 
+/** Rotas de autenticação: o 401 delas (por exemplo, senha incorreta) não indica sessão expirada. */
+const AUTH_PATH_PREFIX = "/auth/";
+
+let unauthorizedHandler: (() => void) | null = null;
+
+/**
+ * Registra quem trata um 401 fora das rotas de autenticação (sessão expirada).
+ * O httpClient só avisa; limpar o estado e redirecionar fica com quem registrou.
+ */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
+}
+
+// No interceptador, e não em sendRequest, para valer também para os services
+// que usam o axiosInstance diretamente
+axiosInstance.interceptors.response.use(undefined, (error: unknown) => {
+  if (
+    axios.isAxiosError(error) &&
+    error.response?.status === 401 &&
+    !(error.config?.url ?? "").startsWith(AUTH_PATH_PREFIX)
+  ) {
+    unauthorizedHandler?.();
+  }
+  return Promise.reject(error);
+});
+
 function isMutatingMethod(method: AxiosRequestConfig["method"]): boolean {
   const normalized = (method ?? "get").toString().toUpperCase();
   return normalized !== "GET" && normalized !== "HEAD";

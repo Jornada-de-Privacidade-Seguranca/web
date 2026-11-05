@@ -1,14 +1,20 @@
 "use client";
 
 import { AuthenticatedUserSidebar } from "@/components/layout/AuthenticatedUserSidebar";
+import { SessionExpiredDialog } from "@/components/layout/SessionExpiredDialog";
 import { cn } from "@/shared/lib/utils";
 import { useRequireAuth } from "@/hooks/useAuthGuard";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { PropsWithChildren } from "react";
 
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
-  const { isLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading, isAuthenticated, sessionExpired, goToLogin } = useRequireAuth();
   const isDrawerOpen = useSidebarStore((state) => state.isMobileOpen);
+
+  // Sessão expirada ao carregar a página: página vazia com o aviso
+  if (sessionExpired && !isAuthenticated) {
+    return <SessionExpiredDialog onConfirm={goToLogin} />;
+  }
 
   if (isLoading || !isAuthenticated) {
     return null;
@@ -30,6 +36,9 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       >
         {children}
       </main>
+
+      {/* Sessão expirada durante o uso: o aviso fica por cima da tela atual */}
+      {sessionExpired && <SessionExpiredDialog onConfirm={goToLogin} />}
     </div>
   );
 }

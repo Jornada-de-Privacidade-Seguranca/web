@@ -36,7 +36,7 @@ function useSidebarVM() {
   const isMobileOpen = useSidebarStore((state) => state.isMobileOpen);
   const setMobileOpen = useSidebarStore((state) => state.setMobileOpen);
   const isMobile = useIsMobile();
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, logout, sessionExpired } = useAuth();
   const t = useTranslations();
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement | null>(null);
@@ -50,6 +50,12 @@ function useSidebarVM() {
   useEffect(() => {
     if (!isMobile) setMobileOpen(false);
   }, [isMobile, setMobileOpen]);
+
+  // O aviso de sessão expirada é outro diálogo modal: o drawer fecha para não
+  // disputar o foco com ele
+  useEffect(() => {
+    if (sessionExpired) setMobileOpen(false);
+  }, [sessionExpired, setMobileOpen]);
 
   // Navegar fecha o drawer, inclusive pelo voltar do navegador
   useEffect(() => {

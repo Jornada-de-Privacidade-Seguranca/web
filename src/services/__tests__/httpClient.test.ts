@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
 import {
   ApiRequestError,
@@ -6,6 +6,7 @@ import {
   apiRequestWithMeta,
   axiosInstance,
   clearCsrfToken,
+  setUnauthorizedHandler,
 } from "../httpClient";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
@@ -234,6 +235,76 @@ describe("httpClient", () => {
     expect(result).toEqual({
       data: { message: "ok" },
       meta: undefined,
+    });
+  });
+  describe("401 fora das rotas de autenticação", () => {
+    const unauthorizedHandler = vi.fn();
+    const originalAdapter = axiosInstance.defaults.adapter;
+
+    /** Responde pelo adaptador, para que a resposta passe pelos interceptadores. */
+    function respondWith(statusByUrl: Record<string, { status: number; data: unknown }>) {
+      axiosInstance.defaults.adapter = async (config) => {
+        const { status, data } = statusByUrl[config.url ?? ""];
+        const response = { data, status, statusText: "", headers: {}, config };
+        if (status >= 400) {
+          throw new AxiosError("Request failed", "ERR_BAD_REQUEST", config, undefined, response as AxiosResponse);
+        }
+        return response as AxiosResponse;
+      };
+    }
+
+    beforeEach(() => {
+      unauthorizedHandler.mockClear();
+      setUnauthorizedHandler(unauthorizedHandler);
+    });
+
+    afterEach(() => {
+      setUnauthorizedHandler(null);
+      axiosInstance.defaults.adapter = originalAdapter;
+    });
+
+    it("should notify the unauthorized handler and still reject with the error", async () => {
+      respondWith({
+        "/journeys/current/competencies": {
+          status: 401,
+          data: { success: false, message: "Usuario nao autenticado.", code: "UNAUTHENTICATED" },
+        },
+      });
+
+      await expect(apiRequest("/journeys/current/competencies")).rejects.toMatchObject({
+        status: 401,
+        code: "UNAUTHENTICATED",
+      });
+      expect(unauthorizedHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should also notify for services that call axiosInstance directly", async () => {
+      respondWith({ "/journeys/2": { status: 401, data: { success: false } } });
+
+      await expect(axiosInstance.get("/journeys/2")).rejects.toBeInstanceOf(AxiosError);
+      expect(unauthorizedHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not notify on 401 from authentication routes (e.g. wrong password)", async () => {
+      respondWith({
+        "/auth/csrf-token": { status: 200, data: { success: true, data: { csrf_token: "token" } } },
+        "/auth/login": {
+          status: 401,
+          data: { success: false, message: "Credenciais invalidas.", code: "INVALID_CREDENTIALS" },
+        },
+      });
+
+      await expect(
+        apiRequest("/auth/login", { method: "post", withCsrf: true })
+      ).rejects.toThrow("Credenciais invalidas.");
+      expect(unauthorizedHandler).not.toHaveBeenCalled();
+    });
+
+    it("should not notify on other error statuses", async () => {
+      respondWith({ "/dashboard": { status: 500, data: { success: false, message: "Erro interno." } } });
+
+      await expect(apiRequest("/dashboard")).rejects.toThrow("Erro interno.");
+      expect(unauthorizedHandler).not.toHaveBeenCalled();
     });
   });
 });

@@ -6,7 +6,12 @@ import AuthenticatedLayout from "../layout";
 import { useSidebarStore } from "@/store/sidebar.store";
 
 vi.mock("@/hooks/useAuthGuard", () => ({
-  useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
+  useRequireAuth: () => ({
+    isLoading: false,
+    isAuthenticated: true,
+    sessionExpired: false,
+    goToLogin: vi.fn(),
+  }),
 }));
 
 vi.mock("@/components/layout/AuthenticatedUserSidebar", () => ({

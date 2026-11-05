@@ -3,7 +3,7 @@
 import { ShieldCheck } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { Button, Input, Message } from "@/components/ui";
+import { AnimatedMessage, Button, Input } from "@/components/ui";
 import { Link } from "@/shared/i18n/navigation";
 
 import { useAuthVM } from "./auth.viewmodel";
@@ -30,17 +30,11 @@ export function AuthView() {
             {labels.description}
           </p>
 
-          {serverMessage && (
-            <div className="mt-6 w-full text-left">
-              <Message
-                title={serverMessage.title}
-                description={serverMessage.description}
-                icon={serverMessage.icon}
-                variant={serverMessage.variant}
-                onClose={onCloseMsg}
-              />
-            </div>
-          )}
+          <AnimatedMessage
+            message={serverMessage}
+            onClose={onCloseMsg}
+            className="pt-6 text-left"
+          />
 
           <form
             className="mt-9 w-full rounded-[2rem] border border-border bg-card/90 px-6 py-7 text-left shadow-xl backdrop-blur-xl"
