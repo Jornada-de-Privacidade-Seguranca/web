@@ -4,6 +4,7 @@ import {
   getPendingAssessment,
   getLastCompletedAssessment,
   getRecentHistory,
+  getDashboardMetrics,
   getDashboardData,
 } from "../dashboardService";
 import { axiosInstance } from "../httpClient";
@@ -147,8 +148,25 @@ describe("dashboardService", () => {
     });
   });
 
+  describe("getDashboardMetrics", () => {
+    it("should unwrap dashboard metrics on success", async () => {
+      const mockMetrics = {
+        completedJourneys: 4,
+        pendingJourneys: 1,
+        averageScore: 90,
+      };
+
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: mockMetrics })
+      );
+
+      const result = await getDashboardMetrics();
+      expect(result).toEqual(mockMetrics);
+    });
+  });
+
   describe("getDashboardData", () => {
-    it("should fetch pending, lastCompleted and history in parallel via Promise.all", async () => {
+    it("should fetch pending, lastCompleted, history and metrics in parallel via Promise.all", async () => {
       const mockPending = {
         id: "p1",
         title: "Test",
@@ -158,19 +176,27 @@ describe("dashboardService", () => {
         estimatedMinutes: 5,
       };
 
+      const mockMetrics = {
+        completedJourneys: 2,
+        pendingJourneys: 1,
+        averageScore: 85,
+      };
+
       const requestSpy = vi
         .spyOn(axiosInstance, "request")
         .mockResolvedValueOnce(mockResponse({ success: true, data: mockPending }))
         .mockResolvedValueOnce(mockResponse({ success: true, data: null }))
-        .mockResolvedValueOnce(mockResponse({ success: true, data: [] }));
+        .mockResolvedValueOnce(mockResponse({ success: true, data: [] }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: mockMetrics }));
 
       const dashboard = await getDashboardData(5);
       expect(dashboard).toEqual({
         pending: mockPending,
         lastCompleted: null,
         history: [],
+        metrics: mockMetrics,
       });
-      expect(requestSpy).toHaveBeenCalledTimes(3);
+      expect(requestSpy).toHaveBeenCalledTimes(4);
     });
   });
 });
