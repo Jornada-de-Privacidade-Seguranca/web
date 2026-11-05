@@ -21,6 +21,7 @@ const mockUser: AuthenticatedUser = {
 };
 
 const setAuthMock = vi.fn();
+const clearQueriesMock = vi.fn();
 const routerPushMock = vi.fn();
 
 vi.mock("next-intl", () => ({
@@ -37,6 +38,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ clear: clearQueriesMock }),
+}));
+
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ setAuth: setAuthMock }),
 }));
@@ -45,6 +50,7 @@ describe("Auth ViewModel Logic (useAuthVM)", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     setAuthMock.mockClear();
+    clearQueriesMock.mockClear();
     routerPushMock.mockClear();
   });
 
@@ -69,6 +75,11 @@ describe("Auth ViewModel Logic (useAuthVM)", () => {
     expect(setAuthMock).toHaveBeenCalledWith(mockUser);
     expect(routerPushMock).toHaveBeenCalledWith("/painel");
     expect(result.current.serverMessage).toBeNull();
+    // O cache da sessão anterior é descartado antes de autenticar
+    expect(clearQueriesMock).toHaveBeenCalledTimes(1);
+    expect(clearQueriesMock.mock.invocationCallOrder[0]).toBeLessThan(
+      setAuthMock.mock.invocationCallOrder[0]
+    );
   });
 
   it("deve exibir a mensagem de erro do backend quando as credenciais são inválidas", async () => {
@@ -89,6 +100,7 @@ describe("Auth ViewModel Logic (useAuthVM)", () => {
 
     expect(setAuthMock).not.toHaveBeenCalled();
     expect(routerPushMock).not.toHaveBeenCalled();
+    expect(clearQueriesMock).not.toHaveBeenCalled();
     expect(result.current.serverMessage).toEqual({
       title: "serverError.title",
       description: "Usuário e/ou senha inválidos.",
@@ -129,6 +141,7 @@ describe("useAuthVM com página de retorno", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     setAuthMock.mockClear();
+    clearQueriesMock.mockClear();
     routerPushMock.mockClear();
   });
 

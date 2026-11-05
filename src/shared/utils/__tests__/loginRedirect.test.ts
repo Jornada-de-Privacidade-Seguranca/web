@@ -27,6 +27,19 @@ describe("getSafeRedirectPath", () => {
 
   it("deve recusar a própria tela de login, para não criar um ciclo", () => {
     expect(getSafeRedirectPath("/login?redirect=%2Fjornadas")).toBeNull();
+    expect(getSafeRedirectPath("/en/login")).toBeNull();
+  });
+
+  it("deve remover o prefixo de idioma, que o router já acrescenta", () => {
+    expect(getSafeRedirectPath("/en/jornadas?page=2")).toBe("/jornadas?page=2");
+    expect(getSafeRedirectPath("/pt")).toBe("/");
+    // Só o idioma no início do caminho
+    expect(getSafeRedirectPath("/jornadas/en")).toBe("/jornadas/en");
+    expect(getSafeRedirectPath("/english")).toBe("/english");
+  });
+
+  it("deve recusar o que vira caminho relativo ao protocolo sem o idioma", () => {
+    expect(getSafeRedirectPath("/en//site-malicioso.com")).toBeNull();
   });
 });
 

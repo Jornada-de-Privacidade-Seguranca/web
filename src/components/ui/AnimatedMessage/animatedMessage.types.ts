@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, TransitionEvent } from "react";
 import type { MessageVariant } from "../message";
 
 export interface AnimatedMessageContent {
@@ -24,5 +24,5 @@ export interface AnimatedMessageViewModelReturn {
   isOpen: boolean;
   onClose?: () => void;
   /** Ao fim da animação de saída, desmonta o conteúdo. */
-  handleTransitionEnd: () => void;
+  handleTransitionEnd: (event: TransitionEvent<HTMLElement>) => void;
 }

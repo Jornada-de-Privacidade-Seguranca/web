@@ -19,11 +19,11 @@ export function AnimatedMessage(props: AnimatedMessageProps) {
     <div
       data-state={isOpen ? "open" : "closed"}
       inert={!isOpen}
-      onTransitionEnd={(event) => {
-        if (event.target === event.currentTarget) handleTransitionEnd();
-      }}
+      onTransitionEnd={handleTransitionEnd}
       className={cn(
-        "grid w-full transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
+        // Com menos animação, a transição dura 1 ms em vez de não existir: sem
+        // ela, o transitionend não dispara e o aviso fechado não sai da tela
+        "grid w-full transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:duration-[1ms]",
         isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
       )}
     >

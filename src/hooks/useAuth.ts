@@ -7,9 +7,17 @@ import { ApiRequestError, setUnauthorizedHandler } from "@/services/httpClient";
 import { clearSessionMarker, hadPreviousSession } from "@/shared/utils/sessionMarker";
 
 // Um 401 da API durante o uso mostra o aviso de sessão expirada por cima da tela
-// atual. Várias requisições falhando juntas mostram o aviso uma única vez.
+// atual. Várias requisições falhando juntas mostram o aviso uma única vez. Sem a
+// marca de sessão, o usuário saiu em outra aba: a sessão foi encerrada, não
+// expirou, e o layout leva direto ao login.
 setUnauthorizedHandler(() => {
-  useAuthStore.getState().markSessionExpired();
+  const { isAuthenticated, markSessionExpired, clearAuth } = useAuthStore.getState();
+  if (!isAuthenticated) return;
+  if (hadPreviousSession()) {
+    markSessionExpired();
+  } else {
+    clearAuth();
+  }
 });
 
 /**

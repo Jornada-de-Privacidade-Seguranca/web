@@ -1,3 +1,5 @@
+import { routing } from "@/shared/i18n/routing";
+
 export const LOGIN_PATH = "/login";
 export const DEFAULT_AUTHENTICATED_PATH = "/painel";
 
@@ -27,11 +29,28 @@ export function getSafeRedirectPath(value: string | null | undefined): string | 
     return null;
   }
 
-  if (url.origin !== INTERNAL_ORIGIN || url.pathname === LOGIN_PATH) {
+  // O router do next-intl acrescenta o idioma; um prefixo já presente ("/en/...")
+  // resultaria em "/pt/en/..."
+  const pathname = stripLocalePrefix(url.pathname);
+
+  if (
+    url.origin !== INTERNAL_ORIGIN ||
+    pathname === LOGIN_PATH ||
+    // Sem o idioma, "/en//site.com" viraria um caminho relativo ao protocolo
+    pathname.startsWith("//")
+  ) {
     return null;
   }
 
-  return `${url.pathname}${url.search}${url.hash}`;
+  return `${pathname}${url.search}${url.hash}`;
+}
+
+function stripLocalePrefix(pathname: string): string {
+  const [, firstSegment, ...rest] = pathname.split("/");
+  if (!(routing.locales as readonly string[]).includes(firstSegment)) {
+    return pathname;
+  }
+  return `/${rest.join("/")}`;
 }
 
 /**

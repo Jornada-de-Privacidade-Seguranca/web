@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { login } from "@services/authService";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +21,7 @@ import type { AuthViewModelReturn, LoginFormValues } from "./auth.types";
 export function useAuthVM(): AuthViewModelReturn {
   const t = useTranslations("auth.login");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { setAuth } = useAuth();
   const tSessionExpired = useTranslations("sessionExpired");
   // useSearchParams acompanha a navegação até o login, inclusive a interna
@@ -72,6 +74,9 @@ export function useAuthVM(): AuthViewModelReturn {
     setIsSessionNoticeDismissed(true);
     try {
       const user = await login(data);
+      // Dados em cache podem ser de quem usava a aba antes (sessão expirada ou
+      // logout): o app volta a buscar tudo para o usuário que acabou de entrar
+      queryClient.clear();
       setAuth(user);
       router.push(redirectPath ?? DEFAULT_AUTHENTICATED_PATH);
     } catch (err: unknown) {

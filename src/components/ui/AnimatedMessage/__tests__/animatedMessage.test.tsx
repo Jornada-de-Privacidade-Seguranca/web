@@ -42,9 +42,20 @@ describe("AnimatedMessage", () => {
     expect(wrapper.hasAttribute("inert")).toBe(true);
     expect(screen.getByText("Sessão expirada")).toBeTruthy();
 
+    // A transição de um elemento interno não remove a mensagem
+    fireEvent.transitionEnd(screen.getByText("Sessão expirada"));
+    expect(screen.getByText("Sessão expirada")).toBeTruthy();
+
     fireEvent.transitionEnd(wrapper);
 
     expect(screen.queryByText("Sessão expirada")).toBeNull();
+  });
+
+  it("com menos animação, deve manter uma transição curta para o aviso fechado sair da tela", () => {
+    render(<AnimatedMessage message={notice} />);
+
+    expect(getWrapper().className).toContain("motion-reduce:duration-[1ms]");
+    expect(getWrapper().className).not.toContain("transition-none");
   });
 
   it("deve trocar o conteúdo quando chegar uma mensagem nova", () => {

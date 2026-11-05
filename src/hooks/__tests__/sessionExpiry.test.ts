@@ -110,6 +110,24 @@ describe("expiração da sessão", () => {
     });
     expect(routerReplaceMock).toHaveBeenCalledTimes(1);
     expect(routerReplaceMock).toHaveBeenCalledWith("/login?reason=session_expired&redirect=%2Fjornadas");
+    // Voltar depois sem entrar leva direto ao login, sem repetir o aviso
+    expect(hadPreviousSession()).toBe(false);
+  });
+
+  it("deve ir ao login sem o aviso quando o usuário saiu em outra aba", async () => {
+    vi.spyOn(authService, "getAuthenticatedUser").mockResolvedValueOnce(mockUser);
+    const { result } = renderHook(() => useRequireAuth());
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+
+    // O logout na outra aba remove a marca, compartilhada pelo localStorage
+    window.localStorage.clear();
+    respondUnauthorized();
+    await act(async () => {
+      await apiRequest("/dashboard").catch(() => undefined);
+    });
+
+    expect(result.current.sessionExpired).toBe(false);
+    await waitFor(() => expect(routerReplaceMock).toHaveBeenCalledWith("/login"));
   });
 
   it("deve marcar a sessão como expirada, sem redirecionar, ao carregar com uma sessão anterior no navegador", async () => {

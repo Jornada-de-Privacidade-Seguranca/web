@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type TransitionEvent } from "react";
 import type {
   AnimatedMessageContent,
   AnimatedMessageProps,
@@ -25,7 +25,9 @@ export function useAnimatedMessageVM({
     setDisplayedMessage(message);
   }
 
-  function handleTransitionEnd() {
+  function handleTransitionEnd(event: TransitionEvent<HTMLElement>) {
+    // Só a transição do próprio contêiner; a do conteúdo interno não fecha o aviso
+    if (event.target !== event.currentTarget) return;
     if (!message) {
       setDisplayedMessage(null);
     }

@@ -8,6 +8,7 @@ import { useSidebarStore } from "@/store/sidebar.store";
 
 let mockIsMobile = true;
 let mockPathname = "/painel";
+let mockSessionExpired = false;
 
 vi.mock("@/hooks/useMobile", () => ({
   useIsMobile: () => mockIsMobile,
@@ -17,6 +18,7 @@ vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     user: { name: "Maria Oliveira", profile: { label: "Usuário comum" } },
     logout: vi.fn(),
+    sessionExpired: mockSessionExpired,
   }),
 }));
 
@@ -59,6 +61,7 @@ describe("AuthenticatedUserSidebar", () => {
   beforeEach(() => {
     mockIsMobile = true;
     mockPathname = "/painel";
+    mockSessionExpired = false;
     useSidebarStore.setState({ isExpanded: true, isMobileOpen: false });
   });
 
@@ -170,6 +173,25 @@ describe("AuthenticatedUserSidebar", () => {
       const lastDrawerFocusable = drawerFocusables[drawerFocusables.length - 1];
       fireEvent.keyDown(firstDrawerFocusable, { key: "Tab", shiftKey: true });
       expect(document.activeElement).toBe(lastDrawerFocusable);
+    });
+
+    it("deve fechar o drawer quando a sessão expirar, para o aviso ficar com o foco", () => {
+      const { rerender } = renderLayout();
+      fireEvent.click(getToggle());
+      expect(document.getElementById("app-sidebar")!.getAttribute("data-state")).toBe("open");
+
+      mockSessionExpired = true;
+      rerender(
+        <>
+          <AuthenticatedUserSidebar />
+          <PageShell title="Painel">
+            <p>Conteúdo</p>
+          </PageShell>
+        </>
+      );
+
+      expect(useSidebarStore.getState().isMobileOpen).toBe(false);
+      expect(document.getElementById("app-sidebar")!.getAttribute("data-state")).toBe("closed");
     });
 
     it("deve deixar o conteúdo sem o recuo da barra", () => {

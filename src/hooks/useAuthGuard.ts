@@ -9,6 +9,7 @@ import {
   buildSessionExpiredLoginPath,
   readCurrentLoginRedirectPath,
 } from "@/shared/utils/loginRedirect";
+import { clearSessionMarker } from "@/shared/utils/sessionMarker";
 
 /**
  * Redireciona para /login quando não houver sessão autenticada. Se a sessão
@@ -31,6 +32,9 @@ export function useRequireAuth() {
     // Mantém sessionExpired: limpar tudo faria o efeito acima redirecionar ao
     // login sem a página de retorno
     expireSession();
+    // A expiração já foi avisada; o aviso no login vem do `reason` da URL, e
+    // voltar depois sem entrar leva direto ao login, sem repetir o modal
+    clearSessionMarker();
     router.replace(buildSessionExpiredLoginPath(`${pathname}${window.location.search}`));
   }
 
