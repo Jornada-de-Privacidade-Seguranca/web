@@ -287,7 +287,6 @@
     "dismissLabel": "Agora não",
     "dismissAriaLabel": "Voltar para a página anterior",
     "actionStart": "Iniciar jornada",
-    "actionContinue": "Continuar jornada",
     "actionRetake": "Refazer jornada",
     "notFoundTitle": "Jornada não encontrada",
     "notFoundMessage": "Não encontramos a jornada solicitada. Ela pode ter sido removida ou o link pode estar incorreto.",

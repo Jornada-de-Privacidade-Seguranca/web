@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@shared/i18n/navigation";
 import { getCompetenciesAreaUrl } from "@shared/utils/journeyRoutes";
 
 interface CompetenciesPageProps {
@@ -9,5 +9,5 @@ interface CompetenciesPageProps {
 // antigo leva direto à primeira área
 export default async function CompetenciesPage({ params }: CompetenciesPageProps) {
   const { locale } = await params;
-  redirect(`/${locale}${getCompetenciesAreaUrl(0)}`);
+  redirect({ href: getCompetenciesAreaUrl(0), locale });
 }

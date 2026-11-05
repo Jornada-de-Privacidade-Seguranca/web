@@ -57,7 +57,7 @@ export function estimateJourneyMinutes(competenciesCount: number): number {
 }
 
 /** Respostas que indicam que a jornada já foi iniciada. */
-const ANSWERED_STEP_CHECKS: ((j: JourneyDetailApi) => boolean)[] = [
+const JOURNEY_STARTED_CHECKS: ((j: JourneyDetailApi) => boolean)[] = [
   (j) => j.answers?.professional_experience != null,
   (j) => j.answers?.english_proficiency != null,
   (j) => j.answers?.profile_experience != null,
@@ -77,7 +77,7 @@ export function mapJourneyToSummary(
       .map((competency) => competency.knowledge_area?.id)
       .filter((id): id is number => id != null)
   );
-  const hasAnswers = ANSWERED_STEP_CHECKS.some((isAnswered) => isAnswered(journey));
+  const hasAnswers = JOURNEY_STARTED_CHECKS.some((isAnswered) => isAnswered(journey));
 
   const status: JourneyStatus =
     journey.status === "completed"

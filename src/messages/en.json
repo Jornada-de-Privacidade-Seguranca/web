@@ -287,7 +287,6 @@
     "dismissLabel": "Not now",
     "dismissAriaLabel": "Go back to the previous page",
     "actionStart": "Start journey",
-    "actionContinue": "Continue journey",
     "actionRetake": "Retake journey",
     "notFoundTitle": "Journey not found",
     "notFoundMessage": "We couldn't find the requested journey. It may have been removed, or the link may be incorrect.",
