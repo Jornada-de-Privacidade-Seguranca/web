@@ -5,7 +5,7 @@ import { Button } from "../ui";
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons";
 import { SwitchThemeButton } from "./SwitchThemeButton";
 import { IdiomSwitch } from "./IdiomSwitch";
-import { SIDEBAR_ID } from "./AuthenticatedUserSidebar";
+import { SIDEBAR_ID } from "@/shared/constants/sidebar";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/shared/lib/utils";

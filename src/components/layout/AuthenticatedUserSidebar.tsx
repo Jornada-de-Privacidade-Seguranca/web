@@ -18,9 +18,7 @@ import { useTranslations } from "next-intl";
 import { KeyboardEvent, PropsWithChildren, useEffect, useRef } from "react";
 import { usePathname } from "@/shared/i18n/navigation";
 import { useIsMobile } from "@/hooks/useMobile";
-
-/** id da barra lateral, referenciado pelo `aria-controls` do botão do cabeçalho */
-export const SIDEBAR_ID = "app-sidebar";
+import { SIDEBAR_ID } from "@/shared/constants/sidebar";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -252,7 +250,6 @@ const SidebarWrapper = ({
           role="dialog"
           aria-modal="true"
           aria-label={drawerLabel}
-          aria-hidden={!isDrawerOpen}
           inert={!isDrawerOpen}
           tabIndex={-1}
           onKeyDown={onKeyDown}
@@ -273,7 +270,9 @@ const SidebarWrapper = ({
     <div
       id={SIDEBAR_ID}
       className={cn(
-        "peer fixed inset-y-0 left-0 z-10 transition-[left,right,width] duration-300 ease-out",
+        // Escondida abaixo de `md` também pelo CSS: no primeiro render o hook
+        // ainda indica desktop, e a barra fixa não chega a aparecer no celular
+        "peer fixed inset-y-0 left-0 z-10 transition-[left,right,width] duration-300 ease-out max-md:hidden",
         isExpanded ? "w-64" : "w-18",
       )}
       data-state={isExpanded ? "expanded" : "collapsed"}

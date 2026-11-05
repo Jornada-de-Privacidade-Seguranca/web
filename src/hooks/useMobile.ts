@@ -5,13 +5,9 @@ export const MOBILE_BREAKPOINT = 768;
 
 const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
-function matchesMobile(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia(MOBILE_QUERY).matches;
-}
-
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean>(matchesMobile);
+  // Começa como desktop, igual ao servidor; o efeito acerta o valor no cliente
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const mql = window.matchMedia(MOBILE_QUERY);

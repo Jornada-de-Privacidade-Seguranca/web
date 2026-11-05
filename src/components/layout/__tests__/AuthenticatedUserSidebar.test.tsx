@@ -73,7 +73,9 @@ describe("AuthenticatedUserSidebar", () => {
       const drawer = document.getElementById("app-sidebar")!;
       expect(drawer.getAttribute("role")).toBe("dialog");
       expect(drawer.getAttribute("data-state")).toBe("closed");
-      expect(drawer.getAttribute("aria-hidden")).toBe("true");
+      expect(drawer.hasAttribute("inert")).toBe(true);
+      // O inert já tira o drawer da árvore; aria-hidden com foco dentro gera aviso
+      expect(drawer.hasAttribute("aria-hidden")).toBe(false);
       expect(getToggle().getAttribute("aria-expanded")).toBe("false");
       expect(getToggle().getAttribute("aria-controls")).toBe("app-sidebar");
     });
@@ -191,11 +193,13 @@ describe("AuthenticatedUserSidebar", () => {
       expect(screen.queryByRole("dialog")).toBeNull();
       expect(sidebar.getAttribute("data-state")).toBe("expanded");
       expect(getToggle().getAttribute("aria-expanded")).toBe("true");
+      expect(getToggle().getAttribute("aria-label")).toBe("sidebar.toggle.close");
 
       fireEvent.click(getToggle());
 
       expect(sidebar.getAttribute("data-state")).toBe("collapsed");
       expect(getToggle().getAttribute("aria-expanded")).toBe("false");
+      expect(getToggle().getAttribute("aria-label")).toBe("sidebar.toggle.open");
       expect(useSidebarStore.getState().isMobileOpen).toBe(false);
     });
 
