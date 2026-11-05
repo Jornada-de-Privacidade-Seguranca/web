@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as journeyService from "../journeyService";
+import * as journeyProfileService from "../journeyProfileService";
 import type { JourneyDetailApi } from "../journeyService";
 import {
   estimateJourneyMinutes,
   getJourneySummary,
+  getProfileSummary,
   mapJourneyToSummary,
   JourneySummaryRequestError,
 } from "../journeySummaryService";
@@ -49,10 +51,9 @@ describe("journeySummaryService", () => {
         title: "Encarregado pelo Tratamento de Dados Pessoais",
         competenciesCount: 3,
         areasCount: 2,
-        stepsCount: 6,
-        completedStepsCount: 0,
         // 3 competências × 20 s = 60 s → 1 min
         estimatedMinutes: 1,
+        domain: "privacy",
         status: "not_started",
       });
       expect(summary).not.toHaveProperty("progress");
@@ -75,7 +76,6 @@ describe("journeySummaryService", () => {
       );
 
       expect(summary.status).toBe("in_progress");
-      expect(summary.completedStepsCount).toBe(2);
     });
 
     it("deve marcar como concluída a jornada com status completed", () => {
@@ -85,7 +85,6 @@ describe("journeySummaryService", () => {
       );
 
       expect(summary.status).toBe("completed");
-      expect(summary.completedStepsCount).toBe(6);
     });
   });
 
@@ -123,6 +122,39 @@ describe("journeySummaryService", () => {
       const error = await getJourneySummary("78", "pt").catch((e) => e);
       expect(error).toBeInstanceOf(JourneySummaryRequestError);
       expect(error.type).toBe(expected);
+    });
+  });
+
+  describe("getProfileSummary", () => {
+    it("deve trazer o domínio do perfil, usado no texto das instruções", async () => {
+      vi.spyOn(journeyProfileService, "getJourneyProfile").mockResolvedValueOnce({
+        id: 5,
+        name_pt: "Analista de Segurança da Informação",
+        name_en: "Information Security Analyst",
+        description_pt: null,
+        description_en: null,
+        type: 2,
+      });
+
+      await expect(getProfileSummary("5", "pt")).resolves.toMatchObject({
+        id: null,
+        profileId: "5",
+        domain: "security",
+        estimatedMinutes: null,
+      });
+    });
+
+    it("deve deixar o domínio nulo quando o perfil não o informar", async () => {
+      vi.spyOn(journeyProfileService, "getJourneyProfile").mockResolvedValueOnce({
+        id: 6,
+        name_pt: "Perfil sem domínio",
+        name_en: "Profile without domain",
+        description_pt: null,
+        description_en: null,
+        type: null,
+      });
+
+      await expect(getProfileSummary("6", "pt")).resolves.toMatchObject({ domain: null });
     });
   });
 });

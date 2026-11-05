@@ -17,17 +17,12 @@ vi.mock("next-intl", () => ({
   useLocale: () => "pt",
   useTranslations: () => {
     const t = (key: string, params?: Record<string, unknown>) => {
-      if (key === "stepsCountAriaLabel") return `${params?.count} etapas`;
       if (key === "durationAriaLabel") return `${params?.minutes} minutos de duração`;
       if (key === "areasAriaLabel") return `${params?.count} áreas`;
       if (key === "competenciesAriaLabel") return `${params?.count} competências`;
       if (key === "estimatedMinutesText") return `${params?.minutes} min`;
-      return key;
-    };
-    t.raw = (key: string) => {
-      if (key === "steps") {
-        return [{ title: "Etapa 1", description: "Descrição 1" }];
-      }
+      if (key === "instructions.items.estimatedTime.description") return `${params?.minutes} minutos`;
+      if (key === "instructions.intro") return `intro: ${params?.domain}`;
       return key;
     };
     return t;
@@ -80,11 +75,10 @@ const notStartedJourney: JourneySummary = {
   id: "78",
   profileId: "1",
   title: "Encarregado de Dados",
-  stepsCount: 6,
-  completedStepsCount: 0,
   estimatedMinutes: 3,
   areasCount: 1,
   competenciesCount: 3,
+  domain: "security",
   status: "not_started",
 };
 
@@ -92,7 +86,6 @@ const completedJourney: JourneySummary = {
   ...notStartedJourney,
   id: "77",
   status: "completed",
-  completedStepsCount: 6,
 };
 
 const profileSummary: JourneySummary = {
@@ -132,7 +125,7 @@ describe("useJourneySummaryVM", () => {
   });
 
   describe("resumo da jornada em andamento", () => {
-    it("deve exibir \"Retomar jornada\" e seguir pelas instruções de competências sem criar jornada", async () => {
+    it("deve exibir \"Retomar jornada\" e seguir para a primeira área de competências sem criar jornada", async () => {
       mockCurrentJourneyId = "78";
       const createSpy = vi.spyOn(journeyService, "createJourney");
       const { result } = await renderJourneySummary(notStartedJourney);
@@ -145,7 +138,7 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       expect(createSpy).not.toHaveBeenCalled();
     });
 
@@ -160,7 +153,7 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       expect(createSpy).not.toHaveBeenCalled();
     });
   });
@@ -195,7 +188,7 @@ describe("useJourneySummaryVM", () => {
       expect(createSpy).not.toHaveBeenCalled();
 
       act(() => result.current.onResumeCurrentJourney());
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
     });
   });
 
@@ -212,11 +205,11 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => {
         expect(createSpy).toHaveBeenCalledWith(2, 1);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias");
+        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       });
     });
 
-    it("iniciar a partir do perfil deve criar a jornada e ir para as instruções de competências", async () => {
+    it("iniciar a partir do perfil deve criar a jornada e ir para a primeira área de competências", async () => {
       const createSpy = vi
         .spyOn(journeyService, "createJourney")
         .mockResolvedValue({ id: 79 });
@@ -228,7 +221,7 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => {
         expect(createSpy).toHaveBeenCalledWith(2, 1);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias");
+        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       });
     });
 
@@ -258,6 +251,37 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => expect(result.current.startError).toBe("startErrorMessage"));
       expect(result.current.journeyInProgressNotice).toBeNull();
+    });
+  });
+
+  describe("instruções do questionário", () => {
+    it("deve montar as instruções com o domínio e a duração estimada da jornada", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      expect(result.current.labels.instructionsIntro).toBe("intro: instructions.domains.security");
+      expect(result.current.instructionItems.map((item) => item.id)).toEqual([
+        "objective",
+        "sincerity",
+        "navigation",
+        "estimatedTime",
+      ]);
+      expect(result.current.instructionItems[3].description).toBe("3 minutos");
+    });
+
+    it("sem domínio e sem duração, deve usar o texto conjunto e o tempo sem minutos", async () => {
+      const { result } = await renderJourneySummary({
+        ...notStartedJourney,
+        id: "80",
+        domain: null,
+        estimatedMinutes: null,
+      });
+
+      expect(result.current.journey?.id).toBe("80");
+
+      expect(result.current.labels.instructionsIntro).toBe("intro: instructions.domains.joint");
+      expect(result.current.instructionItems[3].description).toBe(
+        "instructions.items.estimatedTime.fallbackDescription"
+      );
     });
   });
 

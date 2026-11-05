@@ -14,12 +14,13 @@ import { useJourneySummaryVM } from "./journeySummary.viewmodel";
 import type { JourneySummaryViewProps } from "./journeySummary.types";
 import { JourneySummarySkeleton } from "./components/JourneySummarySkeleton";
 import { JourneyStatsGrid } from "./components/JourneyStatsGrid";
-import { HowItWorksSection } from "./components/HowItWorksSection";
+import { JourneyInstructionsSection } from "./components/JourneyInstructionsSection";
 import { JourneySummaryErrorState } from "./components/JourneySummaryErrorState";
 
 export function JourneySummaryView(props: JourneySummaryViewProps) {
   const {
     journey,
+    instructionItems,
     isLoading,
     error,
     ctaLabel,
@@ -91,10 +92,12 @@ export function JourneySummaryView(props: JourneySummaryViewProps) {
                     </div>
                   </section>
 
-                  <HowItWorksSection
+                  <JourneyInstructionsSection
                     title={labels.howItWorksTitle}
-                    subtitle={labels.howItWorksSubtitle}
-                    steps={labels.steps}
+                    intro={labels.instructionsIntro}
+                    items={instructionItems}
+                    itemsAriaLabel={labels.instructionsAriaLabel}
+                    tip={labels.instructionsTip}
                   />
                 </div>
               )

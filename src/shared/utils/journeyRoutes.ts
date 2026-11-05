@@ -5,20 +5,16 @@
  */
 export const CURRENT_JOURNEY_BASE_PATH = "/jornada/atual";
 
-/**
- * Monta o caminho das instruções do questionário de competências da jornada em
- * andamento, primeira tela da jornada.
- */
-export function getCompetenciesIntroUrl(): string {
-  return `${CURRENT_JOURNEY_BASE_PATH}/competencias`;
-}
+/** Base do questionário de competências da jornada em andamento. */
+const COMPETENCIES_BASE_PATH = `${CURRENT_JOURNEY_BASE_PATH}/competencias`;
 
 /**
  * Monta o caminho de uma área do questionário de competências da jornada em
- * andamento (índice base 0).
+ * andamento (índice base 0). A primeira área é a primeira tela da jornada: as
+ * instruções ficam no resumo.
  */
 export function getCompetenciesAreaUrl(areaIndex: number): string {
-  return `${getCompetenciesIntroUrl()}/${areaIndex}`;
+  return `${COMPETENCIES_BASE_PATH}/${areaIndex}`;
 }
 
 /**

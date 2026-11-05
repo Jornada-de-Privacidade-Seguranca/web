@@ -1,7 +1,10 @@
 import {
   getJourney,
   JourneyRequestError,
+  mapKnowledgeDomain,
+  mapKnowledgeDomainId,
   type JourneyDetailApi,
+  type JourneyDomain,
 } from "@services/journeyService";
 import {
   getJourneyProfile,
@@ -16,14 +19,12 @@ export interface JourneySummary {
   /** Id do perfil da jornada, usado para criar uma nova jornada ao iniciar/refazer */
   profileId: string | null;
   title: string;
-  /** Total de etapas exibido na caixa "Etapas" do resumo */
-  stepsCount: number;
-  /** Etapas com resposta registrada na jornada */
-  completedStepsCount: number;
   /** null quando o dado não está disponível (resumo de perfil) */
   estimatedMinutes: number | null;
   areasCount: number | null;
   competenciesCount: number | null;
+  /** Domínio da jornada, usado no texto das instruções; null quando não informado */
+  domain: JourneyDomain | null;
   status: JourneyStatus;
 }
 
@@ -53,11 +54,7 @@ export function estimateJourneyMinutes(competenciesCount: number): number {
   return Math.max(1, Math.ceil(totalSeconds / 60));
 }
 
-/**
- * Etapas contadas na caixa "Etapas" do resumo, que ainda lista o "Como
- * funciona" anterior. A caixa e a lista saem na atualização do resumo para o
- * fluxo só de competências; até lá, a contagem segue as respostas da jornada.
- */
+/** Respostas que indicam que a jornada já foi iniciada. */
 const ANSWERED_STEP_CHECKS: ((j: JourneyDetailApi) => boolean)[] = [
   (j) => j.answers?.professional_experience != null,
   (j) => j.answers?.english_proficiency != null,
@@ -66,8 +63,6 @@ const ANSWERED_STEP_CHECKS: ((j: JourneyDetailApi) => boolean)[] = [
   (j) => (j.professional_certifications?.length ?? 0) > 0,
   (j) => (j.acquired_knowledges?.length ?? 0) > 0,
 ];
-
-const JOURNEY_STEPS_COUNT = ANSWERED_STEP_CHECKS.length;
 
 export function mapJourneyToSummary(
   journey: JourneyDetailApi,
@@ -80,14 +75,12 @@ export function mapJourneyToSummary(
       .map((competency) => competency.knowledge_area?.id)
       .filter((id): id is number => id != null)
   );
-  const answeredStepsCount = ANSWERED_STEP_CHECKS.filter((isAnswered) =>
-    isAnswered(journey)
-  ).length;
+  const hasAnswers = ANSWERED_STEP_CHECKS.some((isAnswered) => isAnswered(journey));
 
   const status: JourneyStatus =
     journey.status === "completed"
       ? "completed"
-      : answeredStepsCount > 0
+      : hasAnswers
         ? "in_progress"
         : "not_started";
 
@@ -95,11 +88,10 @@ export function mapJourneyToSummary(
     id: String(journey.id),
     profileId: profile?.id != null ? String(profile.id) : null,
     title: (locale === "en" ? profile?.name_en : profile?.name_pt) ?? "",
-    stepsCount: JOURNEY_STEPS_COUNT,
-    completedStepsCount: status === "completed" ? JOURNEY_STEPS_COUNT : answeredStepsCount,
     estimatedMinutes: estimateJourneyMinutes(competencies.length),
     areasCount: areaIds.size,
     competenciesCount: competencies.length,
+    domain: mapKnowledgeDomain(profile?.knowledge_domain),
     status,
   };
 }
@@ -142,11 +134,10 @@ export async function getProfileSummary(
       id: null,
       profileId: String(profile.id),
       title: (locale === "en" ? profile.name_en : profile.name_pt) || profile.name_pt,
-      stepsCount: JOURNEY_STEPS_COUNT,
-      completedStepsCount: 0,
       estimatedMinutes: null,
       areasCount: null,
       competenciesCount: null,
+      domain: mapKnowledgeDomainId(profile.type),
       status: "not_started",
     };
   } catch (err: unknown) {

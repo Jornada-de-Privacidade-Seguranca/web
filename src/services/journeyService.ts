@@ -71,8 +71,13 @@ const KNOWLEDGE_DOMAIN_MAP: Record<number, JourneyDomain> = {
 export function mapKnowledgeDomain(
   knowledgeDomain: JourneyKnowledgeDomainApi | null | undefined
 ): JourneyDomain | null {
-  if (!knowledgeDomain) return null;
-  return KNOWLEDGE_DOMAIN_MAP[knowledgeDomain.id] ?? null;
+  return mapKnowledgeDomainId(knowledgeDomain?.id);
+}
+
+/** Mesmo mapeamento, a partir só do id (por exemplo, o `type` de um perfil de jornada). */
+export function mapKnowledgeDomainId(id: number | null | undefined): JourneyDomain | null {
+  if (id == null) return null;
+  return KNOWLEDGE_DOMAIN_MAP[id] ?? null;
 }
 
 const MOCK_COMPETENCIES: JourneyCompetencyApi[] = [

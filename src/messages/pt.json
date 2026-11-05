@@ -229,45 +229,43 @@
     "backToJourneys": "Voltar para jornadas",
     "backToJourneysAriaLabel": "Voltar para a listagem de jornadas",
     "badgeLabel": "Resumo da jornada",
-    "stepsCountLabel": "Etapas",
     "durationLabel": "Duração",
     "areasLabel": "Áreas",
     "competenciesLabel": "Competências",
-    "stepsCountAriaLabel": "{count} etapas",
-    "stepsProgressText": "{completed} de {total}",
-    "stepsProgressAriaLabel": "{completed} de {total} etapas concluídas",
     "durationAriaLabel": "{minutes} minutos de duração",
     "areasAriaLabel": "{count} áreas",
     "competenciesAriaLabel": "{count} competências",
     "estimatedMinutesText": "{minutes} min",
     "howItWorksTitle": "Como funciona",
-    "howItWorksSubtitle": "A jornada é dividida em etapas curtas. Você pode avançar no seu ritmo.",
-    "steps": [
-      {
-        "title": "Tempo de Experiência Profissional",
-        "description": "Tempo de experiência profissional na área de privacidade e/ou segurança da informação."
+    "instructions": {
+      "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",
+      "domains": {
+        "privacy": "privacidade",
+        "security": "segurança da informação",
+        "joint": "privacidade e/ou segurança da informação"
       },
-      {
-        "title": "Nível de Proficiência em Inglês",
-        "description": "Nível de fluência e conhecimento da língua inglesa."
+      "instructionsAriaLabel": "Instruções do questionário",
+      "items": {
+        "objective": {
+          "title": "Questões objetivas",
+          "description": "Cada pergunta possui uma única alternativa. Escolha a opção que melhor representa seu conhecimento."
+        },
+        "sincerity": {
+          "title": "Responda com sinceridade",
+          "description": "Não há penalidade por erro. O objetivo é mapear seu nível real de conhecimento."
+        },
+        "navigation": {
+          "title": "Navegação livre",
+          "description": "Você pode avançar e voltar entre as perguntas antes de finalizar a jornada."
+        },
+        "estimatedTime": {
+          "title": "Tempo estimado",
+          "description": "Reserve cerca de {minutes, plural, one {# minuto} other {# minutos}} em um ambiente sem interrupções para melhor concentração.",
+          "fallbackDescription": "Reserve um momento em um ambiente sem interrupções para melhor concentração."
+        }
       },
-      {
-        "title": "Tempo de Atuação no Perfil",
-        "description": "Tempo de atuação no perfil escolhido para a jornada."
-      },
-      {
-        "title": "Formação Acadêmica",
-        "description": "Formação em cursos de Graduação/Licenciatura/Tecnólogo e pós graduações."
-      },
-      {
-        "title": "Certificações Profissionais",
-        "description": "Lista de certificações profissionais das áreas de privacidade e/ou segurança da informação."
-      },
-      {
-        "title": "Competências",
-        "description": "Conhecimentos técnicos de privacidade e/ou segurança da informação relacionados ao perfil escolhido para a jornada."
-      }
-    ],
+      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria."
+    },
     "footerNote": "Suas respostas ficam salvas conforme você avança.",
     "dismissLabel": "Agora não",
     "dismissAriaLabel": "Voltar para a página anterior",
@@ -310,40 +308,6 @@
     "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
     "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
     "backToJourneysLink": "Voltar para jornadas",
-    "intro": {
-      "stepTag": "QUESTIONÁRIO · COMPETÊNCIAS",
-      "title": "Questionário de competências",
-      "subtitle": "Leia as instruções antes de iniciar o questionário.",
-      "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",
-      "domains": {
-        "privacy": "privacidade",
-        "security": "segurança da informação",
-        "joint": "privacidade e/ou segurança da informação"
-      },
-      "instructionsAriaLabel": "Instruções do questionário",
-      "items": {
-        "objective": {
-          "title": "Questões objetivas",
-          "description": "Cada pergunta possui uma única alternativa. Escolha a opção que melhor representa seu conhecimento."
-        },
-        "sincerity": {
-          "title": "Responda com sinceridade",
-          "description": "Não há penalidade por erro. O objetivo é mapear seu nível real de conhecimento."
-        },
-        "navigation": {
-          "title": "Navegação livre",
-          "description": "Você pode avançar e voltar entre as perguntas antes de finalizar a jornada."
-        },
-        "estimatedTime": {
-          "title": "Tempo estimado",
-          "description": "Reserve cerca de {minutes, plural, one {# minuto} other {# minutos}} em um ambiente sem interrupções para melhor concentração.",
-          "fallbackDescription": "Reserve um momento em um ambiente sem interrupções para melhor concentração."
-        }
-      },
-      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria.",
-      "startButton": "Iniciar questionário",
-      "loading": "Carregando instruções..."
-    },
     "areas": {
       "areaIndicator": "Área {current} / {total}",
       "progressAriaLabel": "Progresso do questionário de competências",

@@ -2,6 +2,12 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BookOpen01Icon,
+  CheckListIcon,
+  CheckmarkCircle02Icon,
+  Timer02Icon,
+} from "@hugeicons/core-free-icons";
 import { useRouter } from "@shared/i18n/navigation";
 import { useAuth } from "@hooks/useAuth";
 import { CURRENT_JOURNEY_QUERY_KEY, useJourneyContext } from "@hooks/useJourneyContext";
@@ -12,18 +18,19 @@ import {
   getProfileSummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
-import { getCompetenciesIntroUrl } from "@shared/utils/journeyRoutes";
+import { getCompetenciesAreaUrl } from "@shared/utils/journeyRoutes";
 import { requiresJourneyCreation } from "./journeySummary.utils";
 import type {
   JourneySummaryViewModelReturn,
   JourneySummaryErrorType,
   JourneySummaryLabels,
   JourneySummaryTarget,
-  HowItWorksStep,
+  JourneyInstructionItem,
 } from "./journeySummary.types";
 
-// A jornada começa (e é retomada) pelas instruções do questionário de competências
-const START_URL = getCompetenciesIntroUrl();
+// As instruções ficam no próprio resumo: a jornada começa (e é retomada) pela
+// primeira área do questionário de competências
+const START_URL = getCompetenciesAreaUrl(0);
 
 function isJourneyInProgressError(error: unknown): boolean {
   return error instanceof ApiRequestError && error.status === 409;
@@ -137,8 +144,41 @@ export function useJourneySummaryVM(
     startMutation.isError && !hasConflictOnStart ? t("startErrorMessage")
       : null;
 
-  const rawSteps = t.raw("steps");
-  const steps = (Array.isArray(rawSteps) ? rawSteps : []) as HowItWorksStep[];
+  // Sem domínio informado, usa o texto da jornada conjunta
+  const domainText = t(`instructions.domains.${journey?.domain ?? "joint"}`);
+  const estimatedMinutes = journey?.estimatedMinutes ?? null;
+
+  const instructionItems: JourneyInstructionItem[] = [
+    {
+      id: "objective",
+      icon: CheckListIcon,
+      title: t("instructions.items.objective.title"),
+      description: t("instructions.items.objective.description"),
+    },
+    {
+      id: "sincerity",
+      icon: BookOpen01Icon,
+      title: t("instructions.items.sincerity.title"),
+      description: t("instructions.items.sincerity.description"),
+    },
+    {
+      id: "navigation",
+      icon: CheckmarkCircle02Icon,
+      title: t("instructions.items.navigation.title"),
+      description: t("instructions.items.navigation.description"),
+    },
+    {
+      id: "estimatedTime",
+      icon: Timer02Icon,
+      title: t("instructions.items.estimatedTime.title"),
+      // Sem a duração (resumo de perfil, antes de a jornada existir), o card
+      // mostra o texto sem o tempo
+      description:
+        estimatedMinutes !== null
+          ? t("instructions.items.estimatedTime.description", { minutes: estimatedMinutes })
+          : t("instructions.items.estimatedTime.fallbackDescription"),
+    },
+  ];
 
   const labels: JourneySummaryLabels = {
     loadingTitle: t("loadingTitle"),
@@ -146,22 +186,17 @@ export function useJourneySummaryVM(
     backToJourneysText: t("backToJourneys"),
     backToJourneysAriaLabel: t("backToJourneysAriaLabel"),
     badgeLabel: t("badgeLabel"),
-    stepsCountLabel: t("stepsCountLabel"),
     durationLabel: t("durationLabel"),
     areasLabel: t("areasLabel"),
     competenciesLabel: t("competenciesLabel"),
-    stepsCountAriaLabel: (count: number) => t("stepsCountAriaLabel", { count }),
-    stepsProgressText: (completed: number, total: number) =>
-      t("stepsProgressText", { completed, total }),
-    stepsProgressAriaLabel: (completed: number, total: number) =>
-      t("stepsProgressAriaLabel", { completed, total }),
     durationAriaLabel: (minutes: number) => t("durationAriaLabel", { minutes }),
     areasAriaLabel: (count: number) => t("areasAriaLabel", { count }),
     competenciesAriaLabel: (count: number) => t("competenciesAriaLabel", { count }),
     estimatedMinutesText: (minutes: number) => t("estimatedMinutesText", { minutes }),
     howItWorksTitle: t("howItWorksTitle"),
-    howItWorksSubtitle: t("howItWorksSubtitle"),
-    steps,
+    instructionsIntro: t("instructions.intro", { domain: domainText }),
+    instructionsAriaLabel: t("instructions.instructionsAriaLabel"),
+    instructionsTip: t("instructions.tip"),
     footerNote: t("footerNote"),
     dismissLabel: t("dismissLabel"),
     dismissAriaLabel: t("dismissAriaLabel"),
@@ -180,6 +215,7 @@ export function useJourneySummaryVM(
 
   return {
     journey,
+    instructionItems,
     isLoading,
     error,
     ctaLabel,

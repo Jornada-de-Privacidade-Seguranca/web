@@ -15,7 +15,6 @@ import {
 import { resolveDifficultyLevel } from "@shared/utils/difficultyLevel";
 import {
   getCompetenciesAreaUrl,
-  getCompetenciesIntroUrl,
   getJourneyResultUrl,
   getJourneySummaryUrl,
 } from "@shared/utils/journeyRoutes";
@@ -244,12 +243,13 @@ export function useCompetenciesQuestionnaireVM(
 
   const handleBack = () => {
     if (mutation.isPending) return;
-    // "Voltar" não salva: na primeira área volta para a introdução
-    router.push(
-      areaIndex === 0
-        ? getCompetenciesIntroUrl()
-        : getCompetenciesAreaUrl(areaIndex - 1)
-    );
+    // "Voltar" não salva: na primeira área volta para o resumo da jornada,
+    // onde ficam as instruções
+    if (areaIndex > 0) {
+      router.push(getCompetenciesAreaUrl(areaIndex - 1));
+      return;
+    }
+    router.push(journeyId ? getJourneySummaryUrl(journeyId) : JOURNEYS_HREF);
   };
 
   const handleExit = () => {

@@ -229,45 +229,43 @@
     "backToJourneys": "Back to journeys",
     "backToJourneysAriaLabel": "Back to the journeys list",
     "badgeLabel": "Journey summary",
-    "stepsCountLabel": "Steps",
     "durationLabel": "Duration",
     "areasLabel": "Areas",
     "competenciesLabel": "Competencies",
-    "stepsCountAriaLabel": "{count} steps",
-    "stepsProgressText": "{completed} of {total}",
-    "stepsProgressAriaLabel": "{completed} of {total} steps completed",
     "durationAriaLabel": "{minutes} minutes long",
     "areasAriaLabel": "{count} areas",
     "competenciesAriaLabel": "{count} competencies",
     "estimatedMinutesText": "{minutes} min",
     "howItWorksTitle": "How it works",
-    "howItWorksSubtitle": "The journey is split into short steps. You can move at your own pace.",
-    "steps": [
-      {
-        "title": "Professional Experience",
-        "description": "Professional experience in the privacy and/or information security field."
+    "instructions": {
+      "intro": "Next, you will answer a set of questions that assess your knowledge of {domain}. Each answer helps build your competency profile and identify strengths and development opportunities.",
+      "domains": {
+        "privacy": "privacy",
+        "security": "information security",
+        "joint": "privacy and/or information security"
       },
-      {
-        "title": "English Proficiency Level",
-        "description": "Fluency and knowledge level of the English language."
+      "instructionsAriaLabel": "Questionnaire instructions",
+      "items": {
+        "objective": {
+          "title": "Objective questions",
+          "description": "Each question has a single answer. Choose the option that best represents your knowledge."
+        },
+        "sincerity": {
+          "title": "Answer honestly",
+          "description": "There is no penalty for mistakes. The goal is to map your actual level of knowledge."
+        },
+        "navigation": {
+          "title": "Free navigation",
+          "description": "You can move back and forth between questions before finishing the journey."
+        },
+        "estimatedTime": {
+          "title": "Estimated time",
+          "description": "Set aside about {minutes, plural, one {# minute} other {# minutes}} in a distraction-free environment for better focus.",
+          "fallbackDescription": "Set aside some time in a distraction-free environment for better focus."
+        }
       },
-      {
-        "title": "Time in the Chosen Role",
-        "description": "Time spent working in the role chosen for the journey."
-      },
-      {
-        "title": "Academic Background",
-        "description": "Undergraduate, licentiate or technologist degrees, and graduate studies."
-      },
-      {
-        "title": "Professional Certifications",
-        "description": "List of professional certifications in privacy and/or information security."
-      },
-      {
-        "title": "Competencies",
-        "description": "Technical knowledge of privacy and/or information security related to the role chosen for the journey."
-      }
-    ],
+      "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement."
+    },
     "footerNote": "Your answers are saved as you progress.",
     "dismissLabel": "Not now",
     "dismissAriaLabel": "Go back to the previous page",
@@ -310,40 +308,6 @@
     "noOngoingJourneyTitle": "No journey in progress",
     "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list.",
     "backToJourneysLink": "Back to journeys",
-    "intro": {
-      "stepTag": "QUESTIONNAIRE · COMPETENCIES",
-      "title": "Competencies questionnaire",
-      "subtitle": "Read the instructions before starting the questionnaire.",
-      "intro": "Next, you will answer a set of questions that assess your knowledge of {domain}. Each answer helps build your competency profile and identify strengths and development opportunities.",
-      "domains": {
-        "privacy": "privacy",
-        "security": "information security",
-        "joint": "privacy and/or information security"
-      },
-      "instructionsAriaLabel": "Questionnaire instructions",
-      "items": {
-        "objective": {
-          "title": "Objective questions",
-          "description": "Each question has a single answer. Choose the option that best represents your knowledge."
-        },
-        "sincerity": {
-          "title": "Answer honestly",
-          "description": "There is no penalty for mistakes. The goal is to map your actual level of knowledge."
-        },
-        "navigation": {
-          "title": "Free navigation",
-          "description": "You can move back and forth between questions before finishing the journey."
-        },
-        "estimatedTime": {
-          "title": "Estimated time",
-          "description": "Set aside about {minutes, plural, one {# minute} other {# minutes}} in a distraction-free environment for better focus.",
-          "fallbackDescription": "Set aside some time in a distraction-free environment for better focus."
-        }
-      },
-      "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement.",
-      "startButton": "Start questionnaire",
-      "loading": "Loading instructions..."
-    },
     "areas": {
       "areaIndicator": "Area {current} / {total}",
       "progressAriaLabel": "Competencies questionnaire progress",

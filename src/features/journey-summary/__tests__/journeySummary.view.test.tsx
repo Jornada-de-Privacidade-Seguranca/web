@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import React from "react";
+import { CheckListIcon, Timer02Icon } from "@hugeicons/core-free-icons";
 import { JourneySummaryView } from "../index";
 import * as viewModelModule from "../journeySummary.viewmodel";
 import type {
@@ -85,25 +86,17 @@ describe("JourneySummaryView Component", () => {
     backToJourneysText: "Voltar para jornadas",
     backToJourneysAriaLabel: "Voltar para a listagem de jornadas",
     badgeLabel: "Resumo da jornada",
-    stepsCountLabel: "Etapas",
     durationLabel: "Duração",
     areasLabel: "Áreas",
     competenciesLabel: "Competências",
-    stepsCountAriaLabel: (count) => `${count} etapas`,
-    stepsProgressText: (completed, total) => `${completed} de ${total}`,
-    stepsProgressAriaLabel: (completed, total) =>
-      `${completed} de ${total} etapas concluídas`,
     durationAriaLabel: (minutes) => `${minutes} minutos de duração`,
     areasAriaLabel: (count) => `${count} áreas`,
     competenciesAriaLabel: (count) => `${count} competências`,
     estimatedMinutesText: (minutes) => `${minutes} min`,
     howItWorksTitle: "Como funciona",
-    howItWorksSubtitle:
-      "A jornada é dividida em etapas curtas. Você pode avançar no seu ritmo.",
-    steps: [
-      { title: "Etapa 1", description: "Descrição 1" },
-      { title: "Etapa 2", description: "Descrição 2" },
-    ],
+    instructionsIntro: "A seguir, você responderá perguntas sobre privacidade.",
+    instructionsAriaLabel: "Instruções do questionário",
+    instructionsTip: "Dica: ao concluir, você receberá um resultado detalhado.",
     footerNote: "Suas respostas ficam salvas conforme você avança.",
     dismissLabel: "Agora não",
     dismissAriaLabel: "Voltar para a página anterior",
@@ -128,13 +121,16 @@ describe("JourneySummaryView Component", () => {
         id: "1",
         profileId: "1",
         title: "Governança de Dados",
-        stepsCount: 6,
-        completedStepsCount: 0,
         estimatedMinutes: 23,
         areasCount: 13,
         competenciesCount: 39,
+        domain: "privacy",
         status: "not_started",
       },
+      instructionItems: [
+        { id: "objective", icon: CheckListIcon, title: "Questões objetivas", description: "Uma alternativa por pergunta." },
+        { id: "estimatedTime", icon: Timer02Icon, title: "Tempo estimado", description: "Reserve cerca de 23 minutos." },
+      ],
       isLoading: false,
       error: null,
       ctaLabel: "Iniciar jornada",
@@ -173,9 +169,14 @@ describe("JourneySummaryView Component", () => {
     renderView();
 
     expect(screen.getAllByText("Governança de Dados").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("6 etapas")).toBeDefined();
+    expect(screen.queryByText("Etapas")).toBeNull();
     expect(screen.getByLabelText("23 minutos de duração")).toBeDefined();
     expect(screen.getByText("Como funciona")).toBeDefined();
+    expect(screen.getByText("A seguir, você responderá perguntas sobre privacidade.")).toBeDefined();
+    const instructions = screen.getByRole("list", { name: "Instruções do questionário" });
+    expect(within(instructions).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(instructions).getByText("Reserve cerca de 23 minutos.")).toBeDefined();
+    expect(screen.getByText("Dica: ao concluir, você receberá um resultado detalhado.")).toBeDefined();
 
     fireEvent.click(screen.getByText("Agora não"));
     expect(onDismissMock).toHaveBeenCalled();

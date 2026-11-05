@@ -349,11 +349,11 @@ describe("useCompetenciesQuestionnaireVM", () => {
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/jornada/atual/competencias/0"));
   });
 
-  it("deve voltar para a introdução na primeira área e para a área anterior nas demais", async () => {
+  it("deve voltar para o resumo da jornada na primeira área e para a área anterior nas demais", async () => {
     mockLoad();
     const first = await renderVM("0");
     act(() => first.result.current.handleBack());
-    expect(pushMock).toHaveBeenLastCalledWith("/jornada/atual/competencias");
+    expect(pushMock).toHaveBeenLastCalledWith("/jornada/78");
 
     const second = await renderVM("1");
     act(() => second.result.current.handleBack());
