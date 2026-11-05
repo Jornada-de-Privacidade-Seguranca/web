@@ -15,8 +15,13 @@ import { cn } from "@/shared/lib/utils";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslations } from "next-intl";
-import { PropsWithChildren } from "react";
+import { KeyboardEvent, PropsWithChildren, useEffect, useRef } from "react";
 import { usePathname } from "@/shared/i18n/navigation";
+import { useIsMobile } from "@/hooks/useMobile";
+import { SIDEBAR_ID } from "@/shared/constants/sidebar";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -26,11 +31,112 @@ function getInitials(name: string): string {
 }
 
 function useSidebarVM() {
-  const isExpanded = useSidebarStore((state) => state.isExpanded);
+  const isDesktopExpanded = useSidebarStore((state) => state.isExpanded);
   const toggle = useSidebarStore((state) => state.toggle);
+  const isMobileOpen = useSidebarStore((state) => state.isMobileOpen);
+  const setMobileOpen = useSidebarStore((state) => state.setMobileOpen);
+  const isMobile = useIsMobile();
   const { user: authUser, logout } = useAuth();
   const t = useTranslations();
   const pathname = usePathname();
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // No drawer a barra sempre mostra os rótulos
+  const isExpanded = isMobile || isDesktopExpanded;
+  const isDrawerOpen = isMobile && isMobileOpen;
+
+  // Ao passar para a largura de desktop, o drawer deixa de existir
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile, setMobileOpen]);
+
+  // Navegar fecha o drawer, inclusive pelo voltar do navegador
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname, setMobileOpen]);
+
+  // Ao abrir, o foco vai para o drawer; ao fechar, volta para quem o abriu
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const getFocusableElements = () => {
+      const drawerElements = drawerRef.current?.querySelectorAll<HTMLElement>(
+        FOCUSABLE_SELECTOR
+      );
+      const portaledElements = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-sidebar-dialog-focus][data-state="open"]'
+        )
+      ).flatMap((content) =>
+        Array.from(content.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+      );
+
+      return [...(drawerElements ?? []), ...portaledElements];
+    };
+    const focusFirstElement = () => {
+      const firstFocusable = getFocusableElements()[0];
+      (firstFocusable ?? drawerRef.current)?.focus();
+    };
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusables = getFocusableElements();
+      if (focusables.length === 0) return;
+
+      const activeIndex = focusables.indexOf(document.activeElement as HTMLElement);
+      if (event.shiftKey && activeIndex <= 0) {
+        event.preventDefault();
+        focusables[focusables.length - 1].focus();
+      } else if (!event.shiftKey && activeIndex === -1) {
+        event.preventDefault();
+        focusables[0].focus();
+      } else if (!event.shiftKey && activeIndex === focusables.length - 1) {
+        event.preventDefault();
+        focusables[0].focus();
+      }
+    };
+    const handleDocumentFocusIn = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (
+        drawerRef.current?.contains(target) ||
+        target.closest('[data-sidebar-dialog-focus][data-state="open"]')
+      ) {
+        return;
+      }
+
+      focusFirstElement();
+    };
+
+    document.addEventListener("keydown", handleDocumentKeyDown, true);
+    document.addEventListener("focusin", handleDocumentFocusIn);
+    focusFirstElement();
+
+    return () => {
+      document.removeEventListener("keydown", handleDocumentKeyDown, true);
+      document.removeEventListener("focusin", handleDocumentFocusIn);
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
+    };
+  }, [isDrawerOpen]);
+
+  function closeDrawer() {
+    setMobileOpen(false);
+  }
+
+  /** Esc fecha o drawer. */
+  function handleDrawerKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (isDrawerOpen && event.key === "Escape") {
+      event.preventDefault();
+      closeDrawer();
+    }
+  }
+
+  function handleNavigate() {
+    if (isMobile) closeDrawer();
+  }
 
   async function handleLogout() {
     await logout();
@@ -85,27 +191,88 @@ function useSidebarVM() {
 
   return {
     isExpanded,
+    isMobile,
+    isDrawerOpen,
+    drawerRef,
     toggle,
     navItems,
     user,
+    closeDrawer,
+    handleDrawerKeyDown,
+    handleNavigate,
     handleLogout,
     labels: {
       title: t("app.title"),
       description: t("app.description"),
       navTitle: t("sidebar.navigation"),
+      drawerLabel: t("sidebar.drawerLabel"),
       profile: t("sidebar.userMenu.profile"),
       logout: t("sidebar.userMenu.logout"),
     },
   };
 }
 
-const SidebarWrapper = ({ children }: PropsWithChildren) => {
-  const { isExpanded } = useSidebarStore();
+interface SidebarWrapperProps extends PropsWithChildren {
+  isExpanded: boolean;
+  isMobile: boolean;
+  isDrawerOpen: boolean;
+  drawerRef: React.RefObject<HTMLDivElement | null>;
+  drawerLabel: string;
+  onClose: () => void;
+  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+}
+
+const SidebarWrapper = ({
+  children,
+  isExpanded,
+  isMobile,
+  isDrawerOpen,
+  drawerRef,
+  drawerLabel,
+  onClose,
+  onKeyDown,
+}: SidebarWrapperProps) => {
+  if (isMobile) {
+    return (
+      <>
+        <div
+          aria-hidden="true"
+          data-testid="sidebar-backdrop"
+          onClick={onClose}
+          className={cn(
+            "fixed inset-0 z-30 bg-black/50 transition-opacity duration-300 motion-reduce:transition-none",
+            isDrawerOpen ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+        />
+        <div
+          ref={drawerRef}
+          id={SIDEBAR_ID}
+          role="dialog"
+          aria-modal="true"
+          aria-label={drawerLabel}
+          inert={!isDrawerOpen}
+          tabIndex={-1}
+          onKeyDown={onKeyDown}
+          className={cn(
+            "fixed inset-y-0 left-0 z-40 w-64 outline-none transition-transform duration-300 ease-out motion-reduce:transition-none",
+            isDrawerOpen ? "translate-x-0 shadow-xl" : "-translate-x-full",
+          )}
+          data-state={isDrawerOpen ? "open" : "closed"}
+          data-variant="drawer"
+        >
+          {children}
+        </div>
+      </>
+    );
+  }
 
   return (
     <div
+      id={SIDEBAR_ID}
       className={cn(
-        "peer fixed inset-y-0 left-0 z-10 transition-[left,right,width] duration-300 ease-out",
+        // Escondida abaixo de `md` também pelo CSS: no primeiro render o hook
+        // ainda indica desktop, e a barra fixa não chega a aparecer no celular
+        "peer fixed inset-y-0 left-0 z-10 transition-[left,right,width] duration-300 ease-out max-md:hidden",
         isExpanded ? "w-64" : "w-18",
       )}
       data-state={isExpanded ? "expanded" : "collapsed"}
@@ -117,11 +284,30 @@ const SidebarWrapper = ({ children }: PropsWithChildren) => {
 };
 
 export const AuthenticatedUserSidebar = () => {
-  const { isExpanded, navItems, user, labels, handleLogout } =
-    useSidebarVM();
+  const {
+    isExpanded,
+    isMobile,
+    isDrawerOpen,
+    drawerRef,
+    navItems,
+    user,
+    labels,
+    closeDrawer,
+    handleDrawerKeyDown,
+    handleNavigate,
+    handleLogout,
+  } = useSidebarVM();
 
   return (
-    <SidebarWrapper>
+    <SidebarWrapper
+      isExpanded={isExpanded}
+      isMobile={isMobile}
+      isDrawerOpen={isDrawerOpen}
+      drawerRef={drawerRef}
+      drawerLabel={labels.drawerLabel}
+      onClose={closeDrawer}
+      onKeyDown={handleDrawerKeyDown}
+    >
       <div
         className={cn(
           "flex h-full w-full flex-col border-r transition-[width] ease-in-out duration-300",
@@ -163,7 +349,7 @@ export const AuthenticatedUserSidebar = () => {
               return (
                 <li key={item.href}>
                   <a
-                    {...(!item.disabled && { href: item.href })}
+                    {...(!item.disabled && { href: item.href, onClick: handleNavigate })}
                     aria-disabled={item.disabled}
                     title={!isExpanded ? item.label : undefined}
                     className={cn(
@@ -230,6 +416,7 @@ export const AuthenticatedUserSidebar = () => {
                 side="top"
                 align="start"
                 sideOffset={8}
+                data-sidebar-dialog-focus
                 className="z-50 w-56 rounded-xl border border-sidebar-border bg-popover p-1.5 text-popover-foreground shadow-lg outline-none"
               >
                 <button
