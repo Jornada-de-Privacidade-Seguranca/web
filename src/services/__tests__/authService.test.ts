@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
 import { getAuthenticatedUser, login, logout } from "../authService";
 import { axiosInstance, clearCsrfToken } from "../httpClient";
@@ -129,6 +129,34 @@ describe("authService", () => {
       await expect(getAuthenticatedUser()).rejects.toThrow(
         "Usuario nao autenticado."
       );
+    });
+
+    describe("em desenvolvimento", () => {
+      beforeEach(() => {
+        vi.stubEnv("NODE_ENV", "development");
+      });
+
+      afterEach(() => {
+        vi.unstubAllEnvs();
+      });
+
+      it("should not fall back to the mock user on 401, so session expiry can be tested", async () => {
+        vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+          mockAxiosError(401, { success: false, message: "Usuario nao autenticado." })
+        );
+
+        await expect(getAuthenticatedUser()).rejects.toThrow("Usuario nao autenticado.");
+      });
+
+      it("should fall back to the mock user when the backend does not respond", async () => {
+        vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+          new AxiosError("Network Error", "ERR_NETWORK")
+        );
+
+        await expect(getAuthenticatedUser()).resolves.toMatchObject({
+          name: "Usuário Teste",
+        });
+      });
     });
   });
 

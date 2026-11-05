@@ -1,4 +1,4 @@
-import { apiRequest } from "@services/httpClient";
+import { ApiRequestError, apiRequest } from "@services/httpClient";
 import type {
   AuthenticatedUser,
   LoginCredentials,
@@ -45,7 +45,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
       "Não foi possível recuperar o usuário autenticado."
     );
   } catch (err: unknown) {
-    if (process.env.NODE_ENV === "development") {
+    // Só sem resposta do backend (erro de rede): um 401 segue como sessão
+    // inexistente, para que a expiração possa ser testada localmente.
+    const isNetworkError = err instanceof ApiRequestError && err.status === undefined;
+    if (process.env.NODE_ENV === "development" && isNetworkError) {
       return MOCK_DEV_USER;
     }
     throw err;

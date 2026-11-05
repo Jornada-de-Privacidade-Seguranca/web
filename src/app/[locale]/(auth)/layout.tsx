@@ -1,12 +1,20 @@
 "use client";
 
 import { AuthenticatedUserSidebar } from "@/components/layout/AuthenticatedUserSidebar";
+import { SessionExpiredDialog } from "@/components/layout/SessionExpiredDialog";
 import { cn } from "@/shared/lib/utils";
 import { useRequireAuth } from "@/hooks/useAuthGuard";
+import { useSidebarStore } from "@/store/sidebar.store";
 import { PropsWithChildren } from "react";
 
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
-  const { isLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading, isAuthenticated, sessionExpired, goToLogin } = useRequireAuth();
+  const isDrawerOpen = useSidebarStore((state) => state.isMobileOpen);
+
+  // Sessão expirada ao carregar a página: página vazia com o aviso
+  if (sessionExpired && !isAuthenticated) {
+    return <SessionExpiredDialog onConfirm={goToLogin} />;
+  }
 
   if (isLoading || !isAuthenticated) {
     return null;
@@ -19,12 +27,18 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       <main
         className={cn(
           "relative flex h-full min-w-0 flex-1 flex-col overflow-y-auto bg-background",
-          "pl-18 md:pl-64",
-          "peer-data-[state=collapsed]:pl-18 peer-data-[state=expanded]:pl-64 transition-[padding-left] duration-300 ease-in-out",
+          // Abaixo de `md` a barra vira drawer sobreposto e o conteúdo ocupa a largura toda
+          "pl-0 md:pl-64",
+          "md:peer-data-[state=collapsed]:pl-18 md:peer-data-[state=expanded]:pl-64 transition-[padding-left] duration-300 ease-in-out",
+          // Com o drawer aberto, o conteúdo por trás não rola
+          isDrawerOpen && "max-md:overflow-hidden",
         )}
       >
         {children}
       </main>
+
+      {/* Sessão expirada durante o uso: o aviso fica por cima da tela atual */}
+      {sessionExpired && <SessionExpiredDialog onConfirm={goToLogin} />}
     </div>
   );
 }

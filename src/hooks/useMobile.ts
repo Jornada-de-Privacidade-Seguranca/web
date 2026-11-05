@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
 
-const MOBILE_BREAKPOINT = 768;
+/** Mesmo valor do breakpoint `md` do Tailwind. */
+export const MOBILE_BREAKPOINT = 768;
+
+const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(
-    window.innerWidth < MOBILE_BREAKPOINT,
-  );
+  // Começa como desktop, igual ao servidor; o efeito acerta o valor no cliente
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const mql = window.matchMedia(MOBILE_QUERY);
     const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setIsMobile(mql.matches);
     };
+    onChange();
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  return !!isMobile;
+  return isMobile;
 }
