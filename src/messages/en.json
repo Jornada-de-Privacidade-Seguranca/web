@@ -132,6 +132,11 @@
       }
     }
   },
+  "sessionExpired": {
+    "title": "Session expired",
+    "description": "Your session has expired. Sign in again to continue.",
+    "action": "Go to sign in"
+  },
   "jornada": {
     "title": "Privacy/Security Journey",
     "description": "Fill out this form to assess your digital security practices.",

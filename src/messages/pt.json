@@ -132,6 +132,11 @@
       }
     }
   },
+  "sessionExpired": {
+    "title": "Sessão expirada",
+    "description": "Sua sessão expirou. Entre novamente para continuar.",
+    "action": "Ir para o login"
+  },
   "jornada": {
     "title": "Jornada de Privacidade/Segurança",
     "description": "Preencha este formulário para avaliar suas práticas de segurança digital.",

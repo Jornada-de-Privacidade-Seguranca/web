@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import * as authService from "@services/authService";
 import { useAuthVM } from "../auth.viewmodel";
@@ -29,6 +29,12 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/shared/i18n/navigation", () => ({
   useRouter: () => ({ push: routerPushMock }),
+}));
+
+let mockSearch = "";
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
 vi.mock("@/hooks/useAuth", () => ({
@@ -116,5 +122,90 @@ describe("Auth ViewModel Logic (useAuthVM)", () => {
     expect(result.current.form.formState.errors.email?.message).toBe(
       "validation.emailInvalid"
     );
+  });
+});
+
+describe("useAuthVM com página de retorno", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    setAuthMock.mockClear();
+    routerPushMock.mockClear();
+  });
+
+  afterEach(() => {
+    mockSearch = "";
+  });
+
+  async function submitValidCredentials(result: { current: ReturnType<typeof useAuthVM> }) {
+    await act(async () => {
+      result.current.form.setValue("email", "maria.silva@example.com");
+      result.current.form.setValue("password", "secret123");
+    });
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+  }
+
+  it("deve avisar que a sessão expirou ao chegar pelo aviso de sessão expirada", () => {
+    mockSearch = "reason=session_expired&redirect=%2Fjornadas";
+
+    const { result } = renderHook(() => useAuthVM());
+
+    expect(result.current.serverMessage).toEqual({
+      title: "title",
+      description: "description",
+      variant: "warning",
+    });
+  });
+
+  it("deve ocultar o aviso de sessão expirada ao fechá-lo", () => {
+    mockSearch = "reason=session_expired";
+
+    const { result } = renderHook(() => useAuthVM());
+    act(() => result.current.onCloseMsg());
+
+    expect(result.current.serverMessage).toBeNull();
+  });
+
+  it("deve trocar o aviso pelo erro quando o login falhar", async () => {
+    mockSearch = "reason=session_expired";
+    vi.spyOn(authService, "login").mockRejectedValueOnce(new Error("Usuario e/ou senha invalidos."));
+
+    const { result } = renderHook(() => useAuthVM());
+    await submitValidCredentials(result);
+
+    expect(result.current.serverMessage).toMatchObject({
+      description: "Usuario e/ou senha invalidos.",
+      variant: "destructive",
+    });
+  });
+
+  it("não deve mostrar o aviso em um acesso comum ao login", () => {
+    mockSearch = "redirect=%2Fjornadas";
+
+    const { result } = renderHook(() => useAuthVM());
+
+    expect(result.current.serverMessage).toBeNull();
+  });
+
+  it("deve voltar para a página em que o usuário estava depois do login", async () => {
+    mockSearch = "reason=session_expired&redirect=%2Fjornadas%3Fpage%3D2";
+    vi.spyOn(authService, "login").mockResolvedValueOnce(mockUser);
+
+    const { result } = renderHook(() => useAuthVM());
+    await submitValidCredentials(result);
+
+    expect(routerPushMock).toHaveBeenCalledWith("/jornadas?page=2");
+    expect(result.current.serverMessage).toBeNull();
+  });
+
+  it("deve ignorar uma página de retorno externa e ir para o painel", async () => {
+    mockSearch = "redirect=%2F%2Fsite-malicioso.com";
+    vi.spyOn(authService, "login").mockResolvedValueOnce(mockUser);
+
+    const { result } = renderHook(() => useAuthVM());
+    await submitValidCredentials(result);
+
+    expect(routerPushMock).toHaveBeenCalledWith("/painel");
   });
 });
