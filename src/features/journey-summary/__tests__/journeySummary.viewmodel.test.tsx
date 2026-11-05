@@ -23,6 +23,7 @@ vi.mock("next-intl", () => ({
       if (key === "estimatedMinutesText") return `${params?.minutes} min`;
       if (key === "instructions.items.estimatedTime.description") return `${params?.minutes} minutos`;
       if (key === "instructions.intro") return `intro: ${params?.domain}`;
+      if (key === "lastScoreText") return `Última pontuação ${params?.score}/100`;
       return key;
     };
     return t;
@@ -46,6 +47,7 @@ vi.mock("@hooks/useAuth", () => ({
 let mockCurrentJourneyId: string | null = null;
 let mockCurrentProfileId = "1";
 let mockCurrentJourneyLoading = false;
+let mockResumeAreaIndex = 0;
 
 vi.mock("@hooks/useJourneyContext", () => ({
   CURRENT_JOURNEY_QUERY_KEY: ["journey", "current"],
@@ -54,6 +56,7 @@ vi.mock("@hooks/useJourneyContext", () => ({
     profileId: mockCurrentJourneyId ? mockCurrentProfileId : null,
     profileName: null,
     domain: null,
+    resumeAreaIndex: mockResumeAreaIndex,
     isLoading: mockCurrentJourneyLoading,
     isError: !mockCurrentJourneyId && !mockCurrentJourneyLoading,
     isNotFound: !mockCurrentJourneyId && !mockCurrentJourneyLoading,
@@ -122,11 +125,14 @@ describe("useJourneySummaryVM", () => {
     mockCurrentJourneyId = null;
     mockCurrentProfileId = "1";
     mockCurrentJourneyLoading = false;
+    mockResumeAreaIndex = 0;
+    vi.spyOn(journeySummaryService, "getLastProfileScore").mockResolvedValue(null);
   });
 
   describe("resumo da jornada em andamento", () => {
-    it("deve exibir \"Retomar jornada\" e seguir para a primeira área de competências sem criar jornada", async () => {
+    it("deve exibir \"Continuar jornada\" e seguir para a primeira área pendente sem criar jornada", async () => {
       mockCurrentJourneyId = "78";
+      mockResumeAreaIndex = 2;
       const createSpy = vi.spyOn(journeyService, "createJourney");
       const { result } = await renderJourneySummary(notStartedJourney);
 
@@ -138,12 +144,13 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/2");
       expect(createSpy).not.toHaveBeenCalled();
     });
 
     it("resumo do perfil da jornada em andamento deve retomá-la, sem aviso e sem criar outra", async () => {
       mockCurrentJourneyId = "78";
+      mockResumeAreaIndex = 1;
       const createSpy = vi.spyOn(journeyService, "createJourney");
       const { result } = await renderProfileSummary();
 
@@ -153,7 +160,7 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/1");
       expect(createSpy).not.toHaveBeenCalled();
     });
   });
@@ -177,6 +184,7 @@ describe("useJourneySummaryVM", () => {
       mockCurrentJourneyId = "78";
       // A jornada em andamento é de outro perfil
       mockCurrentProfileId = "9";
+      mockResumeAreaIndex = 3;
       const createSpy = vi.spyOn(journeyService, "createJourney");
       const { result } = await renderProfileSummary();
 
@@ -188,7 +196,7 @@ describe("useJourneySummaryVM", () => {
       expect(createSpy).not.toHaveBeenCalled();
 
       act(() => result.current.onResumeCurrentJourney());
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/3");
     });
   });
 
@@ -318,10 +326,41 @@ describe("useJourneySummaryVM", () => {
     await waitFor(() => expect(result.current.error).toBe("server_error"));
   });
 
-  it("onDismiss deve voltar no histórico", async () => {
+  it("onDismiss deve voltar para a listagem de jornadas", async () => {
     const { result } = await renderJourneySummary(notStartedJourney);
 
     act(() => result.current.onDismiss());
-    expect(backMock).toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/jornadas");
+    expect(backMock).not.toHaveBeenCalled();
+  });
+
+  describe("cabeçalho", () => {
+    it("deve trazer o domínio da jornada para a tag", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      expect(result.current.labels.domainLabel).toBe("domainLabels.security");
+    });
+
+    it("sem domínio informado, não deve exibir a tag", async () => {
+      const { result } = await renderJourneySummary({ ...notStartedJourney, domain: null });
+
+      expect(result.current.labels.domainLabel).toBeNull();
+    });
+
+    it("deve buscar a última pontuação do perfil para o usuário", async () => {
+      vi.mocked(journeySummaryService.getLastProfileScore).mockResolvedValue(82);
+      const { result } = await renderProfileSummary();
+
+      await waitFor(() => expect(result.current.lastScore).toBe(82));
+      expect(journeySummaryService.getLastProfileScore).toHaveBeenCalledWith(2, "1");
+      expect(result.current.labels.lastScoreText(82)).toBe("Última pontuação 82/100");
+    });
+
+    it("sem jornada concluída do perfil, não deve haver última pontuação", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      await waitFor(() => expect(journeySummaryService.getLastProfileScore).toHaveBeenCalled());
+      expect(result.current.lastScore).toBeNull();
+    });
   });
 });

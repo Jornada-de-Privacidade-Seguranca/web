@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as journeyService from "../journeyService";
 import * as journeyProfileService from "../journeyProfileService";
+import * as httpClient from "../httpClient";
 import type { JourneyDetailApi } from "../journeyService";
 import {
   estimateJourneyMinutes,
   getJourneySummary,
+  getLastProfileScore,
   getProfileSummary,
   mapJourneyToSummary,
   JourneySummaryRequestError,
@@ -155,6 +157,33 @@ describe("journeySummaryService", () => {
       });
 
       await expect(getProfileSummary("6", "pt")).resolves.toMatchObject({ domain: null });
+    });
+  });
+
+  describe("getLastProfileScore", () => {
+    it("deve buscar a jornada concluída mais recente do perfil e devolver a nota", async () => {
+      const spy = vi
+        .spyOn(httpClient, "apiRequest")
+        .mockResolvedValueOnce([{ id: 40, score: 81.6 }]);
+
+      await expect(getLastProfileScore(2, "5")).resolves.toBe(82);
+      expect(spy).toHaveBeenCalledWith(
+        "/users/2/journeys",
+        {
+          params: { status: "completed", journey_profile_id: "5", page: 1, per_page: 1 },
+        },
+        expect.any(String)
+      );
+    });
+
+    it.each([
+      ["sem jornada concluída", () => Promise.resolve([])],
+      ["sem nota na jornada", () => Promise.resolve([{ id: 40, score: null }])],
+      ["com falha na busca", () => Promise.reject(new Error("boom"))],
+    ])("deve devolver null %s", async (_, response) => {
+      vi.spyOn(httpClient, "apiRequest").mockImplementationOnce(response);
+
+      await expect(getLastProfileScore(2, "5")).resolves.toBeNull();
     });
   });
 });

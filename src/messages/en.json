@@ -229,6 +229,13 @@
     "backToJourneys": "Back to journeys",
     "backToJourneysAriaLabel": "Back to the journeys list",
     "badgeLabel": "Journey summary",
+    "domainLabels": {
+      "privacy": "Privacy",
+      "security": "Information Security",
+      "joint": "Joint"
+    },
+    "lastScoreText": "Last score {score}/100",
+    "lastScoreAriaLabel": "Last score: {score} out of 100",
     "durationLabel": "Duration",
     "areasLabel": "Areas",
     "competenciesLabel": "Competencies",
@@ -283,7 +290,7 @@
     "startingLabel": "Starting...",
     "startErrorMessage": "Could not start the journey. Please try again.",
     "resumeCurrentJourneyLabel": "Continue current journey",
-    "actionResume": "Resume journey",
+    "actionResume": "Continue journey",
     "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
   },
   "questionnaire": {

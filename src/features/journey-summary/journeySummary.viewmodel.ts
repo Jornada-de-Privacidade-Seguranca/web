@@ -15,6 +15,7 @@ import { ApiRequestError } from "@services/httpClient";
 import { createJourney } from "@services/journeyService";
 import {
   getJourneySummary,
+  getLastProfileScore,
   getProfileSummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
@@ -28,9 +29,10 @@ import type {
   JourneyInstructionItem,
 } from "./journeySummary.types";
 
-// As instruções ficam no próprio resumo: a jornada começa (e é retomada) pela
-// primeira área do questionário de competências
+// As instruções ficam no próprio resumo: a jornada começa pela primeira área do
+// questionário de competências
 const START_URL = getCompetenciesAreaUrl(0);
+const JOURNEYS_URL = "/jornadas";
 
 function isJourneyInProgressError(error: unknown): boolean {
   return error instanceof ApiRequestError && error.status === 409;
@@ -69,6 +71,15 @@ export function useJourneySummaryVM(
 
   const journey = query.data ?? null;
   const isLoading = query.isLoading;
+
+  // Nota da última jornada concluída desse perfil, exibida ao lado do título
+  const profileId = journey?.profileId ?? null;
+  const lastScoreQuery = useQuery({
+    queryKey: ["journey-summary", "last-score", userId, profileId],
+    queryFn: () => getLastProfileScore(userId as number, profileId as string),
+    enabled: Boolean(userId && profileId),
+  });
+  const lastScore = lastScoreQuery.data ?? null;
 
   const error: JourneySummaryErrorType | null = query.isError
     ? query.error instanceof JourneySummaryRequestError
@@ -116,6 +127,9 @@ export function useJourneySummaryVM(
 
   const ctaAriaLabel = journey ? `${ctaLabel} — ${journey.title}` : "";
 
+  // Retomar leva à primeira área com competências ainda sem resposta
+  const resumeUrl = getCompetenciesAreaUrl(currentJourney.resumeAreaIndex);
+
   const onStartJourney = () => {
     if (!journey || isCtaDisabled) return;
     // A jornada em andamento apenas continua, sem criar outra
@@ -123,16 +137,16 @@ export function useJourneySummaryVM(
       startMutation.mutate();
       return;
     }
-    router.push(START_URL);
+    router.push(isCurrentJourney ? resumeUrl : START_URL);
   };
 
   // Retoma a jornada que já está em andamento (aviso exibido após o 409)
   const onResumeCurrentJourney = () => {
-    router.push(START_URL);
+    router.push(resumeUrl);
   };
 
   const onDismiss = () => {
-    router.back();
+    router.push(JOURNEYS_URL);
   };
 
   // Aviso exibido ao abrir a página ou, se a verificação não pegar o caso,
@@ -186,6 +200,9 @@ export function useJourneySummaryVM(
     backToJourneysText: t("backToJourneys"),
     backToJourneysAriaLabel: t("backToJourneysAriaLabel"),
     badgeLabel: t("badgeLabel"),
+    domainLabel: journey?.domain ? t(`domainLabels.${journey.domain}`) : null,
+    lastScoreText: (score: number) => t("lastScoreText", { score }),
+    lastScoreAriaLabel: (score: number) => t("lastScoreAriaLabel", { score }),
     durationLabel: t("durationLabel"),
     areasLabel: t("areasLabel"),
     competenciesLabel: t("competenciesLabel"),
@@ -215,6 +232,7 @@ export function useJourneySummaryVM(
 
   return {
     journey,
+    lastScore,
     instructionItems,
     isLoading,
     error,

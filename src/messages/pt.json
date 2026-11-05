@@ -229,6 +229,13 @@
     "backToJourneys": "Voltar para jornadas",
     "backToJourneysAriaLabel": "Voltar para a listagem de jornadas",
     "badgeLabel": "Resumo da jornada",
+    "domainLabels": {
+      "privacy": "Privacidade",
+      "security": "Segurança da Informação",
+      "joint": "Conjunta"
+    },
+    "lastScoreText": "Última pontuação {score}/100",
+    "lastScoreAriaLabel": "Última pontuação: {score} de 100",
     "durationLabel": "Duração",
     "areasLabel": "Áreas",
     "competenciesLabel": "Competências",
@@ -283,7 +290,7 @@
     "startingLabel": "Iniciando...",
     "startErrorMessage": "Não foi possível iniciar a jornada. Tente novamente.",
     "resumeCurrentJourneyLabel": "Continuar jornada atual",
-    "actionResume": "Retomar jornada",
+    "actionResume": "Continuar jornada",
     "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova."
   },
   "questionnaire": {

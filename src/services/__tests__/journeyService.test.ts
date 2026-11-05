@@ -4,6 +4,7 @@ import {
   createJourney,
   getCurrentJourney,
   getJourney,
+  getResumeAreaIndex,
   mapKnowledgeDomain,
   JourneyRequestError,
 } from "../journeyService";
@@ -91,6 +92,48 @@ describe("journeyService", () => {
     expect(mapKnowledgeDomain({ id: 3, name_pt: "", name_en: "" })).toBe("joint");
     expect(mapKnowledgeDomain({ id: 99, name_pt: "", name_en: "" })).toBeNull();
     expect(mapKnowledgeDomain(null)).toBeNull();
+  });
+
+  describe("getResumeAreaIndex", () => {
+    const area = (id: number) => ({ id, name_pt: "", name_en: "" });
+    // Áreas na ordem do questionário: 1, 2 e, por último, as competências sem área
+    const competencies = [
+      { id: 10, knowledge_area: area(2) },
+      { id: 11, knowledge_area: area(1) },
+      { id: 12, knowledge_area: null },
+      { id: 13, knowledge_area: area(1) },
+    ];
+    const buildJourney = (answeredIds: number[]) => ({
+      id: 78,
+      status: "ongoing" as const,
+      journey_profile: {
+        id: 1,
+        name_pt: "",
+        name_en: "",
+        knowledge_domain: null,
+        competencies,
+      },
+      acquired_knowledges: answeredIds.map((id) => ({ competency: { id } })),
+    });
+
+    it.each([
+      [[], 0],
+      [[11], 0],
+      [[11, 13], 1],
+      [[11, 13, 10], 2],
+    ])("com as respostas %j, deve retomar na área %i", (answeredIds, expected) => {
+      expect(getResumeAreaIndex(buildJourney(answeredIds))).toBe(expected);
+    });
+
+    it("com todas as competências respondidas, deve retomar na última área", () => {
+      expect(getResumeAreaIndex(buildJourney([10, 11, 12, 13]))).toBe(2);
+    });
+
+    it("sem competências no perfil, deve retomar na primeira área", () => {
+      expect(
+        getResumeAreaIndex({ id: 78, status: "ongoing", journey_profile: null })
+      ).toBe(0);
+    });
   });
 
   describe("getCurrentJourney", () => {

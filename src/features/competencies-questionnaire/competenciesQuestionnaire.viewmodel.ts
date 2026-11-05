@@ -206,6 +206,9 @@ export function useCompetenciesQuestionnaireVM(
     },
     onSuccess: (finalization, mode) => {
       if (mode === "next") {
+        // As respostas salvas mudam a área em que o resumo retoma a jornada
+        void queryClient.invalidateQueries({ queryKey: CURRENT_JOURNEY_QUERY_KEY });
+        void queryClient.invalidateQueries({ queryKey: ["journey-summary"] });
         router.push(getCompetenciesAreaUrl(areaIndex + 1));
         return;
       }

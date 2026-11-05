@@ -86,6 +86,9 @@ describe("JourneySummaryView Component", () => {
     backToJourneysText: "Voltar para jornadas",
     backToJourneysAriaLabel: "Voltar para a listagem de jornadas",
     badgeLabel: "Resumo da jornada",
+    domainLabel: "Privacidade",
+    lastScoreText: (score) => `Última pontuação ${score}/100`,
+    lastScoreAriaLabel: (score) => `Última pontuação: ${score} de 100`,
     durationLabel: "Duração",
     areasLabel: "Áreas",
     competenciesLabel: "Competências",
@@ -127,6 +130,7 @@ describe("JourneySummaryView Component", () => {
         domain: "privacy",
         status: "not_started",
       },
+      lastScore: null,
       instructionItems: [
         { id: "objective", icon: CheckListIcon, title: "Questões objetivas", description: "Uma alternativa por pergunta." },
         { id: "estimatedTime", icon: Timer02Icon, title: "Tempo estimado", description: "Reserve cerca de 23 minutos." },
@@ -183,6 +187,24 @@ describe("JourneySummaryView Component", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" }));
     expect(vm.onStartJourney).toHaveBeenCalled();
+  });
+
+  it("deve exibir a tag do domínio e, quando houver, a última pontuação", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(createMockVMReturn());
+    const { unmount } = renderView();
+
+    expect(screen.getByText("Privacidade")).toBeDefined();
+    expect(screen.queryByLabelText("Última pontuação: 82 de 100")).toBeNull();
+    unmount();
+
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({ lastScore: 82 })
+    );
+    renderView();
+
+    expect(screen.getByLabelText("Última pontuação: 82 de 100").textContent).toBe(
+      "Última pontuação 82/100"
+    );
   });
 
   it("deve exibir \"—\" nas caixas sem dado (resumo de perfil)", () => {

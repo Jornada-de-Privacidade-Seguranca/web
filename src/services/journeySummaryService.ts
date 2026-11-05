@@ -6,6 +6,8 @@ import {
   type JourneyDetailApi,
   type JourneyDomain,
 } from "@services/journeyService";
+import { apiRequest } from "@services/httpClient";
+import { normalizeScore } from "@shared/utils/scoreBand";
 import {
   getJourneyProfile,
   JourneyProfileRequestError,
@@ -151,3 +153,38 @@ export async function getProfileSummary(
   }
 }
 
+/** Item de GET /users/{user}/journeys usado para a última nota. */
+interface CompletedJourneyListItemApi {
+  id: number;
+  score: number | null;
+}
+
+/**
+ * Nota (0 a 100) da jornada concluída mais recente do usuário nesse perfil, ou
+ * null se ele ainda não concluiu nenhuma. A listagem vem ordenada da mais
+ * recente para a mais antiga. Uma falha também resulta em null: a nota é só
+ * informativa e não deve impedir o resumo de abrir.
+ */
+export async function getLastProfileScore(
+  userId: number,
+  profileId: string
+): Promise<number | null> {
+  try {
+    const journeys = await apiRequest<CompletedJourneyListItemApi[]>(
+      `/users/${userId}/journeys`,
+      {
+        params: {
+          status: "completed",
+          journey_profile_id: profileId,
+          page: 1,
+          per_page: 1,
+        },
+      },
+      "Não foi possível carregar a última pontuação."
+    );
+    const last = Array.isArray(journeys) ? journeys[0] : undefined;
+    return last?.score != null ? normalizeScore(last.score) : null;
+  } catch {
+    return null;
+  }
+}

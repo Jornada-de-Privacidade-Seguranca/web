@@ -20,6 +20,7 @@ import { JourneySummaryErrorState } from "./components/JourneySummaryErrorState"
 export function JourneySummaryView(props: JourneySummaryViewProps) {
   const {
     journey,
+    lastScore,
     instructionItems,
     isLoading,
     error,
@@ -78,14 +79,31 @@ export function JourneySummaryView(props: JourneySummaryViewProps) {
               journey && (
                 <div className="space-y-6">
                   <section className="rounded-[2rem] border border-border bg-card/90 p-8 shadow-md backdrop-blur-xl">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-primary ring-1 ring-primary/20">
-                      <HugeiconsIcon icon={Mortarboard01Icon} size={14} />
-                      {labels.badgeLabel}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-primary ring-1 ring-primary/20">
+                        <HugeiconsIcon icon={Mortarboard01Icon} size={14} />
+                        {labels.badgeLabel}
+                      </span>
+                      {labels.domainLabel && (
+                        <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                          {labels.domainLabel}
+                        </span>
+                      )}
+                    </div>
 
-                    <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight text-card-foreground">
-                      {journey.title}
-                    </h2>
+                    <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+                      <h2 className="font-heading text-3xl font-bold tracking-tight text-card-foreground">
+                        {journey.title}
+                      </h2>
+                      {lastScore !== null && (
+                        <span
+                          aria-label={labels.lastScoreAriaLabel(lastScore)}
+                          className="shrink-0 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium tabular-nums text-foreground"
+                        >
+                          {labels.lastScoreText(lastScore)}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="mt-6">
                       <JourneyStatsGrid journey={journey} labels={labels} />

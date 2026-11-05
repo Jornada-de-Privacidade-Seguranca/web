@@ -71,6 +71,27 @@ describe("useJourneyContext", () => {
     expect(result.current.isError).toBe(false);
   });
 
+  it("deve indicar a área em que a jornada em andamento deve ser retomada", async () => {
+    vi.spyOn(journeyService, "getCurrentJourney").mockResolvedValue({
+      ...buildJourney(1),
+      journey_profile: {
+        ...buildJourney(1).journey_profile,
+        competencies: [
+          { id: 1, knowledge_area: { id: 1, name_pt: "", name_en: "" } },
+          { id: 2, knowledge_area: { id: 2, name_pt: "", name_en: "" } },
+        ],
+      },
+      acquired_knowledges: [{ competency: { id: 1 } }],
+    });
+
+    const { result } = renderHook(() => useJourneyContext(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.resumeAreaIndex).toBe(0);
+    await waitFor(() => expect(result.current.resumeAreaIndex).toBe(1));
+  });
+
   it("deve retornar o nome do perfil conforme o idioma", async () => {
     vi.spyOn(journeyService, "getCurrentJourney").mockResolvedValue(buildJourney(1));
 

@@ -28,6 +28,10 @@ export interface JourneySummaryLabels {
   backToJourneysText: string;
   backToJourneysAriaLabel: string;
   badgeLabel: string;
+  /** Nome do domínio exibido na tag do cabeçalho; null quando não informado */
+  domainLabel: string | null;
+  lastScoreText: (score: number) => string;
+  lastScoreAriaLabel: (score: number) => string;
   durationLabel: string;
   areasLabel: string;
   competenciesLabel: string;
@@ -59,6 +63,8 @@ export interface JourneySummaryLabels {
 
 export interface JourneySummaryViewModelReturn {
   journey: JourneySummary | null;
+  /** Nota (0 a 100) da última jornada concluída desse perfil; null se não houver */
+  lastScore: number | null;
   /** Instruções do questionário, exibidas antes de iniciar a jornada */
   instructionItems: JourneyInstructionItem[];
   isLoading: boolean;
