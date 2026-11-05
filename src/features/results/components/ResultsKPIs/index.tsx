@@ -2,7 +2,7 @@
 
 import { RefreshIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui/button";
+import { Button, MetricsGrid } from "@/components/ui";
 import { useResultsKPIsVM } from "./resultsKPIs.viewmodel";
 import type { ResultsKPIsProps } from "./resultsKPIs.types";
 
@@ -17,14 +17,19 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
     labelAverageScore,
     retryButtonText,
     errorMessage,
+    loadingLabel,
   } = useResultsKPIsVM(props);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-        <div className="h-32 rounded-[2rem] border border-border/40 bg-muted/50 p-6" />
-        <div className="h-32 rounded-[2rem] border border-border/40 bg-muted/50 p-6" />
-      </div>
+      <MetricsGrid
+        items={[
+          { id: "total-completed", label: labelTotalCompleted, value: "" },
+          { id: "average-score", label: labelAverageScore, value: "" },
+        ]}
+        isLoading
+        loadingLabel={loadingLabel}
+      />
     );
   }
 
@@ -51,38 +56,20 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Card 1: Jornadas Concluídas */}
-      <div className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-sm backdrop-blur-xl">
-        <h3
-          id="kpi-total-completed-label"
-          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-        >
-          {labelTotalCompleted}
-        </h3>
-        <p
-          aria-labelledby="kpi-total-completed-label"
-          className="mt-2 text-4xl font-extrabold tracking-tight text-foreground font-heading"
-        >
-          {totalCompleted ?? 0}
-        </p>
-      </div>
-
-      {/* Card 2: Média das Notas */}
-      <div className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-sm backdrop-blur-xl">
-        <h3
-          id="kpi-average-score-label"
-          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-        >
-          {labelAverageScore}
-        </h3>
-        <p
-          aria-labelledby="kpi-average-score-label"
-          className="mt-2 text-4xl font-extrabold tracking-tight text-foreground font-heading"
-        >
-          {averageScore ?? 0}
-        </p>
-      </div>
-    </div>
+    <MetricsGrid
+      items={[
+        {
+          id: "total-completed",
+          label: labelTotalCompleted,
+          value: totalCompleted ?? 0,
+        },
+        {
+          id: "average-score",
+          label: labelAverageScore,
+          value: averageScore ?? 0,
+        },
+      ]}
+      loadingLabel={loadingLabel}
+    />
   );
 }

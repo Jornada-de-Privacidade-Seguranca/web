@@ -16,5 +16,6 @@ export function useResultsKPIsVM(props: ResultsKPIsProps) {
     labelAverageScore: labels.kpiAverageScore,
     retryButtonText: labels.retryButton,
     errorMessage: labels.errorMetricsMessage,
+    loadingLabel: labels.loadingAriaLabel,
   };
 }

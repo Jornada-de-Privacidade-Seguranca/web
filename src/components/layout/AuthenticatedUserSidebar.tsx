@@ -177,8 +177,9 @@ function useSidebarVM() {
       label: t("sidebar.profile"),
       icon: UserIcon,
       href: "/perfil",
-      active: false,
-      disabled: true,
+      active:
+        pathname.startsWith("/perfil") || pathname.startsWith("/profile"),
+      disabled: false,
     },
     {
       label: t("sidebar.admin-panel"),

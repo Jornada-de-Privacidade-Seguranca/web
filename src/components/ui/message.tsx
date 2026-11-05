@@ -73,6 +73,7 @@ interface MessageProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
   variant?: MessageVariant;
   onClose?: () => void;
+  closeLabel?: string;
 }
 
 function Message({
@@ -82,6 +83,7 @@ function Message({
   variant = "default",
   className,
   onClose,
+  closeLabel = "Close",
   ...props
 }: MessageProps) {
   return (
@@ -107,7 +109,7 @@ function Message({
             onClick={onClose}
             className={cn(closeButtonVariants({ variant, className }))}
           >
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{closeLabel}</span>
             <HugeiconsIcon icon={Cancel01Icon} />
           </button>
         )}
