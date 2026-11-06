@@ -10,6 +10,7 @@ import { ApiRequestError } from "@services/httpClient";
 import { getUserProfile, updateUserProfile } from "@services/profileService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useTheme } from "@hooks/useTheme";
+import type { ThemeMode } from "@shared/theme";
 import type {
   ProfileData,
   ProfileFormValues,
@@ -247,7 +248,7 @@ export function useProfileVM(): ProfileViewModelReturn {
 
   const handleCloseMessage = () => setServerMessage(null);
 
-  const handleThemeChange = (mode: "light" | "dark") => {
+  const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode);
   };
 

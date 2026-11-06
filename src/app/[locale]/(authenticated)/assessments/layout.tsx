@@ -15,3 +15,4 @@ export default function AssessmentsLayout({ children }: PropsWithChildren) {
 
   return <>{children}</>;
 }
+

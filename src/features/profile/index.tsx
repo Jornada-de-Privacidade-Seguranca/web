@@ -317,15 +317,13 @@ export function ProfileView() {
                       />
                       {labels.themeDark}
                     </label>
-                    <label
-                      title={labels.themeHighContrastUnavailable}
-                      className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-border px-3 py-2 text-sm opacity-50"
-                    >
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-2 text-sm">
                       <input
                         type="radio"
                         name="profile-theme"
                         value="high-contrast"
-                        disabled
+                        checked={theme === "high-contrast"}
+                        onChange={() => handleThemeChange("high-contrast")}
                       />
                       {labels.themeHighContrast}
                     </label>

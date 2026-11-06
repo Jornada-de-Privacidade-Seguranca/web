@@ -38,7 +38,8 @@
   },
   "switchThemeButton": {
     "light": "Trocar para tema claro",
-    "dark": "Trocar para tema escuro"
+    "dark": "Trocar para tema escuro",
+    "highContrast": "Trocar para tema de alto contraste"
   },
   "nav": {
     "home": "Início"

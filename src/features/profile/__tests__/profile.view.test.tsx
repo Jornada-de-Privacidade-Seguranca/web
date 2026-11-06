@@ -204,7 +204,7 @@ describe("ProfileView", () => {
     expect(screen.getByRole("button", { name: "Cancelar" })).toHaveProperty("disabled", true);
   });
 
-  it("offers light and dark themes and leaves high contrast unavailable", () => {
+  it("offers light, dark and high contrast themes and calls handleThemeChange", () => {
     const handleThemeChange = vi.fn();
     vi.spyOn(viewModelModule, "useProfileVM").mockReturnValue(
       makeViewModel({ handleThemeChange }),
@@ -215,8 +215,10 @@ describe("ProfileView", () => {
     expect(screen.getByRole("radio", { name: "Escuro" })).toHaveProperty("checked", true);
     expect(screen.getByRole("radio", { name: "Alto contraste" })).toHaveProperty(
       "disabled",
-      true,
+      false,
     );
+    fireEvent.click(screen.getByRole("radio", { name: "Alto contraste" }));
+    expect(handleThemeChange).toHaveBeenCalledWith("high-contrast");
     fireEvent.click(screen.getByRole("radio", { name: "Claro" }));
     expect(handleThemeChange).toHaveBeenCalledWith("light");
     fireEvent.click(screen.getByRole("button", { name: "EN" }));

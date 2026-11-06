@@ -20,3 +20,4 @@ export default function JornadasLayout({ children }: PropsWithChildren) {
 
   return <>{children}</>;
 }
+

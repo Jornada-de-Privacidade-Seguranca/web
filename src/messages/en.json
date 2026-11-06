@@ -38,7 +38,8 @@
   },
   "switchThemeButton": {
     "light": "Switch to light mode",
-    "dark": "Switch to dark mode"
+    "dark": "Switch to dark mode",
+    "highContrast": "Switch to high contrast mode"
   },
   "nav": {
     "home": "Home"

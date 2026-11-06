@@ -13,9 +13,10 @@ export function ThemeScript() {
             (function() {
               try {
                 var stored = localStorage.getItem('${THEME_STORAGE_KEY}');
-                var theme = (stored === 'dark' || stored === 'light')
+                var theme = (stored === 'dark' || stored === 'light' || stored === 'high-contrast')
                   ? stored
                   : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.remove('dark', 'light', 'high-contrast');
                 document.documentElement.classList.add(theme);
               } catch (e) {}
             })();
