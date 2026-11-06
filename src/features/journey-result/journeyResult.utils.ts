@@ -3,16 +3,13 @@ import { normalizeScore, resolveScoreBand } from "@shared/utils/scoreBand";
 import type {
   AreaScore,
   AreaScoreGroup,
-  CategoryScore,
   CompetencyAreaBucket,
   CompetencyAreaGroup,
   CompetencyResultItem,
-  CourseLevelGroup,
   JourneyResultApi,
   JourneyResultCompetencyApi,
   JourneyResultFormatters,
   JourneyResultModel,
-  ProfessionalProfileSummary,
   ScoreValue,
 } from "./journeyResult.types";
 
@@ -214,89 +211,6 @@ export function buildCompetencyAreaGroups(
     .filter((group) => group.competencies.length > 0);
 }
 
-/** Cursos agrupados por nível (subcritério), em ordem de id do nível. */
-function buildCourseGroups(
-  journey: JourneyResultApi,
-  formatters: JourneyResultFormatters
-): CourseLevelGroup[] {
-  const byLevel = new Map<string, CourseLevelGroup & { sortId: number }>();
-  for (const course of journey.answers?.higher_education_courses ?? []) {
-    const level = course.subcriterion;
-    const levelId = level ? String(level.id) : OTHER_GROUP_ID;
-    let group = byLevel.get(levelId);
-    if (!group) {
-      group = {
-        id: levelId,
-        sortId: level ? level.id : Number.POSITIVE_INFINITY,
-        name: level ? formatters.localize(level.name_pt, level.name_en) : formatters.otherCoursesLabel,
-        courses: [],
-      };
-      byLevel.set(levelId, group);
-    }
-    group.courses.push({ id: course.id, name: formatters.localize(course.name_pt, course.name_en) });
-  }
-
-  return [...byLevel.values()]
-    .sort((a, b) => a.sortId - b.sortId)
-    .map(({ id, name, courses }) => ({ id, name, courses }));
-}
-
-export function buildProfessionalProfile(
-  journey: JourneyResultApi,
-  formatters: JourneyResultFormatters
-): ProfessionalProfileSummary {
-  const { localize, notProvided, fieldLabels } = formatters;
-  const answers = journey.answers;
-  const professional = answers?.professional_experience;
-  const english = answers?.english_proficiency;
-  const profile = answers?.profile_experience;
-
-  return {
-    fields: [
-      {
-        id: "professional_experience",
-        label: fieldLabels.professional_experience,
-        value: (professional && localize(professional.description_pt, professional.description_en)) || notProvided,
-      },
-      {
-        id: "english_proficiency",
-        label: fieldLabels.english_proficiency,
-        value: (english && localize(english.name_pt, english.name_en)) || notProvided,
-      },
-      {
-        id: "profile_experience",
-        label: fieldLabels.profile_experience,
-        value: (profile && localize(profile.description_pt, profile.description_en)) || notProvided,
-      },
-    ],
-    courseGroups: buildCourseGroups(journey, formatters),
-    // O nome da certificação é único e aparece igual nos dois idiomas
-    certifications: (journey.professional_certifications ?? [])
-      .filter((certification) => Boolean(certification.name))
-      .map((certification) => ({ id: certification.id, name: certification.name ?? "" })),
-  };
-}
-
-/** Pontuação por categoria; null enquanto o backend não retornar `score_breakdown`. */
-export function buildCategoryScores(
-  journey: JourneyResultApi,
-  formatters: JourneyResultFormatters
-): CategoryScore[] | null {
-  const breakdown = journey.score_breakdown;
-  if (!Array.isArray(breakdown) || breakdown.length === 0) return null;
-
-  return breakdown.map((item) => {
-    const name = formatters.localize(item.name_pt, item.name_en) || item.category;
-    const score = buildScoreValue(item.score, formatters.bandLabel);
-    return {
-      id: item.category,
-      name,
-      score,
-      scoreAriaLabel: formatters.scoreAriaLabel(name, score),
-    };
-  });
-}
-
 /**
  * A jornada é conjunta quando as competências avaliadas são de mais de um
  * domínio, sem depender do id do domínio do perfil no banco.
@@ -325,10 +239,8 @@ export function buildJourneyResultModel(
     score: buildScoreValue(journey.score, formatters.bandLabel),
     declaredCount: competencies.filter((competency) => declaredIds.has(competency.id)).length,
     totalCompetencies: competencies.length,
-    categoryScores: buildCategoryScores(journey, formatters),
     isJointJourney: isJoint,
     areaScoreGroups: buildAreaScoreGroups(buckets, declaredIds, isJoint, formatters),
-    professionalProfile: buildProfessionalProfile(journey, formatters),
     declaredCompetencies: buildCompetencyAreaGroups(buckets, declaredIds, true, formatters),
     undeclaredCompetencies: buildCompetencyAreaGroups(buckets, declaredIds, false, formatters),
   };

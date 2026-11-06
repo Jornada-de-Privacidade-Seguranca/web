@@ -56,7 +56,8 @@ describe("useJourneyResultVM", () => {
     expect(result.current.totalCompetencies).toBe(4);
     expect(result.current.isJointJourney).toBe(true);
     expect(result.current.areaScoreGroups).toHaveLength(2);
-    expect(result.current.categoryScores).toBeNull();
+    expect(result.current).not.toHaveProperty("categoryScores");
+    expect(result.current).not.toHaveProperty("professionalProfile");
     expect(result.current.retakeUrl).toBe("/jornada/perfil/2");
     expect(result.current.resultsUrl).toBe("/resultados");
     expect(result.current.recommendedAreaScore).toBe(60);

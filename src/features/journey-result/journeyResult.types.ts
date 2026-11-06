@@ -28,46 +28,10 @@ export interface JourneyResultProfileApi {
   competencies: JourneyResultCompetencyApi[];
 }
 
-/** Resposta de tempo de experiência (profissional ou no perfil). */
-export interface JourneyResultExperienceApi {
-  id: number;
-  description_pt: string | null;
-  description_en: string | null;
-}
-
-export interface JourneyResultCourseApi {
-  id: number;
-  name_pt: string | null;
-  name_en: string | null;
-  /** Nível do curso (Graduação, Pós-graduação, Mestrado, Doutorado) */
-  subcriterion: JourneyResultNamedApi | null;
-}
-
-export interface JourneyResultAnswersApi {
-  professional_experience: JourneyResultExperienceApi | null;
-  profile_experience: JourneyResultExperienceApi | null;
-  english_proficiency: JourneyResultNamedApi | null;
-  higher_education_courses: JourneyResultCourseApi[];
-}
-
 export interface JourneyResultAcquiredKnowledgeApi {
   id: number;
   is_acquired: boolean;
   competency: JourneyResultCompetencyApi | null;
-}
-
-export interface JourneyResultCertificationApi {
-  id: number;
-  name: string | null;
-  knowledge_domain: JourneyResultNamedApi | null;
-}
-
-/** Proposta de detalhamento da nota por categoria; ainda não retornada pelo backend. */
-export interface JourneyResultScoreBreakdownApi {
-  category: string;
-  name_pt: string | null;
-  name_en: string | null;
-  score: number;
 }
 
 export interface JourneyResultApi {
@@ -76,10 +40,7 @@ export interface JourneyResultApi {
   status: "ongoing" | "completed";
   finished_at: string | null;
   score: number | null;
-  answers: JourneyResultAnswersApi;
   acquired_knowledges: JourneyResultAcquiredKnowledgeApi[];
-  professional_certifications: JourneyResultCertificationApi[];
-  score_breakdown?: JourneyResultScoreBreakdownApi[] | null;
 }
 
 /** Erros da requisição; "not_completed" é derivado do status da jornada. */
@@ -101,13 +62,6 @@ export interface ScoreValue {
   bandLabel: string;
 }
 
-export interface CategoryScore {
-  id: string;
-  name: string;
-  score: ScoreValue;
-  scoreAriaLabel: string;
-}
-
 export interface AreaScore {
   /** id da área de conhecimento, ou "other" para competências sem área */
   id: string;
@@ -124,29 +78,6 @@ export interface AreaScoreGroup {
   /** Nome do domínio em jornadas conjuntas; null quando há um único grupo */
   title: string | null;
   areas: AreaScore[];
-}
-
-export interface ProfessionalProfileField {
-  id: "professional_experience" | "english_proficiency" | "profile_experience";
-  label: string;
-  value: string;
-}
-
-export interface NamedChip {
-  id: number;
-  name: string;
-}
-
-export interface CourseLevelGroup {
-  id: string;
-  name: string;
-  courses: NamedChip[];
-}
-
-export interface ProfessionalProfileSummary {
-  fields: ProfessionalProfileField[];
-  courseGroups: CourseLevelGroup[];
-  certifications: NamedChip[];
 }
 
 export interface CompetencyResultDifficulty {
@@ -191,9 +122,6 @@ export interface JourneyResultFormatters {
   groupCountText: (count: number) => string;
   otherAreaLabel: string;
   otherDomainLabel: string;
-  otherCoursesLabel: string;
-  notProvided: string;
-  fieldLabels: Record<ProfessionalProfileField["id"], string>;
 }
 
 /** Dados da tela derivados da jornada, sem estado de carregamento ou erro. */
@@ -202,10 +130,8 @@ export interface JourneyResultModel {
   score: ScoreValue;
   declaredCount: number;
   totalCompetencies: number;
-  categoryScores: CategoryScore[] | null;
   isJointJourney: boolean;
   areaScoreGroups: AreaScoreGroup[];
-  professionalProfile: ProfessionalProfileSummary;
   declaredCompetencies: CompetencyAreaGroup[];
   undeclaredCompetencies: CompetencyAreaGroup[];
 }
@@ -218,23 +144,11 @@ export interface JourneyResultLabels {
   declaredCountText: string;
   retakeButton: string;
   backButton: string;
-  categories: {
-    eyebrow: string;
-    title: string;
-  };
   areas: {
     eyebrow: string;
     title: string;
     recommendation: string;
     markerAriaLabel: string;
-  };
-  profile: {
-    eyebrow: string;
-    title: string;
-    coursesTitle: string;
-    certificationsTitle: string;
-    noCourses: string;
-    noCertifications: string;
   };
   competencies: {
     eyebrow: string;
@@ -264,11 +178,8 @@ export interface JourneyResultViewModelReturn {
   score: ScoreValue;
   declaredCount: number;
   totalCompetencies: number;
-  /** null enquanto o backend não retornar o detalhamento por categoria */
-  categoryScores: CategoryScore[] | null;
   isJointJourney: boolean;
   areaScoreGroups: AreaScoreGroup[];
-  professionalProfile: ProfessionalProfileSummary;
   declaredCompetencies: CompetencyAreaGroup[];
   undeclaredCompetencies: CompetencyAreaGroup[];
   retakeUrl: string;

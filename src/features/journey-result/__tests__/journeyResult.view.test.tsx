@@ -34,20 +34,11 @@ const labels: JourneyResultLabels = {
   declaredCountText: "2 de 4 competências declaradas",
   retakeButton: "Refazer questionário",
   backButton: "Voltar",
-  categories: { eyebrow: "Pontuação ponderada", title: "Pontuação por Categoria" },
   areas: {
     eyebrow: "Detalhamento por área de conhecimento",
     title: "Conhecimentos adquiridos",
     recommendation: "Recomenda-se no mínimo 60% de conhecimento na área.",
     markerAriaLabel: "Mínimo recomendado: 60",
-  },
-  profile: {
-    eyebrow: "Perfil profissional",
-    title: "Dados informados no pré-questionário",
-    coursesTitle: "Formação acadêmica",
-    certificationsTitle: "Certificações profissionais",
-    noCourses: "Nenhum curso informado",
-    noCertifications: "Nenhuma certificação informada",
   },
   competencies: {
     eyebrow: "Respostas do questionário",
@@ -60,7 +51,6 @@ const labels: JourneyResultLabels = {
   errors: null,
 };
 
-const strong = { value: 100, band: "strong", bandLabel: "Forte" } as const;
 const weak = { value: 50, band: "weak", bandLabel: "A desenvolver" } as const;
 
 function buildVM(overrides: Partial<JourneyResultViewModelReturn> = {}): JourneyResultViewModelReturn {
@@ -69,7 +59,6 @@ function buildVM(overrides: Partial<JourneyResultViewModelReturn> = {}): Journey
     score: { value: 76, band: "strong", bandLabel: "Forte" },
     declaredCount: 2,
     totalCompetencies: 4,
-    categoryScores: null,
     isJointJourney: false,
     areaScoreGroups: [
       {
@@ -88,15 +77,6 @@ function buildVM(overrides: Partial<JourneyResultViewModelReturn> = {}): Journey
         ],
       },
     ],
-    professionalProfile: {
-      fields: [
-        { id: "professional_experience", label: "Tempo de experiência profissional", value: "Entre 1 e 3 anos" },
-        { id: "english_proficiency", label: "Nível de proficiência em inglês", value: "Não informado" },
-        { id: "profile_experience", label: "Tempo de atuação no perfil", value: "Entre 4 e 6 anos" },
-      ],
-      courseGroups: [],
-      certifications: [{ id: 1, name: "CIPP/E" }],
-    },
     declaredCompetencies: [
       {
         id: "1",
@@ -164,23 +144,13 @@ describe("JourneyResultView", () => {
     expect(within(card).getByText("Voltar").closest("a")?.getAttribute("href")).toBe("/resultados");
   });
 
-  it("deve ocultar a pontuação por categoria enquanto o backend não a retornar", () => {
-    mockVM({ categoryScores: null });
+  it("não deve exibir a pontuação por categoria nem os dados do pré-questionário", () => {
+    mockVM();
     render(<JourneyResultView journeyId="10" />);
 
     expect(screen.queryByTestId("category-score-list")).toBeNull();
-  });
-
-  it("deve exibir a pontuação por categoria quando retornada", () => {
-    mockVM({
-      categoryScores: [
-        { id: "english", name: "Inglês", score: strong, scoreAriaLabel: "Inglês: Forte, 100 de 100" },
-      ],
-    });
-    render(<JourneyResultView journeyId="10" />);
-
-    const section = screen.getByTestId("category-score-list");
-    expect(within(section).getByRole("progressbar", { name: "Inglês: Forte, 100 de 100" })).toBeTruthy();
+    expect(screen.queryByTestId("professional-profile-summary")).toBeNull();
+    expect(screen.queryByText(/pré-questionário/i)).toBeNull();
   });
 
   it("deve exibir a barra de cada área com o mínimo recomendado", () => {
@@ -218,7 +188,7 @@ describe("JourneyResultView", () => {
     mockVM();
     render(<JourneyResultView journeyId="10" />);
 
-    const button = screen.getByRole("button", { name: "Dados informados no pré-questionário" });
+    const button = screen.getByRole("button", { name: "Conhecimentos adquiridos" });
     const region = document.getElementById(button.getAttribute("aria-controls") ?? "");
     expect(button.getAttribute("aria-expanded")).toBe("true");
     expect(region?.getAttribute("role")).toBe("region");
@@ -230,14 +200,19 @@ describe("JourneyResultView", () => {
     expect(region?.hidden).toBe(true);
   });
 
-  it("deve exibir o perfil profissional e as listas vazias", () => {
+  it("deve permitir recolher todas as seções, exceto a nota geral", () => {
     mockVM();
     render(<JourneyResultView journeyId="10" />);
 
-    const section = screen.getByTestId("professional-profile-summary");
-    expect(within(section).getByText("Não informado")).toBeTruthy();
-    expect(within(section).getByText("Nenhum curso informado")).toBeTruthy();
-    expect(within(section).getByText("CIPP/E")).toBeTruthy();
+    const card = screen.getByTestId("score-summary-card");
+    expect(within(card).queryByRole("button")).toBeNull();
+    for (const title of [
+      "Conhecimentos adquiridos",
+      "Competências declaradas",
+      "Competências não declaradas",
+    ]) {
+      expect(screen.getByRole("button", { name: title }).getAttribute("aria-expanded")).toBe("true");
+    }
   });
 
   it("deve iniciar as áreas das caixas de competências recolhidas", () => {

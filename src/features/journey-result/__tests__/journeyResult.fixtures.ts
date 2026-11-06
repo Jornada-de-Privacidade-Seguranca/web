@@ -57,46 +57,10 @@ export function buildJourney(overrides: Partial<JourneyResultApi> = {}): Journey
     status: "completed",
     finished_at: "2026-10-14 16:30:00",
     score: 76.4,
-    answers: {
-      professional_experience: {
-        id: 2,
-        description_pt: "Entre 1 e 3 anos",
-        description_en: "Between 1 and 3 years",
-      },
-      profile_experience: {
-        id: 3,
-        description_pt: "Entre 4 e 6 anos",
-        description_en: "Between 4 and 6 years",
-      },
-      english_proficiency: null,
-      higher_education_courses: [
-        {
-          id: 7,
-          name_pt: "Segurança Cibernética",
-          name_en: "Cybersecurity",
-          subcriterion: { id: 3, name_pt: "Mestrado", name_en: "Master's" },
-        },
-        {
-          id: 1,
-          name_pt: "Ciência da Computação",
-          name_en: "Computer Science",
-          subcriterion: { id: 1, name_pt: "Graduação", name_en: "Graduation" },
-        },
-        {
-          id: 2,
-          name_pt: "Sistemas de Informação",
-          name_en: "Information Systems",
-          subcriterion: { id: 1, name_pt: "Graduação", name_en: "Graduation" },
-        },
-      ],
-    },
     acquired_knowledges: [
       { id: 51, is_acquired: true, competency: c1 },
       { id: 52, is_acquired: false, competency: c2 },
       { id: 53, is_acquired: true, competency: c3 },
-    ],
-    professional_certifications: [
-      { id: 1, name: "CIPP/E", knowledge_domain: privacy },
     ],
     ...overrides,
   };

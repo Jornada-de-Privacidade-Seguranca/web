@@ -360,10 +360,6 @@
       "medium": "Medium",
       "weak": "To develop"
     },
-    "categories": {
-      "eyebrow": "Weighted score",
-      "title": "Score by Category"
-    },
     "areas": {
       "eyebrow": "Breakdown by knowledge area",
       "title": "Acquired knowledge",
@@ -372,19 +368,6 @@
       "markerAriaLabel": "Recommended minimum: {value}",
       "otherAreaLabel": "Other competencies",
       "otherDomainLabel": "Other domains"
-    },
-    "profile": {
-      "eyebrow": "Professional profile",
-      "title": "Data provided in the pre-questionnaire",
-      "professionalExperience": "Length of professional experience",
-      "englishProficiency": "English proficiency level",
-      "profileExperience": "Time working in the profile",
-      "coursesTitle": "Academic background",
-      "certificationsTitle": "Professional certifications",
-      "otherCourses": "Other courses",
-      "notProvided": "Not provided",
-      "noCourses": "No courses provided",
-      "noCertifications": "No certifications provided"
     },
     "competencies": {
       "eyebrow": "Questionnaire responses",

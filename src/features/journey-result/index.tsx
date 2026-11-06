@@ -3,11 +3,9 @@
 import { PageShell } from "@components/layout/PageShell";
 import { useJourneyResultVM } from "./journeyResult.viewmodel";
 import { AreaScoreSection } from "./components/AreaScoreSection";
-import { CategoryScoreList } from "./components/CategoryScoreList";
 import { CompetencyAnswerBox } from "./components/CompetencyAnswerBox";
 import { JourneyResultErrorState } from "./components/JourneyResultErrorState";
 import { JourneyResultSkeleton } from "./components/JourneyResultSkeleton";
-import { ProfessionalProfileSummary } from "./components/ProfessionalProfileSummary";
 import { ScoreSummaryCard } from "./components/ScoreSummaryCard";
 import type { JourneyResultViewProps } from "./journeyResult.types";
 
@@ -15,10 +13,8 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
   const {
     journeyTitle,
     score,
-    categoryScores,
     isJointJourney,
     areaScoreGroups,
-    professionalProfile,
     declaredCompetencies,
     undeclaredCompetencies,
     retakeUrl,
@@ -64,22 +60,12 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
                 backLabel={labels.backButton}
               />
 
-              {categoryScores && (
-                <CategoryScoreList
-                  categories={categoryScores}
-                  eyebrow={labels.categories.eyebrow}
-                  title={labels.categories.title}
-                />
-              )}
-
               <AreaScoreSection
                 groups={areaScoreGroups}
                 isJointJourney={isJointJourney}
                 recommendedScore={recommendedAreaScore}
                 labels={labels.areas}
               />
-
-              <ProfessionalProfileSummary profile={professionalProfile} labels={labels.profile} />
 
               <CompetencyAnswerBox
                 variant="declared"
