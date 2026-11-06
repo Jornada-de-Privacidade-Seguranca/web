@@ -7,3 +7,19 @@ export interface ResultsKPIsProps {
   onRetry?: () => void;
   labels: ResultsLabels;
 }
+
+export interface KPIItem {
+  id: string;
+  label: string;
+  value: string | number;
+}
+
+export interface ResultsKPIsViewModelReturn {
+  items: KPIItem[];
+  isLoading: boolean;
+  isError: boolean;
+  onRetry?: () => void;
+  retryButtonText: string;
+  errorMessage: string;
+  loadingLabel: string;
+}

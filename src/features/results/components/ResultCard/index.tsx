@@ -6,18 +6,17 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, DomainBadge } from "@/components/ui";
 import { useResultCardVM } from "./resultCard.viewmodel";
 import type { ResultCardProps } from "./resultCard.types";
 
 export function ResultCard(props: ResultCardProps) {
   const {
-    result,
-    score,
-    isHighScore,
-    isMediumScore,
-    actionHref,
+    title,
+    domainLabel,
+    completedTagText,
     completedAtText,
+    actionHref,
     buttonText,
     ctaAriaLabel,
     badgeAriaLabel,
@@ -26,29 +25,24 @@ export function ResultCard(props: ResultCardProps) {
   return (
     <article className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-md backdrop-blur-xl transition-all duration-200 hover:border-primary/40 hover:shadow-lg">
       <div>
-        <div className="flex items-center justify-between gap-3 min-h-[24px]">
-          <h3 className="font-heading text-lg font-bold tracking-tight text-card-foreground">
-            {result.title}
-          </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 min-h-[24px]">
+          <DomainBadge label={domainLabel} />
 
-          {/* Badge de Nota Condicional com Acessibilidade */}
           <span
             data-testid="result-score-tag"
             aria-label={badgeAriaLabel}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold shrink-0 ${
-              isHighScore
-                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20"
-                : isMediumScore
-                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20"
-                : "bg-destructive/15 text-destructive ring-1 ring-destructive/20"
-            }`}
+            className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20"
           >
             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
-            <span>{score}</span>
+            <span>{completedTagText}</span>
           </span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+        <h3 className="mt-3 font-heading text-lg font-bold tracking-tight text-card-foreground">
+          {title}
+        </h3>
+
+        <div className="mt-2 text-xs font-medium text-muted-foreground">
           <span>{completedAtText}</span>
         </div>
       </div>
@@ -72,3 +66,5 @@ export function ResultCard(props: ResultCardProps) {
     </article>
   );
 }
+
+export * from "./resultCard.types";

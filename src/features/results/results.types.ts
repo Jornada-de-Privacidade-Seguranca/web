@@ -1,15 +1,28 @@
+import type { JourneyDomain } from "@services/journeyService";
+
+export type { JourneyDomain };
+
 export interface ResultItem {
   id: string;
   title: string;
   score: number;
   completedAt: string;
+  domain?: JourneyDomain;
+  domainLabel?: string;
   description?: string;
   questionsCount?: number;
 }
 
+export interface DomainMetric {
+  domain: string;
+  label: string;
+  averageScore: number | null;
+}
+
 export interface ResultsMetrics {
   totalCompleted: number;
-  averageScore: number;
+  averageScore?: number | null;
+  domainMetrics: DomainMetric[];
 }
 
 export interface PaginatedResponse<T> {
@@ -28,11 +41,23 @@ export interface ServerMessage {
 
 export type ResultsEmptyStateMode = "none" | "no-results" | "no-search-matches";
 
+export interface ResultsFilters {
+  domains: JourneyDomain[];
+}
+
+export interface FilterOption<T extends string = string> {
+  id: T;
+  label: string;
+  isSelected: boolean;
+}
+
 export interface ResultsLabels {
   title: string;
   subtitle: string;
   kpiTotalCompleted: string;
   kpiAverageScore: string;
+  kpiDomainScore: (score: number) => string;
+  kpiEmptyScore: string;
   sectionTitle: string;
   sectionSubtitle: string;
   searchPlaceholder: string;
@@ -42,8 +67,17 @@ export interface ResultsLabels {
   userEmpty: string;
   availableJourneysCta: string;
   completedAt: (dateString: string) => string;
+  completedScoreTag: (score: number) => string;
   questionsCount: (count: number) => string;
   viewResult: string;
+  filtersButton: string;
+  filtersButtonWithCount: (count: number) => string;
+  filtersTitle: string;
+  filtersDomainTitle: string;
+  filtersClear: string;
+  filterDomainPrivacy: string;
+  filterDomainSecurity: string;
+  filterDomainJoint: string;
   paginationPrevious: string;
   paginationNext: string;
   paginationPageOf: (current: number, total: number) => string;
@@ -71,6 +105,14 @@ export interface ResultsViewModelReturn {
   searchTerm: string;
   handleSearchChange: (term: string) => void;
   handlePageChange: (page: number) => void;
+
+  // Filter Panel
+  isFilterPanelOpen: boolean;
+  handleToggleFilterPanel: () => void;
+  activeFiltersCount: number;
+  filters: ResultsFilters;
+  handleToggleDomainFilter: (domain: JourneyDomain) => void;
+  handleClearFilters: () => void;
 
   isLoading: boolean;
   error: string | null;

@@ -8,13 +8,10 @@ import type { ResultsKPIsProps } from "./resultsKPIs.types";
 
 export function ResultsKPIs(props: ResultsKPIsProps) {
   const {
-    totalCompleted,
-    averageScore,
+    items,
     isLoading,
     isError,
     onRetry,
-    labelTotalCompleted,
-    labelAverageScore,
     retryButtonText,
     errorMessage,
     loadingLabel,
@@ -24,11 +21,14 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
     return (
       <MetricsGrid
         items={[
-          { id: "total-completed", label: labelTotalCompleted, value: "" },
-          { id: "average-score", label: labelAverageScore, value: "" },
+          { id: "loading-1", label: "", value: "" },
+          { id: "loading-2", label: "", value: "" },
+          { id: "loading-3", label: "", value: "" },
+          { id: "loading-4", label: "", value: "" },
         ]}
         isLoading
         loadingLabel={loadingLabel}
+        className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
       />
     );
   }
@@ -57,19 +57,11 @@ export function ResultsKPIs(props: ResultsKPIsProps) {
 
   return (
     <MetricsGrid
-      items={[
-        {
-          id: "total-completed",
-          label: labelTotalCompleted,
-          value: totalCompleted ?? 0,
-        },
-        {
-          id: "average-score",
-          label: labelAverageScore,
-          value: averageScore ?? 0,
-        },
-      ]}
+      items={items}
       loadingLabel={loadingLabel}
+      className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
     />
   );
 }
+
+export * from "./resultsKPIs.types";

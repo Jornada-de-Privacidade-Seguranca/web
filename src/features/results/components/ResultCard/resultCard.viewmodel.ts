@@ -1,28 +1,32 @@
-import type { ResultCardProps } from "./resultCard.types";
+import type { ResultCardProps, ResultCardViewModelReturn } from "./resultCard.types";
 
-export function useResultCardVM(props: ResultCardProps) {
+export function useResultCardVM(props: ResultCardProps): ResultCardViewModelReturn {
   const { result, labels } = props;
 
-  const score = result.score;
-  const isHighScore = score >= 75;
-  const isMediumScore = score >= 60 && score < 75;
-  const isLowScore = score < 60;
+  const title = result.title;
+  const domainLabel =
+    result.domainLabel ||
+    (result.domain === "privacy"
+      ? labels.filterDomainPrivacy
+      : result.domain === "security"
+      ? labels.filterDomainSecurity
+      : result.domain === "joint"
+      ? labels.filterDomainJoint
+      : null);
 
-  const actionHref = `/jornada/${result.id}/resultado`;
-
+  const completedTagText = labels.completedScoreTag(result.score);
   const completedAtText = labels.completedAt(result.completedAt);
   const buttonText = labels.viewResult;
-  const ctaAriaLabel = `${buttonText} — ${result.title}`;
-  const badgeAriaLabel = labels.scoreAriaLabel(score);
+  const actionHref = `/jornada/${result.id}/resultado`;
+  const ctaAriaLabel = `${buttonText} — ${title}`;
+  const badgeAriaLabel = labels.scoreAriaLabel(result.score);
 
   return {
-    result,
-    score,
-    isHighScore,
-    isMediumScore,
-    isLowScore,
-    actionHref,
+    title,
+    domainLabel,
+    completedTagText,
     completedAtText,
+    actionHref,
     buttonText,
     ctaAriaLabel,
     badgeAriaLabel,
