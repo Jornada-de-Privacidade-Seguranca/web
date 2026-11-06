@@ -426,7 +426,26 @@
     "startErrorMessage": "Could not start the journey. Please try again.",
     "resumeCurrentJourneyLabel": "Continue current journey",
     "actionResume": "Continue journey",
-    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
+    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one.",
+    "profileSelection": {
+      "title": "Confirm your initial journey profile",
+      "description": "The journey profile {profile} will be your initial journey profile, used in your first journey.",
+      "lockedWarning": "This choice cannot be changed once you start.",
+      "cancel": "Cancel",
+      "confirm": "Confirm and start",
+      "confirming": "Starting...",
+      "retry": "Try again",
+      "mismatchNotice": "Your first journey must use the journey profile you chose: {profile}.",
+      "selectedProfileFallback": "the chosen journey profile",
+      "goToSelectedProfile": "Go to the chosen journey profile",
+      "errors": {
+        "selectionRequired": "Choose your initial journey profile before starting your first journey.",
+        "profileMismatch": "Your first journey must use the journey profile you chose.",
+        "selectionLocked": "You have already started a journey, so the initial journey profile can no longer be changed.",
+        "profileNotFound": "This journey profile was not found.",
+        "generic": "Could not save your initial journey profile. Please try again."
+      }
+    }
   },
   "questionnaire": {
     "header": {

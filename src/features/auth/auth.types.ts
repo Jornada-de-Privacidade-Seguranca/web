@@ -77,6 +77,10 @@ export interface AuthenticatedUserProfile {
   profile_type_id: number | null;
   profile_type_name: string | null;
   permissions?: PermissionCode[];
+  /** Perfil de jornada inicial salvo (FK_PERFIL_JORNADA); null até o usuário escolher */
+  journey_profile_id?: number | null;
+  journey_profile_name?: string | null;
+  journey_profile_name_en?: string | null;
 }
 
 /** Formato do usuário autenticado retornado por /auth/login, /auth/register e /me. */

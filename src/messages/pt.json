@@ -426,7 +426,26 @@
     "startErrorMessage": "Não foi possível iniciar a jornada. Tente novamente.",
     "resumeCurrentJourneyLabel": "Continuar jornada atual",
     "actionResume": "Continuar jornada",
-    "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova."
+    "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova.",
+    "profileSelection": {
+      "title": "Confirmar o perfil de jornada inicial",
+      "description": "O perfil de jornada {profile} será o seu perfil de jornada inicial, usado na sua primeira jornada.",
+      "lockedWarning": "Essa escolha não pode ser alterada depois que você começar.",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar e iniciar",
+      "confirming": "Iniciando...",
+      "retry": "Tentar novamente",
+      "mismatchNotice": "A sua primeira jornada precisa ser do perfil de jornada que você escolheu: {profile}.",
+      "selectedProfileFallback": "o perfil de jornada escolhido",
+      "goToSelectedProfile": "Ir para o perfil de jornada escolhido",
+      "errors": {
+        "selectionRequired": "Escolha o seu perfil de jornada inicial antes de começar a primeira jornada.",
+        "profileMismatch": "A primeira jornada precisa ser do perfil de jornada que você escolheu.",
+        "selectionLocked": "Você já começou uma jornada, então o perfil de jornada inicial não pode mais ser alterado.",
+        "profileNotFound": "Este perfil de jornada não foi encontrado.",
+        "generic": "Não foi possível salvar o perfil de jornada inicial. Tente novamente."
+      }
+    }
   },
   "questionnaire": {
     "header": {

@@ -114,6 +114,10 @@ describe("JourneySummaryView Component", () => {
     startingLabel: "Iniciando...",
     startErrorMessage: "Não foi possível iniciar a jornada. Tente novamente.",
     resumeCurrentJourneyLabel: "Continuar jornada atual",
+    profileSelectionTitle: "Confirmar o perfil de jornada inicial",
+    profileSelectionLockedWarning: "Essa escolha não pode ser alterada depois que você começar.",
+    profileSelectionCancel: "Cancelar",
+    profileSelectionConfirming: "Iniciando...",
   };
 
   function createMockVMReturn(
@@ -143,6 +147,16 @@ describe("JourneySummaryView Component", () => {
       isCtaDisabled: false,
       startError: null,
       journeyInProgressNotice: null,
+      profileSelection: {
+        isOpen: false,
+        isConfirming: false,
+        description: "O perfil de jornada Governança de Dados será o seu perfil de jornada inicial.",
+        error: null,
+        confirmLabel: "Confirmar e iniciar",
+        onConfirm: vi.fn(),
+        onCancel: vi.fn(),
+      },
+      initialProfileNotice: null,
       onStartJourney: vi.fn(),
       onResumeCurrentJourney: vi.fn(),
       onDismiss: vi.fn(),
@@ -246,6 +260,43 @@ describe("JourneySummaryView Component", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Continuar jornada atual" }));
     expect(onResume).toHaveBeenCalled();
+  });
+
+  it("deve exibir o diálogo do perfil de jornada inicial e repassar a confirmação", () => {
+    const onConfirm = vi.fn();
+    const base = createMockVMReturn();
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue({
+      ...base,
+      profileSelection: { ...base.profileSelection, isOpen: true, onConfirm },
+    });
+
+    renderView();
+
+    const dialog = screen.getByRole("alertdialog", { name: "Confirmar o perfil de jornada inicial" });
+    expect(within(dialog).getByText(/Governança de Dados será o seu perfil/)).toBeDefined();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar e iniciar" }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve exibir o aviso do perfil inicial com o link para o perfil escolhido", () => {
+    vi.spyOn(viewModelModule, "useJourneySummaryVM").mockReturnValue(
+      createMockVMReturn({
+        isCtaDisabled: true,
+        initialProfileNotice: {
+          message: "A sua primeira jornada precisa ser do perfil de jornada que você escolheu: Controlador.",
+          linkLabel: "Ir para o perfil de jornada escolhido",
+          href: "/jornada/perfil/5",
+        },
+      })
+    );
+
+    renderView();
+
+    expect(screen.getByText(/precisa ser do perfil de jornada que você escolheu: Controlador/)).toBeDefined();
+    const link = screen.getByRole("link", { name: "Ir para o perfil de jornada escolhido" });
+    expect(link.getAttribute("href")).toBe("/jornada/perfil/5");
+    const cta = screen.getByRole("button", { name: "Iniciar jornada — Governança de Dados" }) as HTMLButtonElement;
+    expect(cta.disabled).toBe(true);
   });
 
   it("deve exibir falhas ao iniciar como alerta", () => {
