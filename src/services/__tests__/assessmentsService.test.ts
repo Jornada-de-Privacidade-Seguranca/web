@@ -95,7 +95,7 @@ describe("assessmentsService", () => {
           status: "in_progress",
           href: "/jornada/atual/competencias/0",
           competenciesCount: 8,
-          estimatedMinutes: 20,
+          estimatedMinutes: 25,
           origin: "self_started",
           isSelfStarted: true,
         },
@@ -136,52 +136,100 @@ describe("assessmentsService", () => {
     expect(result.total).toBe(0);
   });
 
-  it("deve buscar o catálogo em /journey-profiles e mapear perfis para cards que levam ao resumo do perfil", async () => {
+  it("deve buscar o catálogo em /journey-profiles e mapear competências, tempo e status do perfil", async () => {
     const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
       mockResponse({
         success: true,
         data: [
           {
+            id: 1,
+            name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+            name_en: "Data Protection Officer",
+            description_pt: "Canal de comunicação",
+            description_en: "Communication channel",
+            type: 1,
+          },
+          {
             id: 4,
-            name_pt: "Titular",
-            name_en: "Data Subject",
-            description_pt: "Perfil do titular",
-            description_en: "Data subject profile",
+            name_pt: "Operador de Dados",
+            name_en: "Data Operator",
+            description_pt: "Tratamento de dados",
+            description_en: "Data processing",
             type: 1,
           },
         ],
         meta: {
-          pagination: { current_page: 2, per_page: 6, total: 18, last_page: 3, has_next_page: true },
+          pagination: { current_page: 1, per_page: 9, total: 2, last_page: 1, has_next_page: false },
         },
       })
     );
 
-    const result = await getCatalogAssessments({ page: 2, limit: 6, locale: "en" });
+    const result = await getCatalogAssessments({ page: 1, limit: 9, locale: "pt" });
 
     expect(requestSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/journey-profiles",
-        params: { page: 2, per_page: 6 },
+        params: { page: 1, per_page: 9 },
       })
     );
-    expect(result).toEqual({
-      items: [
-        {
-          id: "4",
-          title: "Data Subject",
-          description: "Data subject profile",
-          domain: "privacy",
-          competenciesCount: 10,
-          estimatedMinutes: 15,
-          status: "not_started",
-          href: "/jornada/perfil/4",
-        },
-      ],
-      total: 18,
-      page: 2,
-      limit: 6,
-      totalPages: 3,
+    expect(result.items).toHaveLength(2);
+
+    // Perfil 1 (Encarregado): concluído com nota e competências específicas
+    expect(result.items[0]).toEqual({
+      id: "1",
+      title: "Encarregado pelo Tratamento de Dados Pessoais",
+      description: "Canal de comunicação",
+      domain: "privacy",
+      competenciesCount: 14,
+      estimatedMinutes: 25,
+      status: "completed",
+      score: 88,
+      href: "/jornada/perfil/1",
     });
+
+    // Perfil 4 (Operador): não iniciado com quantidade de competências diferente
+    expect(result.items[1]).toEqual({
+      id: "4",
+      title: "Operador de Dados",
+      description: "Tratamento de dados",
+      domain: "privacy",
+      competenciesCount: 8,
+      estimatedMinutes: 15,
+      status: "not_started",
+      score: undefined,
+      href: "/jornada/perfil/4",
+    });
+  });
+
+  it("deve respeitar dados dinâmicos de competências e tempo quando providos no objeto", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 99,
+            name_pt: "Perfil Customizado",
+            name_en: "Custom Profile",
+            description_pt: "Desc",
+            description_en: "Desc",
+            type: 2,
+            competencies_count: 22,
+            estimated_minutes: 40,
+            user_status: "in_progress",
+            last_score: 91,
+          },
+        ],
+        meta: {
+          pagination: { current_page: 1, per_page: 9, total: 1, last_page: 1, has_next_page: false },
+        },
+      })
+    );
+
+    const result = await getCatalogAssessments({ page: 1, limit: 9 });
+    expect(result.items[0].competenciesCount).toBe(22);
+    expect(result.items[0].estimatedMinutes).toBe(40);
+    expect(result.items[0].status).toBe("in_progress");
+    expect(result.items[0].score).toBe(91);
   });
 
   it("deve lançar erro quando a resposta HTTP for status de erro (ex: 500)", async () => {

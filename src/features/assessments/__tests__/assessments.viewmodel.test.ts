@@ -264,5 +264,37 @@ describe("useAssessmentsVM", () => {
     expect(result.current.catalogJourneys).toHaveLength(1);
     expect(result.current.catalogJourneys[0].status).toBe("completed");
     expect(result.current.catalogJourneys[0].score).toBe(90);
+    expect(
+      result.current.labels.completedScoreBadge(result.current.catalogJourneys[0].score!)
+    ).toBe("Concluída · 90/100");
+
+    // Filtra por não iniciadas
+    act(() => {
+      result.current.handleToggleStatusFilter("completed");
+      result.current.handleToggleStatusFilter("not_started");
+    });
+    expect(result.current.catalogJourneys).toHaveLength(2);
+    expect(result.current.catalogJourneys.every((j) => j.status === "not_started")).toBe(true);
+  });
+
+  it("deve retornar mensagem amigável de t(errorMessage) quando as queries falharem", async () => {
+    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
+      new Error("Database connection refused")
+    );
+    vi.spyOn(assessmentsService, "getCatalogAssessments").mockRejectedValue(
+      new Error("500 Internal Server Error")
+    );
+
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isPendingLoading).toBe(false);
+      expect(result.current.isCatalogLoading).toBe(false);
+    });
+
+    expect(result.current.pendingError).toBe("Erro ao carregar dados do servidor.");
+    expect(result.current.catalogError).toBe("Erro ao carregar dados do servidor.");
   });
 });

@@ -20,20 +20,6 @@ import type {
 
 const CATALOG_PAGE_SIZE = 9;
 
-function formatErrorMessage(err: unknown, defaultMsg: string): string {
-  if (err instanceof Error) {
-    if (
-      err.message.includes("Failed to fetch") ||
-      err.message.includes("NetworkError") ||
-      err.message.includes("fetch failed")
-    ) {
-      return defaultMsg;
-    }
-    return err.message;
-  }
-  return defaultMsg;
-}
-
 /** Normaliza para busca: sem acentos, em minúsculas e sem espaços nas pontas. */
 function normalizeSearch(value: string): string {
   return value
@@ -62,7 +48,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   // Pagination State for Catalog
   const [catalogPage, setCatalogPage] = useState<number>(1);
 
-  // Cancellation Modal State (fictitious cancel for #148)
+  // Cancellation Modal State (simulação local para #148; integração real com backend na issue #121)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [isCancelledLocally, setIsCancelledLocally] = useState<boolean>(false);
 
@@ -104,7 +90,9 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     queryFn: () =>
       getCatalogAssessments({
         page: 1,
-        limit: 50, // Carrega todos os perfis do catálogo para filtrar e paginar no cliente com agilidade
+        // Limite máximo suportado pela API (100) para busca, filtros e paginação no cliente.
+        // A issue #98 moverá a paginação, busca e filtros diretamente para os parâmetros da API.
+        limit: 100,
         locale,
       }),
     placeholderData: keepPreviousData,
@@ -118,9 +106,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
       : null;
 
   const isPendingLoading = pendingQuery.isLoading || (!userId && isAuthLoading);
-  const pendingError = pendingQuery.isError
-    ? formatErrorMessage(pendingQuery.error, t("errorMessage"))
-    : null;
+  const pendingError = pendingQuery.isError ? t("errorMessage") : null;
 
   const hasPendingJourney = rawPendingJourney !== null;
 
@@ -176,9 +162,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   }, [filteredCatalogItems, catalogPage]);
 
   const isCatalogLoading = catalogQuery.isLoading;
-  const catalogError = catalogQuery.isError
-    ? formatErrorMessage(catalogQuery.error, t("errorMessage"))
-    : null;
+  const catalogError = catalogQuery.isError ? t("errorMessage") : null;
 
   // Handlers for filters
   const handleToggleDomainFilter = useCallback((domain: JourneyDomain) => {
