@@ -1,78 +1,30 @@
-import { apiRequest } from "@services/httpClient";
-import { env } from "@/shared/config/env";
+import { getInitials } from "@/shared/utils/initials";
+import type {
+  AdminUserListItem,
+  AccessProfile,
+  UserRole,
+  UserStatus,
+  GetUsersListParams,
+  PaginatedUsersResponse,
+  UserCompletedJourney,
+} from "@features/admin-users/adminUsers.types";
+import type {
+  AdminUserDetails,
+  UpdateUserPayload,
+} from "@features/admin-user-detail/adminUserDetail.types";
 
-export type UserStatus = "active" | "pending" | "inactive";
-export type UserRole = "admin" | "manager" | "user";
-
-export interface AdminUserListItem {
-  id: string;
-  name: string;
-  email: string;
-  initials: string;
-  employeeCode: string;
-  department: string;
-  role: UserRole;
-  roleLabel: string;
-  status: UserStatus;
-  journeysCount: number;
-  organization: string;
-  createdAt: string;
-}
-
-export interface AccessProfile {
-  id: UserRole;
-  name: string;
-  description: string;
-  isDefault?: boolean;
-  permissions: string[];
-}
-
-export interface UserCompletedJourney {
-  id: string;
-  title: string;
-  domain: "privacy" | "security" | "joint";
-  domainLabel: string;
-  completedAt: string;
-  score: number;
-}
-
-export interface AdminUserDetails extends AdminUserListItem {
-  journeys: UserCompletedJourney[];
-}
-
-export interface GetUsersListParams {
-  search?: string;
-  department?: string;
-  role?: string;
-  status?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface PaginatedUsersResponse {
-  items: AdminUserListItem[];
-  total: number;
-  filteredTotal: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface UpdateUserPayload {
-  name: string;
-  organization: string;
-  employeeCode: string;
-  email: string;
-  department: string;
-  role: UserRole;
-}
-
-export function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+export { getInitials };
+export type {
+  AdminUserListItem,
+  AccessProfile,
+  UserRole,
+  UserStatus,
+  GetUsersListParams,
+  PaginatedUsersResponse,
+  UserCompletedJourney,
+  AdminUserDetails,
+  UpdateUserPayload,
+};
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
   {
@@ -80,11 +32,16 @@ export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
     name: "Administrador",
     description: "Acesso total à gestão de usuários, configurações e relatórios corporativos.",
     permissions: [
-      "Visualizar e gerenciar todos os usuários",
-      "Alterar perfis de acesso e permissões",
-      "Ativar, desativar e excluir contas",
-      "Visualizar relatórios gerais e individuais de jornadas",
-      "Configurar parâmetros do sistema",
+      "users.manage",
+      "users.view",
+      "users.register",
+      "users.deactivate",
+      "users.change_profile",
+      "results.view_all",
+      "results.view_own",
+      "journeys.assign",
+      "journeys.take",
+      "catalog.manage",
     ],
   },
   {
@@ -92,10 +49,11 @@ export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
     name: "Gestor",
     description: "Acompanhamento de equipes e atribuição de jornadas de capacitação.",
     permissions: [
-      "Visualizar usuários do seu setor",
-      "Acompanhar resultados e progresso de jornadas da equipe",
-      "Atribuir trilhas de capacitação",
-      "Exportar relatórios setoriais",
+      "users.view",
+      "results.view_all",
+      "journeys.assign",
+      "journeys.take",
+      "results.view_own",
     ],
   },
   {
@@ -104,9 +62,8 @@ export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
     description: "Perfil padrão atribuído a todos os colaboradores ao se cadastrarem.",
     isDefault: true,
     permissions: [
-      "Acessar e responder jornadas disponíveis",
-      "Visualizar histórico e notas de resultados pessoais",
-      "Editar dados cadastrais próprios no perfil",
+      "journeys.take",
+      "results.view_own",
     ],
   },
 ];
@@ -128,7 +85,7 @@ let mockUsersData: AdminUserDetails[] = [
     journeys: [
       {
         id: "j-1",
-        title: "Fundamentos de LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-03-12T14:30:00Z",
@@ -136,7 +93,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-2",
-        title: "Segurança de Senhas e Acessos",
+        title: "Gestor de Segurança da Informação",
         domain: "security",
         domainLabel: "Segurança da Informação",
         completedAt: "2026-04-05T09:15:00Z",
@@ -144,7 +101,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-3",
-        title: "Prevenção contra Phishing",
+        title: "Membro de Equipe de Resposta a Incidentes",
         domain: "security",
         domainLabel: "Segurança da Informação",
         completedAt: "2026-05-18T16:00:00Z",
@@ -152,7 +109,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-4",
-        title: "Governança de Dados Corporativos",
+        title: "Auditor de Conformidade e Segurança",
         domain: "joint",
         domainLabel: "Conjunta",
         completedAt: "2026-05-28T11:00:00Z",
@@ -176,7 +133,7 @@ let mockUsersData: AdminUserDetails[] = [
     journeys: [
       {
         id: "j-1",
-        title: "Fundamentos de LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-04-20T10:00:00Z",
@@ -184,7 +141,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-5",
-        title: "Gestão de Incidentes de Privacidade",
+        title: "Controlador",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-05-10T15:45:00Z",
@@ -208,7 +165,7 @@ let mockUsersData: AdminUserDetails[] = [
     journeys: [
       {
         id: "j-1",
-        title: "Fundamentos de LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-05-02T16:20:00Z",
@@ -262,7 +219,7 @@ let mockUsersData: AdminUserDetails[] = [
     journeys: [
       {
         id: "j-2",
-        title: "Segurança de Senhas e Acessos",
+        title: "Gestor de Segurança da Informação",
         domain: "security",
         domainLabel: "Segurança da Informação",
         completedAt: "2026-04-25T11:00:00Z",
@@ -270,7 +227,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-3",
-        title: "Prevenção contra Phishing",
+        title: "Membro de Equipe de Resposta a Incidentes",
         domain: "security",
         domainLabel: "Segurança da Informação",
         completedAt: "2026-05-12T14:10:00Z",
@@ -278,7 +235,7 @@ let mockUsersData: AdminUserDetails[] = [
       },
       {
         id: "j-4",
-        title: "Governança de Dados Corporativos",
+        title: "Auditor de Conformidade e Segurança",
         domain: "joint",
         domainLabel: "Conjunta",
         completedAt: "2026-05-29T17:30:00Z",
@@ -302,7 +259,7 @@ let mockUsersData: AdminUserDetails[] = [
     journeys: [
       {
         id: "j-1",
-        title: "Fundamentos de LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-05-18T10:30:00Z",
@@ -336,172 +293,97 @@ export async function getUsersList(
     role = "",
     status = "",
     page = 1,
-    limit = 6,
+    limit = params.per_page ?? 6,
   } = params;
 
-  try {
-    return await apiRequest<PaginatedUsersResponse>(
-      "/admin/users",
-      {
-        params: {
-          ...(search.trim() ? { search: search.trim() } : {}),
-          ...(department ? { department } : {}),
-          ...(role ? { role } : {}),
-          ...(status ? { status } : {}),
-          page,
-          limit,
-        },
-      },
-      "Erro ao carregar a listagem de usuários."
+  let filtered = [...mockUsersData];
+
+  if (search.trim()) {
+    const query = search.trim().toLowerCase();
+    filtered = filtered.filter(
+      (u) =>
+        u.name.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query) ||
+        u.employeeCode.toLowerCase().includes(query)
     );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      let filtered = [...mockUsersData];
-
-      if (search.trim()) {
-        const query = search.trim().toLowerCase();
-        filtered = filtered.filter(
-          (u) =>
-            u.name.toLowerCase().includes(query) ||
-            u.email.toLowerCase().includes(query) ||
-            u.employeeCode.toLowerCase().includes(query)
-        );
-      }
-
-      if (department) {
-        filtered = filtered.filter((u) => u.department === department);
-      }
-
-      if (role) {
-        filtered = filtered.filter((u) => u.role === role);
-      }
-
-      if (status) {
-        filtered = filtered.filter((u) => u.status === status);
-      }
-
-      const startIndex = (page - 1) * limit;
-      const paginatedItems = filtered.slice(startIndex, startIndex + limit);
-      const totalPages = Math.ceil(filtered.length / limit) || 1;
-
-      return {
-        items: paginatedItems,
-        total: mockUsersData.length,
-        filteredTotal: filtered.length,
-        page,
-        limit,
-        totalPages,
-      };
-    }
-    throw err;
   }
+
+  if (department) {
+    filtered = filtered.filter((u) => u.department === department);
+  }
+
+  if (role) {
+    filtered = filtered.filter((u) => u.role === role);
+  }
+
+  if (status) {
+    filtered = filtered.filter((u) => u.status === status);
+  }
+
+  const startIndex = (page - 1) * limit;
+  const paginatedItems = filtered.slice(startIndex, startIndex + limit);
+  const totalPages = Math.ceil(filtered.length / limit) || 1;
+
+  return {
+    items: paginatedItems,
+    total: mockUsersData.length,
+    filteredTotal: filtered.length,
+    page,
+    limit,
+    totalPages,
+  };
 }
 
 export async function getUserById(id: string): Promise<AdminUserDetails> {
-  try {
-    return await apiRequest<AdminUserDetails>(
-      `/admin/users/${id}`,
-      {},
-      "Erro ao carregar os dados do usuário."
-    );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      const found = mockUsersData.find((u) => u.id === id);
-      if (found) return found;
-      // Fallback para novo id ou primeiro usuário
-      return mockUsersData[0];
-    }
-    throw err;
-  }
+  const found = mockUsersData.find((u) => u.id === id);
+  if (found) return found;
+  if (mockUsersData.length > 0) return mockUsersData[0];
+  throw new Error("Usuário não encontrado");
 }
 
 export async function updateUser(
   id: string,
   payload: UpdateUserPayload
 ): Promise<AdminUserDetails> {
-  try {
-    return await apiRequest<AdminUserDetails>(
-      `/admin/users/${id}`,
-      { method: "put", data: payload, withCsrf: true },
-      "Erro ao atualizar o usuário."
-    );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      const roleLabelMap: Record<UserRole, string> = {
-        admin: "Administrador",
-        manager: "Gestor",
-        user: "Usuário",
-      };
+  const roleLabelMap: Record<UserRole, string> = {
+    admin: "Administrador",
+    manager: "Gestor",
+    user: "Usuário",
+  };
 
-      const index = mockUsersData.findIndex((u) => u.id === id);
-      if (index !== -1) {
-        mockUsersData[index] = {
-          ...mockUsersData[index],
-          ...payload,
-          initials: getInitials(payload.name),
-          roleLabel: roleLabelMap[payload.role] || "Usuário",
-        };
-        return mockUsersData[index];
-      }
-      throw new Error("Usuário não encontrado");
-    }
-    throw err;
+  const index = mockUsersData.findIndex((u) => u.id === id);
+  if (index !== -1) {
+    mockUsersData[index] = {
+      ...mockUsersData[index],
+      ...payload,
+      initials: getInitials(payload.name),
+      roleLabel: roleLabelMap[payload.role] || "Usuário",
+    };
+    return mockUsersData[index];
   }
+  throw new Error("Usuário não encontrado");
 }
 
 export async function toggleUserStatus(
   id: string,
   newStatus: UserStatus
 ): Promise<AdminUserDetails> {
-  try {
-    return await apiRequest<AdminUserDetails>(
-      `/admin/users/${id}/status`,
-      { method: "patch", data: { status: newStatus }, withCsrf: true },
-      "Erro ao alterar o status do usuário."
-    );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      const index = mockUsersData.findIndex((u) => u.id === id);
-      if (index !== -1) {
-        mockUsersData[index] = {
-          ...mockUsersData[index],
-          status: newStatus,
-        };
-        return mockUsersData[index];
-      }
-      throw new Error("Usuário não encontrado");
-    }
-    throw err;
+  const index = mockUsersData.findIndex((u) => u.id === id);
+  if (index !== -1) {
+    mockUsersData[index] = {
+      ...mockUsersData[index],
+      status: newStatus,
+    };
+    return mockUsersData[index];
   }
+  throw new Error("Usuário não encontrado");
 }
 
 export async function deleteUser(id: string): Promise<{ success: boolean }> {
-  try {
-    return await apiRequest<{ success: boolean }>(
-      `/admin/users/${id}`,
-      { method: "delete", withCsrf: true },
-      "Erro ao excluir o usuário."
-    );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      mockUsersData = mockUsersData.filter((u) => u.id !== id);
-      return { success: true };
-    }
-    throw err;
-  }
+  mockUsersData = mockUsersData.filter((u) => u.id !== id);
+  return { success: true };
 }
 
 export async function getAccessProfiles(): Promise<AccessProfile[]> {
-  try {
-    return await apiRequest<AccessProfile[]>(
-      "/admin/roles",
-      {},
-      "Erro ao carregar os perfis de acesso."
-    );
-  } catch (err: unknown) {
-    if (env.isDev || process.env.NODE_ENV === "test") {
-      return MOCK_ACCESS_PROFILES;
-    }
-    throw err;
-  }
+  return MOCK_ACCESS_PROFILES;
 }

@@ -53,7 +53,7 @@ describe("useAdminUserDetailVM", () => {
     journeys: [
       {
         id: "j1",
-        title: "Fundamentos LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         domain: "privacy",
         domainLabel: "Privacidade",
         completedAt: "2026-03-01",
@@ -227,5 +227,34 @@ describe("useAdminUserDetailVM", () => {
 
     expect(deleteSpy).toHaveBeenCalledWith("1");
     expect(pushMock).toHaveBeenCalledWith("/admin/usuarios");
+  });
+
+  it("falha ao ler ou gravar o localStorage não pode quebrar a tela", async () => {
+    vi.spyOn(usersService, "getUserById").mockResolvedValue(mockUser);
+
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("SecurityError: Access is denied");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("SecurityError: Access is denied");
+    });
+
+    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "1" }), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user?.name).toBe("Ana Silva");
+
+    expect(() => {
+      act(() => {
+        result.current.handleDontShowAgain();
+      });
+    }).not.toThrow();
+
+    expect(result.current.showInactiveBanner).toBe(false);
   });
 });

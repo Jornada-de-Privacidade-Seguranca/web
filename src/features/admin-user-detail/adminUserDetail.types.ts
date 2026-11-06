@@ -1,10 +1,22 @@
 import type {
-  AdminUserDetails,
+  AdminUserListItem,
   UserCompletedJourney,
   UserRole,
   UserStatus,
-  UpdateUserPayload,
-} from "@services/usersService";
+} from "@features/admin-users/adminUsers.types";
+
+export interface AdminUserDetails extends AdminUserListItem {
+  journeys: UserCompletedJourney[];
+}
+
+export interface UpdateUserPayload {
+  name: string;
+  organization: string;
+  employeeCode: string;
+  email: string;
+  department: string;
+  role: UserRole;
+}
 
 export interface UserFormValues {
   name: string;
@@ -116,4 +128,4 @@ export interface AdminUserDetailViewModelReturn {
   labels: AdminUserDetailLabels;
 }
 
-export type { AdminUserDetails, UserCompletedJourney, UserRole, UserStatus, UpdateUserPayload };
+export type { UserCompletedJourney, UserRole, UserStatus };

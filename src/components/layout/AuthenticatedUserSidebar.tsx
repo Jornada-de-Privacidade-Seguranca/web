@@ -19,16 +19,10 @@ import { KeyboardEvent, PropsWithChildren, useEffect, useRef } from "react";
 import { usePathname } from "@/shared/i18n/navigation";
 import { useIsMobile } from "@/hooks/useMobile";
 import { SIDEBAR_ID } from "@/shared/constants/sidebar";
+import { getInitials } from "@/shared/utils/initials";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 function useSidebarVM() {
   const isDesktopExpanded = useSidebarStore((state) => state.isExpanded);

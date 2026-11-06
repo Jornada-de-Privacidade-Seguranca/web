@@ -167,10 +167,21 @@ export function useAdminUserDetailVM({
 
   // Banner logic
   const storageKey = `admin_dont_show_inactive_banner_${userId}`;
-  const isPermanentlyDismissed =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem(storageKey) === "true"
-      : false;
+  const [isPermanentlyDismissed, setIsPermanentlyDismissed] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem(storageKey);
+        if (stored === "true") {
+          setIsPermanentlyDismissed(true);
+        }
+      }
+    } catch {
+      // Ignora erro de acesso ao localStorage (ex: modo restrito)
+    }
+  }, [storageKey]);
 
   const showInactiveBanner =
     user?.status === "inactive" &&
@@ -182,9 +193,14 @@ export function useAdminUserDetailVM({
   }, []);
 
   const handleDontShowAgain = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(storageKey, "true");
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(storageKey, "true");
+      }
+    } catch {
+      // Ignora erro ao salvar no localStorage
     }
+    setIsPermanentlyDismissed(true);
     setIsBannerDismissed(true);
   }, [storageKey]);
 

@@ -32,11 +32,12 @@ describe("usersService", () => {
     expect(result.items.every((u) => u.department === "Jurídico")).toBe(true);
   });
 
-  it("deve retornar um usuário por id e seus detalhes", async () => {
+  it("deve retornar um usuário por id e seus detalhes com jornadas reais", async () => {
     const user = await getUserById("1");
     expect(user).toBeDefined();
     expect(user.id).toBe("1");
     expect(user.name).toBe("Ana Beatriz Silva");
+    expect(user.journeys[0].title).toBe("Encarregado pelo Tratamento de Dados Pessoais");
   });
 
   it("deve atualizar os dados de um usuário", async () => {
@@ -64,9 +65,17 @@ describe("usersService", () => {
     expect(res.success).toBe(true);
   });
 
-  it("deve retornar a lista de perfis de acesso", async () => {
+  it("deve retornar a lista de perfis de acesso com as permissões da #132", async () => {
     const profiles = await getAccessProfiles();
     expect(profiles.length).toBe(3);
-    expect(profiles.find((p) => p.isDefault)?.id).toBe("user");
+
+    const admin = profiles.find((p) => p.id === "admin");
+    expect(admin?.permissions).toContain("users.manage");
+    expect(admin?.permissions).toContain("catalog.manage");
+    expect(admin?.permissions).toContain("results.view_all");
+
+    const user = profiles.find((p) => p.id === "user");
+    expect(user?.isDefault).toBe(true);
+    expect(user?.permissions).toEqual(["journeys.take", "results.view_own"]);
   });
 });
