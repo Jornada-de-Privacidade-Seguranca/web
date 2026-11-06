@@ -27,10 +27,8 @@ const EMPTY_MODEL: Omit<JourneyResultModel, "score"> = {
   journeyTitle: "",
   declaredCount: 0,
   totalCompetencies: 0,
-  categoryScores: null,
   isJointJourney: false,
   areaScoreGroups: [],
-  professionalProfile: { fields: [], courseGroups: [], certifications: [] },
   declaredCompetencies: [],
   undeclaredCompetencies: [],
 };
@@ -59,13 +57,6 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
       groupCountText: (count) => t("competencies.groupCount", { count }),
       otherAreaLabel: t("areas.otherAreaLabel"),
       otherDomainLabel: t("areas.otherDomainLabel"),
-      otherCoursesLabel: t("profile.otherCourses"),
-      notProvided: t("profile.notProvided"),
-      fieldLabels: {
-        professional_experience: t("profile.professionalExperience"),
-        english_proficiency: t("profile.englishProficiency"),
-        profile_experience: t("profile.profileExperience"),
-      },
     }),
     [isEnglish, t]
   );
@@ -112,23 +103,11 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
     }),
     retakeButton: t("retakeButton"),
     backButton: t("backButton"),
-    categories: {
-      eyebrow: t("categories.eyebrow"),
-      title: t("categories.title"),
-    },
     areas: {
       eyebrow: t("areas.eyebrow"),
       title: t("areas.title"),
       recommendation: t("areas.recommendation"),
       markerAriaLabel: t("areas.markerAriaLabel", { value: RECOMMENDED_AREA_SCORE }),
-    },
-    profile: {
-      eyebrow: t("profile.eyebrow"),
-      title: t("profile.title"),
-      coursesTitle: t("profile.coursesTitle"),
-      certificationsTitle: t("profile.certificationsTitle"),
-      noCourses: t("profile.noCourses"),
-      noCertifications: t("profile.noCertifications"),
     },
     competencies: {
       eyebrow: t("competencies.eyebrow"),

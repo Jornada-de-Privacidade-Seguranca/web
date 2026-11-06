@@ -492,10 +492,6 @@
       "medium": "Médio",
       "weak": "A desenvolver"
     },
-    "categories": {
-      "eyebrow": "Pontuação ponderada",
-      "title": "Pontuação por Categoria"
-    },
     "areas": {
       "eyebrow": "Detalhamento por área de conhecimento",
       "title": "Conhecimentos adquiridos",
@@ -504,19 +500,6 @@
       "markerAriaLabel": "Mínimo recomendado: {value}",
       "otherAreaLabel": "Outras competências",
       "otherDomainLabel": "Outros domínios"
-    },
-    "profile": {
-      "eyebrow": "Perfil profissional",
-      "title": "Dados informados no pré-questionário",
-      "professionalExperience": "Tempo de experiência profissional",
-      "englishProficiency": "Nível de proficiência em inglês",
-      "profileExperience": "Tempo de atuação no perfil",
-      "coursesTitle": "Formação acadêmica",
-      "certificationsTitle": "Certificações profissionais",
-      "otherCourses": "Outros cursos",
-      "notProvided": "Não informado",
-      "noCourses": "Nenhum curso informado",
-      "noCertifications": "Nenhuma certificação informada"
     },
     "competencies": {
       "eyebrow": "Respostas do questionário",

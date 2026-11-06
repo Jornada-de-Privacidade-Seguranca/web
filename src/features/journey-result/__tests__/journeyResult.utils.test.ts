@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  buildCategoryScores,
   buildJourneyResultModel,
   buildScoreValue,
   calculateAreaScore,
@@ -20,13 +19,6 @@ const formatters: JourneyResultFormatters = {
   groupCountText: (count) => `${count} competências`,
   otherAreaLabel: "Outras competências",
   otherDomainLabel: "Outros domínios",
-  otherCoursesLabel: "Outros cursos",
-  notProvided: "Não informado",
-  fieldLabels: {
-    professional_experience: "Tempo de experiência profissional",
-    english_proficiency: "Nível de proficiência em inglês",
-    profile_experience: "Tempo de atuação no perfil",
-  },
 };
 
 describe("journeyResult.utils", () => {
@@ -167,22 +159,17 @@ describe("journeyResult.utils", () => {
       expect(withoutArea.difficulty).toBeNull();
     });
 
-    it("deve resumir o perfil profissional, com 'Não informado' nos itens ausentes", () => {
-      expect(model.professionalProfile.fields.map((field) => field.value)).toEqual([
-        "Entre 1 e 3 anos",
-        "Não informado",
-        "Entre 4 e 6 anos",
+    it("deve montar só a nota geral e as competências, sem os dados do pré-questionário", () => {
+      expect(Object.keys(model).sort()).toEqual([
+        "areaScoreGroups",
+        "declaredCompetencies",
+        "declaredCount",
+        "isJointJourney",
+        "journeyTitle",
+        "score",
+        "totalCompetencies",
+        "undeclaredCompetencies",
       ]);
-      expect(
-        model.professionalProfile.courseGroups.map((group) => [
-          group.name,
-          group.courses.map((course) => course.name),
-        ])
-      ).toEqual([
-        ["Graduação", ["Ciência da Computação", "Sistemas de Informação"]],
-        ["Mestrado", ["Segurança Cibernética"]],
-      ]);
-      expect(model.professionalProfile.certifications).toEqual([{ id: 1, name: "CIPP/E" }]);
     });
 
     it("deve usar os nomes em inglês quando o idioma for EN", () => {
@@ -193,36 +180,6 @@ describe("journeyResult.utils", () => {
 
       expect(english.journeyTitle).toBe("Data Protection Officer");
       expect(english.areaScoreGroups[0].title).toBe("Privacy");
-      expect(english.professionalProfile.fields[0].value).toBe("Between 1 and 3 years");
-    });
-  });
-
-  describe("buildCategoryScores", () => {
-    it("deve retornar null enquanto o backend não enviar score_breakdown", () => {
-      expect(buildCategoryScores(buildJourney(), formatters)).toBeNull();
-      expect(buildCategoryScores(buildJourney({ score_breakdown: [] }), formatters)).toBeNull();
-    });
-
-    it("deve montar a nota de cada categoria", () => {
-      const journey = buildJourney({
-        score_breakdown: [
-          {
-            category: "professional_experience",
-            name_pt: "Experiência profissional",
-            name_en: "Professional experience",
-            score: 66.7,
-          },
-        ],
-      });
-
-      expect(buildCategoryScores(journey, formatters)).toEqual([
-        {
-          id: "professional_experience",
-          name: "Experiência profissional",
-          score: { value: 67, band: "medium", bandLabel: "Médio" },
-          scoreAriaLabel: "Experiência profissional: Médio, 67 de 100",
-        },
-      ]);
     });
   });
 });
