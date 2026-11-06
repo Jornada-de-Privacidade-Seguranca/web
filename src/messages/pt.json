@@ -266,10 +266,15 @@
     "closeMessage": "Fechar mensagem",
     "validation": {
       "nameRequired": "O nome completo é obrigatório.",
+      "nameLastName": "Informe nome e sobrenome.",
+      "nameMaxLength": "O nome deve ter no máximo 50 caracteres.",
       "organizationRequired": "O órgão/empresa é obrigatório.",
+      "organizationMaxLength": "O órgão/empresa deve ter no máximo 100 caracteres.",
       "emailRequired": "O e-mail é obrigatório.",
       "emailInvalid": "Informe um e-mail válido.",
+      "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
       "departmentRequired": "O setor é obrigatório.",
+      "departmentMaxLength": "O setor deve ter no máximo 100 caracteres.",
       "employeeCodeImmutable": "O código de funcionário não pode ser alterado."
     },
     "preferencesTitle": "Preferências",

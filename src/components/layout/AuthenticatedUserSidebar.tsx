@@ -177,8 +177,7 @@ function useSidebarVM() {
       label: t("sidebar.profile"),
       icon: UserIcon,
       href: "/perfil",
-      active:
-        pathname.startsWith("/perfil") || pathname.startsWith("/profile"),
+      active: pathname.startsWith("/perfil"),
       disabled: false,
     },
     {

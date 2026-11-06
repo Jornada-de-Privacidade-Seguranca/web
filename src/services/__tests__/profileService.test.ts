@@ -1,25 +1,19 @@
-import type { AxiosResponse } from "axios";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { axiosInstance, clearCsrfToken } from "../httpClient";
-import { getUserProfile, updateUserProfile } from "../profileService";
+import { beforeEach, describe, expect, it } from "vitest";
+import type { AuthenticatedUser } from "@features/auth/auth.types";
+import {
+  getUserProfile,
+  updateUserProfile,
+  resetProfileMock,
+  createDefaultProfileMock,
+} from "../profileService";
 
-function mockResponse<T>(data: T): AxiosResponse<T> {
-  return {
-    data,
-    status: 200,
-    statusText: "OK",
-    headers: {},
-    config: {} as AxiosResponse["config"],
-  };
-}
-
-const user = {
-  id: 8,
+const mockAuthUser: AuthenticatedUser = {
+  id: 1,
   name: "Joana Lima",
-  email: "joana@example.com",
-  role: "common_user" as const,
+  email: "joana@tre.gov.br",
+  role: "common_user",
   profile: {
-    role: "common_user" as const,
+    role: "common_user",
     label: "Colaboradora",
     user_type_id: 1,
     profile_type_id: 1,
@@ -28,69 +22,80 @@ const user = {
   active_status: 1,
 };
 
-const data = {
-  user: {
-    name: "Joana Lima",
-    organization: "Empresa Exemplo",
-    email: "joana@example.com",
-    employeeCode: "8-A",
-    department: "Segurança",
-  },
-  activity: {
-    completedJourneys: 2,
-    inProgressJourneys: 1,
-    averageByDomain: { privacy: 70, security: 80, combined: 75 },
-  },
-};
-
 describe("profileService", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    clearCsrfToken();
+    resetProfileMock();
   });
 
-  it("unwraps the standard API response envelope for profile GET", async () => {
-    const request = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, data }));
+  it("returns mock profile matching #152 format with organization, department, employeeCode", async () => {
+    const profile = await getUserProfile(mockAuthUser);
 
-    await expect(getUserProfile(user)).resolves.toEqual(data);
-    expect(request).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/profile" }),
-    );
-  });
-
-  it("updates with editable values only and unwraps the response", async () => {
-    const request = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(
-        mockResponse({
-          success: true,
-          data: { csrf_token: "test-csrf-token" },
-        }),
-      )
-      .mockResolvedValueOnce(mockResponse({ success: true, data }));
-
-    await expect(
-      updateUserProfile(user, data, {
-        name: "Joana Souza",
-        organization: "Nova Empresa",
-        email: "joana.souza@example.com",
-        department: "Privacidade",
-      }),
-    ).resolves.toEqual(data);
-    expect(request).toHaveBeenNthCalledWith(
-      2,
+    expect(profile).toBeDefined();
+    expect(profile.user).toEqual(
       expect.objectContaining({
-        url: "/profile",
-        method: "put",
-        data: {
-          name: "Joana Souza",
-          organization: "Nova Empresa",
-          email: "joana.souza@example.com",
-          department: "Privacidade",
-        },
+        name: "Joana Lima",
+        email: "joana@tre.gov.br",
+        organization: "Tribunal Regional Eleitoral",
+        department: "Tecnologia da Informação",
+        employeeCode: "TRE-2026-0842",
       }),
     );
+    expect(profile.activity).toEqual({
+      completedJourneys: 0,
+      inProgressJourneys: 0,
+      averageByDomain: {
+        privacy: 0,
+        security: 0,
+        combined: 0,
+      },
+    });
+  });
+
+  it("creates default mock when optional user is not fully populated", () => {
+    const defaultProfile = createDefaultProfileMock();
+    expect(defaultProfile.user.name).toBe("Administrador do Sistema");
+    expect(defaultProfile.user.email).toBe("admin@tre.gov.br");
+    expect(defaultProfile.user.organization).toBe("Tribunal Regional Eleitoral");
+    expect(defaultProfile.user.department).toBe("Tecnologia da Informação");
+  });
+
+  it("updates editable profile fields in memory and preserves employeeCode", async () => {
+    const initialProfile = await getUserProfile(mockAuthUser);
+
+    const updatedProfile = await updateUserProfile(mockAuthUser, initialProfile, {
+      name: "Joana Souza",
+      organization: "Novo Órgão",
+      email: "joana.souza@tre.gov.br",
+      department: "Segurança da Informação",
+    });
+
+    expect(updatedProfile.user).toEqual({
+      name: "Joana Souza",
+      organization: "Novo Órgão",
+      email: "joana.souza@tre.gov.br",
+      department: "Segurança da Informação",
+      employeeCode: "TRE-2026-0842",
+    });
+
+    // Subsequente chamada de getUserProfile reflete a atualização
+    const fetchedAgain = await getUserProfile(mockAuthUser);
+    expect(fetchedAgain.user.name).toBe("Joana Souza");
+    expect(fetchedAgain.user.organization).toBe("Novo Órgão");
+  });
+
+  it("throws error when authenticatedUser is missing", async () => {
+    // @ts-expect-error test invalid param
+    await expect(getUserProfile(undefined)).rejects.toThrow(
+      "Usuário autenticado não informado.",
+    );
+
+    const initial = await getUserProfile(mockAuthUser);
+    // @ts-expect-error test invalid param
+    await expect(updateUserProfile(undefined, initial, {
+      name: "Teste",
+      organization: "Org",
+      email: "teste@teste.com",
+      department: "Dept",
+    })).rejects.toThrow("Usuário autenticado não informado.");
   });
 });

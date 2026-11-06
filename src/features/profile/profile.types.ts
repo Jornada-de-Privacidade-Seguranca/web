@@ -71,10 +71,15 @@ export interface ProfileLabels {
   closeMessage: string;
   validation: {
     nameRequired: string;
+    nameLastName: string;
+    nameMaxLength: string;
     organizationRequired: string;
+    organizationMaxLength: string;
     emailRequired: string;
     emailInvalid: string;
+    emailMaxLength: string;
     departmentRequired: string;
+    departmentMaxLength: string;
     employeeCodeImmutable: string;
   };
   preferencesTitle: string;

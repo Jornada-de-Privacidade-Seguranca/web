@@ -162,6 +162,34 @@ describe("useProfileVM", () => {
     ).toBe("profile.validation.employeeCodeImmutable");
   });
 
+  it("validates first and last name, and maximum character lengths", async () => {
+    const updateSpy = vi.spyOn(profileService, "updateUserProfile");
+    const { result } = renderHook(() => useProfileVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+
+    await act(async () => {
+      result.current.handleEdit();
+      result.current.form.setValue("name", "ApenasUmNome");
+      result.current.form.setValue("organization", "A".repeat(101));
+      result.current.form.setValue("department", "B".repeat(101));
+      await result.current.handleSubmit();
+    });
+
+    expect(updateSpy).not.toHaveBeenCalled();
+    expect(result.current.form.getFieldState("name").error?.message).toBe(
+      "profile.validation.nameLastName",
+    );
+    expect(result.current.form.getFieldState("organization").error?.message).toBe(
+      "profile.validation.organizationMaxLength",
+    );
+    expect(result.current.form.getFieldState("department").error?.message).toBe(
+      "profile.validation.departmentMaxLength",
+    );
+  });
+
   it.each([
     [401, "profile.unauthorizedError"],
     [500, "profile.serverError"],

@@ -31,10 +31,16 @@ export function MetricsGrid({
           key={item.id}
           className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-sm backdrop-blur-xl"
         >
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h3
+            id={`metric-${item.id}-label`}
+            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
             {item.label}
           </h3>
-          <p className="mt-2 font-heading text-4xl font-extrabold tracking-tight text-foreground">
+          <p
+            aria-labelledby={`metric-${item.id}-label`}
+            className="mt-2 font-heading text-4xl font-extrabold tracking-tight text-foreground"
+          >
             {item.value}
           </p>
         </article>

@@ -266,10 +266,15 @@
     "closeMessage": "Close message",
     "validation": {
       "nameRequired": "Full name is required.",
+      "nameLastName": "Enter your first and last name.",
+      "nameMaxLength": "Name must have at most 50 characters.",
       "organizationRequired": "Organization/company is required.",
+      "organizationMaxLength": "Organization/company must have at most 100 characters.",
       "emailRequired": "Email is required.",
       "emailInvalid": "Enter a valid email address.",
+      "emailMaxLength": "Email must have at most 100 characters.",
       "departmentRequired": "Department is required.",
+      "departmentMaxLength": "Department must have at most 100 characters.",
       "employeeCodeImmutable": "The employee code cannot be changed."
     },
     "preferencesTitle": "Preferences",

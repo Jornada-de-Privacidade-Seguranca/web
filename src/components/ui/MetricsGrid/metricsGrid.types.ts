@@ -7,6 +7,6 @@ export interface MetricsGridItem {
 export interface MetricsGridProps {
   items: MetricsGridItem[];
   isLoading?: boolean;
-  loadingLabel: string;
+  loadingLabel?: string;
   className?: string;
 }

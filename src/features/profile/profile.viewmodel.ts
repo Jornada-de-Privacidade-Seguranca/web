@@ -19,6 +19,8 @@ import type {
   ProfileViewModelReturn,
 } from "./profile.types";
 
+const FULL_NAME_PATTERN = /^\S+\s+\S+/u;
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "";
@@ -69,10 +71,15 @@ export function useProfileVM(): ProfileViewModelReturn {
     closeMessage: t("closeMessage"),
     validation: {
       nameRequired: t("validation.nameRequired"),
+      nameLastName: t("validation.nameLastName"),
+      nameMaxLength: t("validation.nameMaxLength"),
       organizationRequired: t("validation.organizationRequired"),
+      organizationMaxLength: t("validation.organizationMaxLength"),
       emailRequired: t("validation.emailRequired"),
       emailInvalid: t("validation.emailInvalid"),
+      emailMaxLength: t("validation.emailMaxLength"),
       departmentRequired: t("validation.departmentRequired"),
+      departmentMaxLength: t("validation.departmentMaxLength"),
       employeeCodeImmutable: t("validation.employeeCodeImmutable"),
     },
     preferencesTitle: t("preferencesTitle"),
@@ -101,21 +108,29 @@ export function useProfileVM(): ProfileViewModelReturn {
     () =>
       z
         .object({
-          name: z.string().trim().min(1, labels.validation.nameRequired),
+          name: z
+            .string()
+            .trim()
+            .min(1, labels.validation.nameRequired)
+            .regex(FULL_NAME_PATTERN, labels.validation.nameLastName)
+            .max(50, labels.validation.nameMaxLength),
           organization: z
             .string()
             .trim()
-            .min(1, labels.validation.organizationRequired),
+            .min(1, labels.validation.organizationRequired)
+            .max(100, labels.validation.organizationMaxLength),
           email: z
             .string()
             .trim()
             .min(1, labels.validation.emailRequired)
-            .email(labels.validation.emailInvalid),
+            .email(labels.validation.emailInvalid)
+            .max(100, labels.validation.emailMaxLength),
           employeeCode: z.string(),
           department: z
             .string()
             .trim()
-            .min(1, labels.validation.departmentRequired),
+            .min(1, labels.validation.departmentRequired)
+            .max(100, labels.validation.departmentMaxLength),
         })
         .superRefine((values, context) => {
           if (profile && values.employeeCode !== profile.user.employeeCode) {

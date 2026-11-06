@@ -1,5 +1,3 @@
-import { ApiRequestError, apiRequest } from "@services/httpClient";
-import { env } from "@shared/config/env";
 import type { AuthenticatedUser } from "@features/auth/auth.types";
 import type {
   ProfileActivity,
@@ -17,14 +15,25 @@ const EMPTY_ACTIVITY: ProfileActivity = {
   },
 };
 
-function createDevelopmentProfile(user: AuthenticatedUser): ProfileData {
+/**
+ * Mock em memória do perfil do usuário para desenvolvimento e testes
+ * enquanto a integração com os endpoints /me da API (#154) não for finalizada.
+ * O formato segue o modelo da #152 (organization, department, registration_number).
+ */
+let inMemoryProfile: { userId?: number; profile: ProfileData } | null = null;
+
+export function resetProfileMock(): void {
+  inMemoryProfile = null;
+}
+
+export function createDefaultProfileMock(user?: AuthenticatedUser): ProfileData {
   return {
     user: {
-      name: user.name,
-      organization: "",
-      email: user.email,
-      employeeCode: "",
-      department: "",
+      name: user?.name || "Administrador do Sistema",
+      organization: "Tribunal Regional Eleitoral",
+      email: user?.email || "admin@tre.gov.br",
+      employeeCode: "TRE-2026-0842",
+      department: "Tecnologia da Informação",
     },
     activity: EMPTY_ACTIVITY,
   };
@@ -33,22 +42,19 @@ function createDevelopmentProfile(user: AuthenticatedUser): ProfileData {
 export async function getUserProfile(
   authenticatedUser: AuthenticatedUser,
 ): Promise<ProfileData> {
-  try {
-    return await apiRequest<ProfileData>(
-      "/profile",
-      {},
-      "profile.fetch.failed",
-    );
-  } catch (error: unknown) {
-    if (
-      env.isDev &&
-      error instanceof ApiRequestError &&
-      error.status === undefined
-    ) {
-      return createDevelopmentProfile(authenticatedUser);
-    }
-    throw error;
+  if (!authenticatedUser) {
+    throw new Error("Usuário autenticado não informado.");
   }
+
+  // Devolve o mock diretamente sem chamar a API até a implementação da tarefa #154.
+  if (!inMemoryProfile || inMemoryProfile.userId !== authenticatedUser.id) {
+    inMemoryProfile = {
+      userId: authenticatedUser.id,
+      profile: createDefaultProfileMock(authenticatedUser),
+    };
+  }
+
+  return { ...inMemoryProfile.profile };
 }
 
 export async function updateUserProfile(
@@ -56,23 +62,24 @@ export async function updateUserProfile(
   currentProfile: ProfileData,
   payload: ProfileUpdatePayload,
 ): Promise<ProfileData> {
-  try {
-    return await apiRequest<ProfileData>(
-      "/profile",
-      { method: "put", data: payload, withCsrf: true },
-      "profile.update.failed",
-    );
-  } catch (error: unknown) {
-    if (
-      env.isDev &&
-      error instanceof ApiRequestError &&
-      error.status === undefined
-    ) {
-      return {
-        ...currentProfile,
-        user: { ...currentProfile.user, ...payload },
-      };
-    }
-    throw error;
+  if (!authenticatedUser) {
+    throw new Error("Usuário autenticado não informado.");
   }
+
+  const updated: ProfileData = {
+    ...currentProfile,
+    user: {
+      ...currentProfile.user,
+      name: payload.name,
+      organization: payload.organization,
+      email: payload.email,
+      department: payload.department,
+    },
+  };
+
+  inMemoryProfile = {
+    userId: authenticatedUser.id,
+    profile: updated,
+  };
+  return { ...updated };
 }
