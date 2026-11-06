@@ -18,6 +18,10 @@ vi.mock("@/components/layout/AuthenticatedUserSidebar", () => ({
   AuthenticatedUserSidebar: () => null,
 }));
 
+vi.mock("@/components/layout/SessionTimeoutWarning", () => ({
+  SessionTimeoutWarning: () => null,
+}));
+
 describe("AuthenticatedLayout", () => {
   beforeEach(() => {
     useSidebarStore.setState({ isMobileOpen: false });

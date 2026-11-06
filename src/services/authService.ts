@@ -82,3 +82,16 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
     throw err;
   }
 }
+
+/**
+ * Renova a sessão a pedido do usuário, no aviso de expiração. Diferente de
+ * `getAuthenticatedUser`, nunca usa o usuário de teste: sem resposta do backend,
+ * a sessão não foi renovada e o aviso precisa continuar aberto.
+ */
+export async function renewSession(): Promise<void> {
+  await apiRequest<AuthenticatedUser>(
+    "/me",
+    {},
+    "Não foi possível renovar a sessão."
+  );
+}

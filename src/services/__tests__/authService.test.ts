@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { getAuthenticatedUser, login, logout } from "../authService";
+import { getAuthenticatedUser, login, logout, renewSession } from "../authService";
 import { axiosInstance, clearCsrfToken } from "../httpClient";
 import type { AuthenticatedUser } from "@features/auth/auth.types";
 
@@ -180,6 +180,30 @@ describe("authService", () => {
           headers: expect.objectContaining({ "X-CSRF-TOKEN": "token-1" }),
         })
       );
+    });
+  });
+
+  describe("renewSession", () => {
+    it("should call GET /me without fetching a CSRF token", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: mockUser }));
+
+      await expect(renewSession()).resolves.toBeUndefined();
+      expect(requestSpy).toHaveBeenCalledTimes(1);
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/me" })
+      );
+    });
+
+    it("should not fall back to the mock user in development when the backend does not respond", async () => {
+      vi.stubEnv("NODE_ENV", "development");
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        new AxiosError("Network Error", "ERR_NETWORK")
+      );
+
+      await expect(renewSession()).rejects.toThrow("Não foi possível renovar a sessão.");
+      vi.unstubAllEnvs();
     });
   });
 });

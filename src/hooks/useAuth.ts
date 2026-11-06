@@ -6,11 +6,14 @@ import { getAuthenticatedUser, logout as logoutRequest } from "@/services/authSe
 import { ApiRequestError, setUnauthorizedHandler } from "@/services/httpClient";
 import { clearSessionMarker, hadPreviousSession } from "@/shared/utils/sessionMarker";
 
-// Um 401 da API durante o uso mostra o aviso de sessão expirada por cima da tela
-// atual. Várias requisições falhando juntas mostram o aviso uma única vez. Sem a
-// marca de sessão, o usuário saiu em outra aba: a sessão foi encerrada, não
-// expirou, e o layout leva direto ao login.
-setUnauthorizedHandler(() => {
+/**
+ * Trata o fim da sessão durante o uso: um 401 da API ou o fim da contagem do
+ * aviso de expiração. Mostra o aviso de sessão expirada por cima da tela atual,
+ * uma única vez mesmo que várias requisições falhem juntas. Sem a marca de
+ * sessão, o usuário saiu em outra aba: a sessão foi encerrada, não expirou, e o
+ * layout leva direto ao login.
+ */
+export function endSessionInUse(): void {
   const { isAuthenticated, markSessionExpired, clearAuth } = useAuthStore.getState();
   if (!isAuthenticated) return;
   if (hadPreviousSession()) {
@@ -18,7 +21,9 @@ setUnauthorizedHandler(() => {
   } else {
     clearAuth();
   }
-});
+}
+
+setUnauthorizedHandler(endSessionInUse);
 
 /**
  * Garante que a sessão atual (cookie httpOnly) seja conferida em /me uma

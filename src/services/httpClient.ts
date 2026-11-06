@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { env } from "@shared/config/env";
+import { recordSessionActivity } from "@shared/utils/sessionActivity";
 
 const CSRF_HEADER = "X-CSRF-TOKEN";
 const CSRF_TOKEN_PATH = "/auth/csrf-token";
@@ -64,18 +65,32 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler;
 }
 
-// No interceptador, e não em sendRequest, para valer também para os services
-// que usam o axiosInstance diretamente
-axiosInstance.interceptors.response.use(undefined, (error: unknown) => {
-  if (
-    axios.isAxiosError(error) &&
-    error.response?.status === 401 &&
-    !(error.config?.url ?? "").startsWith(AUTH_PATH_PREFIX)
-  ) {
-    unauthorizedHandler?.();
+function readSessionLifetime(payload: unknown): number | undefined {
+  const meta = (payload as { meta?: { session?: { lifetime_minutes?: unknown } } } | null)
+    ?.meta;
+  const lifetime = meta?.session?.lifetime_minutes;
+  return typeof lifetime === "number" && lifetime > 0 ? lifetime : undefined;
+}
+
+// Nos interceptadores, e não em sendRequest, para valer também para os services
+// que usam o axiosInstance diretamente. Toda resposta bem-sucedida renova a
+// sessão; o login e o /me trazem também o tempo de vida dela
+axiosInstance.interceptors.response.use(
+  (response) => {
+    recordSessionActivity(readSessionLifetime(response.data));
+    return response;
+  },
+  (error: unknown) => {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !(error.config?.url ?? "").startsWith(AUTH_PATH_PREFIX)
+    ) {
+      unauthorizedHandler?.();
+    }
+    return Promise.reject(error);
   }
-  return Promise.reject(error);
-});
+);
 
 function isMutatingMethod(method: AxiosRequestConfig["method"]): boolean {
   const normalized = (method ?? "get").toString().toUpperCase();

@@ -2,6 +2,7 @@
 
 import { AuthenticatedUserSidebar } from "@/components/layout/AuthenticatedUserSidebar";
 import { SessionExpiredDialog } from "@/components/layout/SessionExpiredDialog";
+import { SessionTimeoutWarning } from "@/components/layout/SessionTimeoutWarning";
 import { cn } from "@/shared/lib/utils";
 import { useRequireAuth } from "@/hooks/useAuthGuard";
 import { useSidebarStore } from "@/store/sidebar.store";
@@ -36,6 +37,9 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       >
         {children}
       </main>
+
+      {/* Sessão perto de expirar: aviso com contagem regressiva */}
+      <SessionTimeoutWarning />
 
       {/* Sessão expirada durante o uso: o aviso fica por cima da tela atual */}
       {sessionExpired && <SessionExpiredDialog onConfirm={goToLogin} />}

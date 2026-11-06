@@ -151,6 +151,16 @@
     "description": "Sua sessão expirou. Entre novamente para continuar.",
     "action": "Ir para o login"
   },
+  "sessionWarning": {
+    "title": "Sua sessão está quase expirando",
+    "countdown": "Sua sessão vai expirar em {time}.",
+    "announcement": "Sua sessão vai expirar em {minutes, plural, one {# minuto} other {# minutos}}.",
+    "hint": "Para não perder o que você está fazendo, continue conectado.",
+    "renew": "Continuar conectado",
+    "renewing": "Renovando...",
+    "logout": "Sair",
+    "renewError": "Não foi possível renovar a sessão. Tente novamente."
+  },
   "jornada": {
     "title": "Jornada de Privacidade/Segurança",
     "description": "Preencha este formulário para avaliar suas práticas de segurança digital.",
