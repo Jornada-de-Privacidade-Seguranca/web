@@ -259,4 +259,14 @@ export const theme = {
 } as const
 
 export type Theme = typeof theme
-export type ThemeMode = 'dark' | 'light' | 'high-contrast'
+export const VALID_THEMES = ['dark', 'light', 'high-contrast'] as const
+export type ThemeMode = (typeof VALID_THEMES)[number]
+
+export function isValidTheme(value: unknown): value is ThemeMode {
+  return typeof value === 'string' && (VALID_THEMES as readonly string[]).includes(value)
+}
+
+export function parseTheme(value: unknown, fallback: ThemeMode = 'dark'): ThemeMode {
+  return isValidTheme(value) ? value : fallback
+}
+

@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { getMessages } from "next-intl/server";
 import { AppProviders } from "@/shared/providers";
 import { ThemeScript } from "@/shared/theme-script";
+import { isValidTheme } from "@/shared/theme";
 import { cookies } from "next/headers";
 
 import { QueryProvider } from "@/shared/providers/queryProvider";
@@ -29,7 +30,8 @@ export default async function RootLayout({
 }: RootLayoutProps) {
   const { locale } = await params;
   const cookieStore = await cookies();
-  const theme = cookieStore.get('theme')?.value ?? "dark";
+  const rawTheme = cookieStore.get("theme")?.value;
+  const theme = isValidTheme(rawTheme) ? rawTheme : "dark";
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();

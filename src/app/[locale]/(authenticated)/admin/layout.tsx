@@ -20,4 +20,3 @@ export default function AdminLayout({ children }: PropsWithChildren) {
 
   return <>{children}</>;
 }
-

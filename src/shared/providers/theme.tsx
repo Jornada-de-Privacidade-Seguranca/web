@@ -7,7 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { ThemeMode } from "@/shared/theme";
+import { isValidTheme, type ThemeMode } from "@/shared/theme";
 
 export const THEME_STORAGE_KEY = "theme";
 
@@ -23,7 +23,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-function getSystemTheme(): ThemeMode {
+export function getSystemTheme(): ThemeMode {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
@@ -32,14 +32,10 @@ function getSystemTheme(): ThemeMode {
   return "dark";
 }
 
-function getStoredTheme(): ThemeMode | null {
+export function getStoredTheme(): ThemeMode | null {
   try {
     const fromStorage = localStorage.getItem(THEME_STORAGE_KEY);
-    if (
-      fromStorage === "dark" ||
-      fromStorage === "light" ||
-      fromStorage === "high-contrast"
-    ) {
+    if (isValidTheme(fromStorage)) {
       return fromStorage;
     }
 

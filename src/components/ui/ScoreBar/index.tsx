@@ -24,7 +24,11 @@ export function ScoreBar(props: ScoreBarProps) {
   const markerDescriptionId = useId();
 
   return (
-    <div data-testid="score-bar" className={cn("w-full min-w-0 space-y-2", className)}>
+    <div
+      data-slot="score-bar"
+      data-testid="score-bar"
+      className={cn("w-full min-w-0 space-y-2", className)}
+    >
       <p aria-hidden="true" className={cn("text-sm font-semibold tabular-nums", textClassName)}>
         {text}
       </p>

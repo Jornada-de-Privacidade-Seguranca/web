@@ -81,4 +81,23 @@ describe("useTheme Hook & ThemeProvider", () => {
     expect(document.documentElement.classList.contains("light")).toBe(true);
     expect(document.documentElement.classList.contains("high-contrast")).toBe(false);
   });
+
+  it("deve fazer fallback para o tema padrão quando o valor no localStorage for inválido", () => {
+    localStorage.setItem(THEME_STORAGE_KEY, "invalid-theme-value");
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+
+    // "invalid-theme-value" não é reconhecido, deve cair no fallback do sistema (dark ou light)
+    expect(["dark", "light"]).toContain(result.current.theme);
+    expect(result.current.theme).not.toBe("invalid-theme-value");
+    expect(document.documentElement.classList.contains(result.current.theme)).toBe(true);
+  });
+
+  it("deve fazer fallback para 'dark' quando matchMedia não estiver disponível ou localStorage estiver vazio", () => {
+    localStorage.clear();
+    const { result } = renderHook(() => useTheme(), { wrapper });
+
+    expect(["dark", "light"]).toContain(result.current.theme);
+    expect(document.documentElement.classList.contains(result.current.theme)).toBe(true);
+  });
 });

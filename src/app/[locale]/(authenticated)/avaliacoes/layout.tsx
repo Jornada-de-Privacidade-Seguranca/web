@@ -15,4 +15,3 @@ export default function AvaliacoesLayout({ children }: PropsWithChildren) {
 
   return <>{children}</>;
 }
-

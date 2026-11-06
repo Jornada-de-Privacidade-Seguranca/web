@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, .high-contrast *));
 @custom-variant high-contrast (&:is(.high-contrast *));
 
 * {
@@ -215,19 +215,19 @@ h6 {
     outline: 2px solid oklch(0.97 0.2 105);
   }
 
-  [data-testid="score-bar"] [role="progressbar"] {
+  [data-slot="score-bar"] [role="progressbar"] {
     border: 1.5px solid oklch(1 0 0) !important;
     background-color: oklch(0.12 0 0) !important;
   }
 
-  [data-testid="domain-badge"] {
+  [data-slot="domain-badge"] {
     border: 1.5px solid oklch(1 0 0) !important;
     color: oklch(1 0 0) !important;
     background-color: oklch(0 0 0) !important;
     font-weight: 700 !important;
   }
 
-  [data-testid="difficulty-badge"] {
+  [data-slot="difficulty-badge"] {
     border: 1.5px solid oklch(1 0 0) !important;
     font-weight: 700 !important;
   }
