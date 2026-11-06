@@ -45,7 +45,7 @@ describe("WithPermission Component", () => {
 
   it("NÃO deve renderizar o conteúdo quando o usuário NÃO possui a permissão", () => {
     render(
-      <WithPermission permission="users.delete">
+      <WithPermission permission="users.change_profile">
         <button type="button">Excluir Conta</button>
       </WithPermission>
     );
@@ -58,7 +58,7 @@ describe("WithPermission Component", () => {
   it("deve renderizar o fallback quando o usuário não tiver permissão", () => {
     render(
       <WithPermission
-        permission="users.delete"
+        permission="users.change_profile"
         fallback={<span data-testid="fallback-msg">Sem permissão</span>}
       >
         <button type="button">Excluir Conta</button>
@@ -74,7 +74,7 @@ describe("WithPermission Component", () => {
   it("deve suportar modo 'any' para múltiplas permissões", () => {
     render(
       <WithPermission
-        permission={["users.delete", "users.view"]}
+        permission={["users.change_profile", "users.view"]}
         needPermissionMode="any"
       >
         <div data-testid="allowed-content">Acesso Concedido</div>
@@ -87,7 +87,7 @@ describe("WithPermission Component", () => {
   it("deve bloquear no modo 'all' quando faltar alguma permissão", () => {
     render(
       <WithPermission
-        permission={["users.view", "users.delete"]}
+        permission={["users.view", "users.change_profile"]}
         needPermissionMode="all"
       >
         <div data-testid="blocked-content">Bloqueado</div>

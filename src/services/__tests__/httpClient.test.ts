@@ -325,5 +325,4 @@ describe("httpClient", () => {
     expect(error.code).toBe("PERMISSION_DENIED");
     expect(error.message).toBe("Você não tem permissão para esta ação.");
   });
-  });
 });

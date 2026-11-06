@@ -6,19 +6,20 @@ import { PERMISSIONS_BY_PROFILE } from "@/services/authService";
 import type { PermissionCode } from "@/features/auth/auth.types";
 
 /**
- * Tabela de permissões e regras do sistema:
+ * Tabela de permissões e regras do sistema (#132, PR 64 do backend):
  *
- * | Código               | Ação / Acesso no Sistema                                        | Perfis com Acesso             |
- * |----------------------|-----------------------------------------------------------------|-------------------------------|
- * | `journeys.take`      | Iniciar, responder e concluir questionários de jornadas         | Administrador, Gestor, Usuário|
- * | `results.view_own`   | Ver a tela de resultados próprios (/resultados)                 | Administrador, Gestor, Usuário|
- * | `users.view`         | Visualizar listagem e detalhes de usuários (/admin/usuarios)     | Administrador, Gestor, Cadastro|
- * | `users.manage`       | Cadastrar, editar dados e ativar/desativar usuários             | Administrador, Cadastro       |
- * | `users.manage_roles` | Alterar o perfil de acesso (Role/Profile) de outros usuários   | Administrador                 |
- * | `users.delete`       | Excluir permanentemente usuários do sistema                     | Administrador                 |
- * | `results.view_all`   | Visualizar relatórios e resultados de todos os usuários        | Administrador, Gestor         |
- * | `journeys.assign`    | Atribuir jornadas a colaboradores e equipes                     | Administrador, Gestor         |
- * | `system.configure`   | Acessar configurações avançadas e parâmetros globais           | Administrador                 |
+ * | Código                 | Ação / Acesso no Sistema                                        | Perfis com Acesso             |
+ * |------------------------|-----------------------------------------------------------------|-------------------------------|
+ * | `journeys.take`        | Iniciar, responder e concluir questionários de jornadas         | Administrador, Gestor, Usuário|
+ * | `journeys.assign`      | Atribuir jornadas a colaboradores e equipes                     | Administrador, Gestor         |
+ * | `results.view_own`     | Ver a tela de resultados próprios (/resultados)                 | Administrador, Gestor, Usuário|
+ * | `results.view_all`     | Visualizar relatórios e resultados de todos os usuários        | Administrador, Gestor         |
+ * | `users.view`           | Visualizar listagem e detalhes de usuários (/admin/usuarios)     | Administrador, Gestor         |
+ * | `users.register`       | Cadastrar novos usuários no sistema                             | Administrador                 |
+ * | `users.deactivate`     | Ativar e desativar contas de usuários                           | Administrador                 |
+ * | `users.manage`         | Gerenciar usuários (editar dados e exclusão permanente)         | Administrador                 |
+ * | `users.change_profile` | Alterar o perfil de acesso (Role/Profile) de outros usuários   | Administrador                 |
+ * | `catalog.manage`       | Gerenciar catálogo de jornadas e competências                   | Administrador                 |
  */
 
 export interface UsePermissionReturn {
@@ -71,7 +72,8 @@ export function usePermission(): UsePermissionReturn {
     if (Array.isArray(list)) {
       return list;
     }
-    // Fallback gracioso para sessões ou mocks legados sem o campo permissions explícito
+    // Fallback gracioso para sessões ou mocks legados sem o campo permissions explícito.
+    // Trata o Gestor como usuário comum enquanto o /me não traz as permissões (este fallback sai depois da #133).
     if (user.role === "administrator") {
       return PERMISSIONS_BY_PROFILE.administrator ?? [];
     }

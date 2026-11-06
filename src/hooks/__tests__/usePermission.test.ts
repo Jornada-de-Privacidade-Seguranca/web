@@ -48,26 +48,28 @@ describe("usePermission Hook", () => {
       useAuthStore.getState().setAuth(adminUser);
     });
 
-    it("deve ter acesso total a todas as permissões administrativas e de usuário", () => {
+    it("deve ter acesso total a todas as permissões administrativas e de usuário da #132", () => {
       const { result } = renderHook(() => usePermission());
 
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.userProfileName).toBe("Administrador");
       expect(result.current.can("journeys.take")).toBe(true);
+      expect(result.current.can("journeys.assign")).toBe(true);
       expect(result.current.can("results.view_own")).toBe(true);
-      expect(result.current.can("users.view")).toBe(true);
-      expect(result.current.can("users.manage")).toBe(true);
-      expect(result.current.can("users.manage_roles")).toBe(true);
-      expect(result.current.can("users.delete")).toBe(true);
       expect(result.current.can("results.view_all")).toBe(true);
-      expect(result.current.can("system.configure")).toBe(true);
+      expect(result.current.can("users.view")).toBe(true);
+      expect(result.current.can("users.register")).toBe(true);
+      expect(result.current.can("users.deactivate")).toBe(true);
+      expect(result.current.can("users.manage")).toBe(true);
+      expect(result.current.can("users.change_profile")).toBe(true);
+      expect(result.current.can("catalog.manage")).toBe(true);
     });
 
     it("deve validar canAll corretamente para múltiplas permissões", () => {
       const { result } = renderHook(() => usePermission());
 
       expect(
-        result.current.canAll(["users.view", "users.delete", "system.configure"])
+        result.current.canAll(["users.view", "users.manage", "catalog.manage"])
       ).toBe(true);
     });
   });
@@ -96,34 +98,35 @@ describe("usePermission Hook", () => {
       useAuthStore.getState().setAuth(managerUser);
     });
 
-    it("deve visualizar relatórios e usuários, mas NÃO pode alterar roles nem excluir", () => {
+    it("deve visualizar relatórios e usuários, mas NÃO pode alterar perfis (users.change_profile) nem gerenciar catálogo", () => {
       const { result } = renderHook(() => usePermission());
 
       expect(result.current.userProfileName).toBe("Gestor");
-      // Permitidos:
+      // Permitidos na #132:
       expect(result.current.can("journeys.take")).toBe(true);
       expect(result.current.can("results.view_own")).toBe(true);
       expect(result.current.can("users.view")).toBe(true);
       expect(result.current.can("results.view_all")).toBe(true);
       expect(result.current.can("journeys.assign")).toBe(true);
 
-      // Bloqueados:
-      expect(result.current.can("users.manage_roles")).toBe(false);
-      expect(result.current.can("users.delete")).toBe(false);
-      expect(result.current.can("system.configure")).toBe(false);
+      // Bloqueados para o Gestor:
+      expect(result.current.can("users.change_profile")).toBe(false);
+      expect(result.current.can("users.manage")).toBe(false);
+      expect(result.current.can("users.deactivate")).toBe(false);
+      expect(result.current.can("catalog.manage")).toBe(false);
     });
 
     it("can() com array deve retornar true se ao menos uma for permitida (modo ANY)", () => {
       const { result } = renderHook(() => usePermission());
 
-      // Possui users.view, mas não users.delete
-      expect(result.current.can(["users.delete", "users.view"])).toBe(true);
+      // Possui users.view, mas não users.change_profile
+      expect(result.current.can(["users.change_profile", "users.view"])).toBe(true);
     });
 
     it("canAll() com array deve retornar false se alguma não for permitida", () => {
       const { result } = renderHook(() => usePermission());
 
-      expect(result.current.canAll(["users.view", "users.delete"])).toBe(false);
+      expect(result.current.canAll(["users.view", "users.change_profile"])).toBe(false);
     });
   });
 
@@ -160,48 +163,8 @@ describe("usePermission Hook", () => {
 
       expect(result.current.can("users.view")).toBe(false);
       expect(result.current.can("users.manage")).toBe(false);
+      expect(result.current.can("users.change_profile")).toBe(false);
       expect(result.current.can("results.view_all")).toBe(false);
-      expect(result.current.can("users.delete")).toBe(false);
-    });
-  });
-
-  describe("Perfil: Cadastro", () => {
-    const registrationUser: AuthenticatedUser = {
-      id: 4,
-      name: "Operador Cadastro",
-      email: "cadastro@empresa.com",
-      role: "administrator",
-      permissions: PERMISSIONS_BY_PROFILE.registration,
-      profile: {
-        id: "registration",
-        name: "Cadastro",
-        label: "Cadastro",
-        role: "administrator",
-        user_type_id: 4,
-        profile_type_id: 4,
-        profile_type_name: "Cadastro",
-        permissions: PERMISSIONS_BY_PROFILE.registration,
-      },
-      active_status: 1,
-    };
-
-    beforeEach(() => {
-      useAuthStore.getState().setAuth(registrationUser);
-    });
-
-    it("deve gerenciar usuários, mas NÃO ter acesso a jornadas, resultados ou exclusão", () => {
-      const { result } = renderHook(() => usePermission());
-
-      expect(result.current.userProfileName).toBe("Cadastro");
-      expect(result.current.can("users.view")).toBe(true);
-      expect(result.current.can("users.manage")).toBe(true);
-
-      // Bloqueados:
-      expect(result.current.can("journeys.take")).toBe(false);
-      expect(result.current.can("results.view_own")).toBe(false);
-      expect(result.current.can("results.view_all")).toBe(false);
-      expect(result.current.can("users.manage_roles")).toBe(false);
-      expect(result.current.can("users.delete")).toBe(false);
     });
   });
 });

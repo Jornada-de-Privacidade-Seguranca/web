@@ -97,12 +97,6 @@ function extractErrorMessage(error: unknown, defaultErrorMessage: string): strin
     const data = error.response?.data as
       | (ApiResponse<unknown> & { code?: string })
       | undefined;
-    if (error.response?.status === 403 && data?.code === "PERMISSION_DENIED") {
-      return (
-        data.message ||
-        "Acesso negado. Você não tem permissão para realizar esta ação."
-      );
-    }
     if (data && typeof data.message === "string") {
       return data.message;
     }

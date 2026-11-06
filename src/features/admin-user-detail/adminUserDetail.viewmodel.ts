@@ -287,9 +287,9 @@ export function useAdminUserDetailVM({
   };
 
   const { can } = usePermission();
-  const canDeleteUser = can("users.delete");
-  const canManageRoles = can("users.manage_roles");
-  const canManageUser = can("users.manage");
+  const canDeleteUser = can("users.manage");
+  const canManageRoles = can("users.change_profile");
+  const canManageUser = can("users.manage") || can("users.deactivate");
 
   return {
     user,

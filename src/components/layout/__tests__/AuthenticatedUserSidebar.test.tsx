@@ -16,7 +16,16 @@ vi.mock("@/hooks/useMobile", () => ({
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: { name: "Maria Oliveira", profile: { label: "Usuário comum" } },
+    user: {
+      name: "Maria Oliveira",
+      role: "common_user",
+      permissions: ["journeys.take", "results.view_own"],
+      profile: {
+        label: "Usuário comum",
+        permissions: ["journeys.take", "results.view_own"],
+      },
+    },
+    isAuthenticated: true,
     logout: vi.fn(),
     sessionExpired: mockSessionExpired,
   }),
