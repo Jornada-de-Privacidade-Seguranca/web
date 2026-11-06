@@ -6,14 +6,16 @@ import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { registerUser } from "@services/cadastroService";
+import { CadastroRequestError, registerUser } from "@services/cadastroService";
 import type {
   CadastroFormValues,
   CadastroViewModelReturn,
   CadastroServerMessage,
   CadastroValidationMessages,
 } from "./cadastro.types";
-import { env } from "@/shared/config/env";
+
+/** Nome e sobrenome, a mesma regra do POST /auth/register. */
+const FULL_NAME_PATTERN = /^\S+\s+\S+/u;
 
 interface UseCadastroVMProps {
   isGeneralSystem?: boolean;
@@ -31,13 +33,20 @@ export function useCadastroVM(
 
   const validationMessages: CadastroValidationMessages = {
     fullNameRequired: t("validation.fullNameRequired"),
+    fullNameLastName: t("validation.fullNameLastName"),
+    fullNameMaxLength: t("validation.fullNameMaxLength"),
     employeeCodeRequired: t("validation.employeeCodeRequired"),
+    employeeCodeMaxLength: t("validation.employeeCodeMaxLength"),
     departmentRequired: t("validation.departmentRequired"),
+    departmentMaxLength: t("validation.departmentMaxLength"),
     companyRequired: t("validation.companyRequired"),
+    companyMaxLength: t("validation.companyMaxLength"),
     emailRequired: t("validation.emailRequired"),
     emailInvalid: t("validation.emailInvalid"),
+    emailMaxLength: t("validation.emailMaxLength"),
     passwordRequired: t("validation.passwordRequired"),
     passwordMinLength: t("validation.passwordMinLength"),
+    passwordMaxLength: t("validation.passwordMaxLength"),
     confirmPasswordRequired: t("validation.confirmPasswordRequired"),
     passwordsDoNotMatch: t("validation.passwordsDoNotMatch"),
     termsRequired: t("validation.termsRequired"),
@@ -48,28 +57,38 @@ export function useCadastroVM(
       nomeCompleto: z
         .string()
         .trim()
-        .min(1, validationMessages.fullNameRequired),
+        .min(1, validationMessages.fullNameRequired)
+        .regex(FULL_NAME_PATTERN, validationMessages.fullNameLastName)
+        .max(50, validationMessages.fullNameMaxLength),
       codigoFuncionario: z
         .string()
         .trim()
-        .min(1, validationMessages.employeeCodeRequired),
+        .min(1, validationMessages.employeeCodeRequired)
+        .max(50, validationMessages.employeeCodeMaxLength),
       departamento: z
         .string()
         .trim()
-        .min(1, validationMessages.departmentRequired),
+        .min(1, validationMessages.departmentRequired)
+        .max(100, validationMessages.departmentMaxLength),
       empresa: isGeneralSystem
-        ? z.string().trim().min(1, validationMessages.companyRequired)
-        : z.string().optional(),
+        ? z
+            .string()
+            .trim()
+            .min(1, validationMessages.companyRequired)
+            .max(100, validationMessages.companyMaxLength)
+        : z.string().trim().max(100, validationMessages.companyMaxLength).optional(),
       email: z
         .string()
         .trim()
         .min(1, validationMessages.emailRequired)
-        .email(validationMessages.emailInvalid),
+        .email(validationMessages.emailInvalid)
+        .max(100, validationMessages.emailMaxLength),
       senha: z
         .string()
         .trim()
         .min(1, validationMessages.passwordRequired)
-        .min(8, validationMessages.passwordMinLength),
+        .min(8, validationMessages.passwordMinLength)
+        .max(100, validationMessages.passwordMaxLength),
       confirmarSenha: z
         .string()
         .trim()
@@ -105,27 +124,14 @@ export function useCadastroVM(
   const handleSubmit = form.handleSubmit(async (values) => {
     setServerMessage(null);
     try {
-      if (env.isDev) {
-        // Mock test triggers for local frontend testing without backend:
-        if (values.email === "duplicado@empresa.com") {
-          throw new Error(t("serverError.alreadyRegisteredDescription"));
-        }
-        if (values.email === "invalido@empresa.com") {
-          throw new Error(
-            "Campo inválido: o e-mail informado não possui permissão.",
-          );
-        }
-      }
-
       await registerUser({
         nomeCompleto: values.nomeCompleto,
         codigoFuncionario: values.codigoFuncionario,
         departamento: values.departamento,
-        ...(isGeneralSystem && values.empresa
-          ? { empresa: values.empresa }
-          : {}),
+        empresa: isGeneralSystem ? values.empresa : undefined,
         email: values.email,
         senha: values.senha,
+        confirmarSenha: values.confirmarSenha,
       });
 
       setIsSuccess(true);
@@ -135,39 +141,41 @@ export function useCadastroVM(
         variant: "success",
       });
     } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error
-          ? err.message
-          : t("serverError.serverErrorDescription");
+      const type = err instanceof CadastroRequestError ? err.type : "server_error";
 
-      // Categorize server response errors according to task requirements
-      if (
-        errorMsg.toLowerCase().includes("cadastrado") ||
-        errorMsg.toLowerCase().includes("already registered") ||
-        errorMsg.toLowerCase().includes("exist")
-      ) {
+      if (type === "already_registered") {
         setServerMessage({
           title: t("serverError.alreadyRegisteredTitle"),
-          description:
-            errorMsg || t("serverError.alreadyRegisteredDescription"),
+          description: t("serverError.alreadyRegisteredDescription"),
           variant: "destructive",
         });
-      } else if (
-        errorMsg.toLowerCase().includes("inválido") ||
-        errorMsg.toLowerCase().includes("invalid")
-      ) {
+        return;
+      }
+
+      if (type === "validation" && err instanceof CadastroRequestError) {
+        // Cada mensagem vai para o seu campo; a da empresa fica no aviso quando o campo não aparece
+        const bannerMessages = [...err.otherErrors];
+        for (const [field, message] of Object.entries(err.fieldErrors)) {
+          if (!message) continue;
+          if (field === "empresa" && !isGeneralSystem) {
+            bannerMessages.push(message);
+          } else {
+            form.setError(field as keyof CadastroFormValues, { type: "server", message });
+          }
+        }
         setServerMessage({
           title: t("serverError.invalidFieldsTitle"),
-          description: errorMsg,
+          description: bannerMessages.length > 0 ? bannerMessages.join(" ") : undefined,
           variant: "destructive",
         });
-      } else {
-        setServerMessage({
-          title: t("serverError.serverErrorTitle"),
-          description: t("serverError.serverErrorDescription"),
-          variant: "destructive",
-        });
+        return;
       }
+
+      setServerMessage({
+        title: t("serverError.serverErrorTitle"),
+        description: t("serverError.serverErrorDescription"),
+        variant: "destructive",
+      });
     }
   });
 

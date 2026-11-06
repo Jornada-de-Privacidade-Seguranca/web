@@ -113,13 +113,20 @@
       "loginLink": "Sign in",
       "validation": {
         "fullNameRequired": "Full name is required.",
+        "fullNameLastName": "Please enter your first and last name.",
+        "fullNameMaxLength": "Name must be at most 50 characters long.",
         "employeeCodeRequired": "Employee code is required.",
+        "employeeCodeMaxLength": "Employee code must be at most 50 characters long.",
         "departmentRequired": "Department is required.",
+        "departmentMaxLength": "Department must be at most 100 characters long.",
         "companyRequired": "Company is required.",
+        "companyMaxLength": "Company must be at most 100 characters long.",
         "emailRequired": "Institutional email is required.",
         "emailInvalid": "Please provide a valid institutional email.",
+        "emailMaxLength": "Email must be at most 100 characters long.",
         "passwordRequired": "Password is required.",
         "passwordMinLength": "Password must be at least 8 characters long.",
+        "passwordMaxLength": "Password must be at most 100 characters long.",
         "confirmPasswordRequired": "Password confirmation is required.",
         "passwordsDoNotMatch": "Passwords do not match.",
         "termsRequired": "You must accept the terms of use and privacy policy."
@@ -127,13 +134,13 @@
       "serverError": {
         "invalidFieldsTitle": "Invalid field",
         "alreadyRegisteredTitle": "Data already registered",
-        "alreadyRegisteredDescription": "Email or employee code already registered for this department/company.",
+        "alreadyRegisteredDescription": "An account with this email already exists.",
         "serverErrorTitle": "Server error",
         "serverErrorDescription": "An internal server error occurred. Please try again later."
       },
       "serverSuccess": {
         "title": "Account created successfully!",
-        "description": "Account created successfully! You can now log in."
+        "description": "Your account was created and must be activated by an administrator before you can sign in."
       }
     }
   },

@@ -12,33 +12,56 @@ export interface CadastroFormValues {
   aceitouTermos: boolean;
 }
 
+/** Dados do formulário enviados ao cadastro; o aceite dos termos não vai para a API. */
+export type CadastroFormData = Omit<CadastroFormValues, "aceitouTermos">;
+
+/** Corpo de POST /auth/register. O perfil de acesso é definido pelo backend. */
 export interface CadastroPayload {
-  nomeCompleto: string;
-  codigoFuncionario: string;
-  departamento: string;
-  empresa?: string;
+  name: string;
   email: string;
-  senha: string;
+  password: string;
+  password_confirmation: string;
+  organization?: string;
+  department: string;
+  registration_number: string;
 }
 
+/** `data` da resposta 201 de POST /auth/register. */
 export interface CadastroResponse {
-  id: string;
-  nomeCompleto: string;
+  id: number;
+  name: string;
   email: string;
-  codigoFuncionario: string;
-  departamento: string;
-  empresa?: string;
+  organization_company: string;
+  department: string;
+  registration_number: string;
+  profile_type_id: number;
+  journey_profile_id: number | null;
+  active_status: number;
+  account_status: "pending_activation";
+  created_at: string | null;
 }
+
+export type CadastroRequestErrorType = "validation" | "already_registered" | "server_error";
+
+/** Mensagens de erro da API, já com os nomes dos campos do formulário. */
+export type CadastroFieldErrors = Partial<Record<keyof CadastroFormData, string>>;
 
 export interface CadastroValidationMessages {
   fullNameRequired: string;
+  fullNameLastName: string;
+  fullNameMaxLength: string;
   employeeCodeRequired: string;
+  employeeCodeMaxLength: string;
   departmentRequired: string;
+  departmentMaxLength: string;
   companyRequired: string;
+  companyMaxLength: string;
   emailRequired: string;
   emailInvalid: string;
+  emailMaxLength: string;
   passwordRequired: string;
   passwordMinLength: string;
+  passwordMaxLength: string;
   confirmPasswordRequired: string;
   passwordsDoNotMatch: string;
   termsRequired: string;
