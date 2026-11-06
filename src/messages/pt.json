@@ -239,193 +239,22 @@
     "backToJourneys": "Voltar para jornadas",
     "backToJourneysAriaLabel": "Voltar para a listagem de jornadas",
     "badgeLabel": "Resumo da jornada",
-    "stepsCountLabel": "Etapas",
+    "domainLabels": {
+      "privacy": "Privacidade",
+      "security": "Segurança da Informação",
+      "joint": "Conjunta"
+    },
+    "lastScoreText": "Última pontuação {score}/100",
+    "lastScoreAriaLabel": "Última pontuação: {score} de 100",
     "durationLabel": "Duração",
     "areasLabel": "Áreas",
     "competenciesLabel": "Competências",
-    "stepsCountAriaLabel": "{count} etapas",
-    "stepsProgressText": "{completed} de {total}",
-    "stepsProgressAriaLabel": "{completed} de {total} etapas concluídas",
     "durationAriaLabel": "{minutes} minutos de duração",
     "areasAriaLabel": "{count} áreas",
     "competenciesAriaLabel": "{count} competências",
     "estimatedMinutesText": "{minutes} min",
     "howItWorksTitle": "Como funciona",
-    "howItWorksSubtitle": "A jornada é dividida em etapas curtas. Você pode avançar no seu ritmo.",
-    "steps": [
-      {
-        "title": "Tempo de Experiência Profissional",
-        "description": "Tempo de experiência profissional na área de privacidade e/ou segurança da informação."
-      },
-      {
-        "title": "Nível de Proficiência em Inglês",
-        "description": "Nível de fluência e conhecimento da língua inglesa."
-      },
-      {
-        "title": "Tempo de Atuação no Perfil",
-        "description": "Tempo de atuação no perfil escolhido para a jornada."
-      },
-      {
-        "title": "Formação Acadêmica",
-        "description": "Formação em cursos de Graduação/Licenciatura/Tecnólogo e pós graduações."
-      },
-      {
-        "title": "Certificações Profissionais",
-        "description": "Lista de certificações profissionais das áreas de privacidade e/ou segurança da informação."
-      },
-      {
-        "title": "Competências",
-        "description": "Conhecimentos técnicos de privacidade e/ou segurança da informação relacionados ao perfil escolhido para a jornada."
-      }
-    ],
-    "footerNote": "Suas respostas ficam salvas conforme você avança.",
-    "dismissLabel": "Agora não",
-    "dismissAriaLabel": "Voltar para a página anterior",
-    "actionStart": "Iniciar jornada",
-    "actionContinue": "Continuar jornada",
-    "actionRetake": "Refazer jornada",
-    "notFoundTitle": "Jornada não encontrada",
-    "notFoundMessage": "Não encontramos a jornada solicitada. Ela pode ter sido removida ou o link pode estar incorreto.",
-    "serverErrorTitle": "Não foi possível carregar a jornada",
-    "serverErrorMessage": "Não foi possível completar a busca pelos dados da jornada. Tente novamente mais tarde.",
-    "backToJourneysLink": "Voltar para a listagem de jornadas",
-    "loadingAriaLabel": "Carregando resumo da jornada",
-    "notAvailable": "—",
-    "notAvailableAriaLabel": "{label}: não disponível",
-    "startingLabel": "Iniciando...",
-    "startErrorMessage": "Não foi possível iniciar a jornada. Tente novamente.",
-    "resumeCurrentJourneyLabel": "Continuar jornada atual",
-    "actionResume": "Retomar jornada",
-    "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova."
-  },
-  "preQuestionnaire": {
-    "header": {
-      "exitButton": "Sair",
-      "exitAriaLabel": "Sair do pré-questionário",
-      "backAriaLabel": "Voltar para a etapa anterior",
-      "backToSummaryAriaLabel": "Voltar para o resumo da jornada"
-    },
-    "experience": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · EXPERIÊNCIA PROFISSIONAL",
-      "title": "Conte sobre sua experiência profissional",
-      "description": "Tempo de experiência profissional na área de privacidade e/ou segurança da informação.",
-      "questionLabel": {
-        "privacy": "Qual é o seu tempo de experiência profissional em áreas de privacidade?",
-        "security": "Qual é o seu tempo de experiência profissional em áreas de segurança da informação?",
-        "joint": "Qual é o seu tempo de experiência profissional em áreas de privacidade ou de segurança da informação? Considere a soma das duas."
-      },
-      "options": {
-        "none": "Nenhum",
-        "less-than-1-year": "Menos de 1 ano",
-        "1-3-years": "Entre 1 e 3 anos",
-        "4-6-years": "Entre 4 e 6 anos",
-        "7-10-years": "Entre 7 e 10 anos",
-        "10-plus-years": "Mais de 10 anos"
-      }
-    },
-    "english": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · NÍVEL DE PROFICIÊNCIA EM INGLÊS",
-      "title": "Nível de proficiência em inglês",
-      "description": "Isso nos ajuda a calibrar a complexidade das perguntas técnicas apresentadas ao longo da jornada.",
-      "questionLabel": "Nível de proficiência em inglês",
-      "options": {
-        "none": "Nenhum",
-        "basic-reading": "Básico - Leitura",
-        "intermediate-reading-writing": "Intermediário - Leitura e Escritura",
-        "advanced-fluent": "Avançado - Fluente"
-      }
-    },
-    "roleTenure": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · TEMPO DE ATUAÇÃO NO PERFIL",
-      "title": "Tempo de atuação no perfil",
-      "description": "Isso nos ajuda a entender quanto tempo você atua nesse perfil e calibrar o nível de profundidade das perguntas.",
-      "questionLabel": "Tempo de atuação no perfil",
-      "options": {
-        "0-years": "Nenhum",
-        "1-3-years": "Entre 1 e 3 anos",
-        "4-6-years": "Entre 4 e 6 anos",
-        "7-10-years": "Entre 7 e 10 anos",
-        "10-plus-years": "Mais de 10 anos"
-      }
-    },
-    "academic": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · FORMAÇÃO ACADÊMICA",
-      "title": "Formação acadêmica",
-      "description": "Selecione um ou mais cursos que fazem parte do seu currículo.",
-      "searchPlaceholder": "Pesquisar curso...",
-      "searchAriaLabel": "Pesquisar curso",
-      "groupsAriaLabel": "Níveis de formação",
-      "emptyLabel": "Nenhum curso encontrado.",
-      "counterLabel": "{count} curso(s) selecionado(s)",
-      "removeCourseAriaLabel": "Remover {course}",
-      "typeLegends": {
-        "1": "Bacharelado/Licenciatura/Tecnólogo",
-        "2": "lato sensu",
-        "3": "stricto sensu",
-        "4": "stricto sensu"
-      }
-    },
-    "certifications": {
-      "stepTag": "PRÉ-QUESTIONÁRIO · CERTIFICAÇÕES PROFISSIONAIS",
-      "title": "Certificações profissionais",
-      "description": "Selecione uma ou mais certificações que fazem parte do seu currículo.",
-      "searchPlaceholder": "Pesquisar certificação...",
-      "searchAriaLabel": "Pesquisar certificação",
-      "groupsAriaLabel": "Domínios de conhecimento",
-      "emptyLabel": "Nenhuma certificação encontrada.",
-      "counterLabel": "{count} certificação(ões) selecionada(s)",
-      "limitReachedLabel": "Você atingiu o limite de {max} certificações selecionadas.",
-      "removeCertificationAriaLabel": "Remover {certification}",
-      "otherGroupLabel": "Outras"
-    },
-    "actions": {
-      "back": "Voltar",
-      "continue": "Continuar",
-      "saving": "Salvando..."
-    },
-    "exitModal": {
-      "title": "Deseja sair do pré-questionário?",
-      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
-      "cancelButton": "Continuar respondendo",
-      "confirmButton": "Sair da jornada"
-    },
-    "loading": "Carregando pergunta...",
-    "errorTitle": "Não foi possível carregar o pré-questionário",
-    "errorMessage": "Ocorreu um erro ao buscar os dados da etapa. Tente novamente.",
-    "retryButton": "Tentar novamente",
-    "saveError": "Não foi possível salvar sua resposta. Tente novamente.",
-    "notFoundTitle": "Jornada não encontrada",
-    "notFoundMessage": "Não encontramos a jornada que você está tentando acessar. Ela pode ter sido removida ou o link está incorreto.",
-    "backToJourneysLink": "Voltar para jornadas",
-    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
-    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem."
-  },
-  "questionnaire": {
-    "header": {
-      "exitButton": "Sair",
-      "exitAriaLabel": "Sair do questionário",
-      "backAriaLabel": "Voltar para a etapa anterior"
-    },
-    "exitModal": {
-      "title": "Deseja sair do questionário?",
-      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
-      "cancelButton": "Continuar respondendo",
-      "confirmButton": "Sair da jornada"
-    },
-    "actions": {
-      "back": "Voltar",
-      "saving": "Salvando..."
-    },
-    "retryButton": "Tentar novamente",
-    "errorMessage": "Ocorreu um erro ao buscar os dados do questionário. Tente novamente.",
-    "saveError": "Não foi possível salvar suas respostas. Tente novamente.",
-    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
-    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
-    "backToJourneysLink": "Voltar para jornadas",
-    "intro": {
-      "stepTag": "QUESTIONÁRIO · COMPETÊNCIAS",
-      "title": "Questionário de competências",
-      "subtitle": "Leia as instruções antes de iniciar o questionário.",
+    "instructions": {
       "intro": "A seguir, você responderá a um conjunto de perguntas que avaliam seus conhecimentos em {domain}. Cada resposta contribui para compor o seu perfil de competências e ajuda a identificar pontos fortes e oportunidades de desenvolvimento.",
       "domains": {
         "privacy": "privacidade",
@@ -452,10 +281,49 @@
           "fallbackDescription": "Reserve um momento em um ambiente sem interrupções para melhor concentração."
         }
       },
-      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria.",
-      "startButton": "Iniciar questionário",
-      "loading": "Carregando instruções..."
+      "tip": "Dica: ao concluir, você receberá um resultado detalhado por perfil de conhecimento, destacando áreas fortes e pontos de melhoria."
     },
+    "footerNote": "Suas respostas ficam salvas conforme você avança.",
+    "dismissLabel": "Agora não",
+    "dismissAriaLabel": "Voltar para a página anterior",
+    "actionStart": "Iniciar jornada",
+    "actionRetake": "Refazer jornada",
+    "notFoundTitle": "Jornada não encontrada",
+    "notFoundMessage": "Não encontramos a jornada solicitada. Ela pode ter sido removida ou o link pode estar incorreto.",
+    "serverErrorTitle": "Não foi possível carregar a jornada",
+    "serverErrorMessage": "Não foi possível completar a busca pelos dados da jornada. Tente novamente mais tarde.",
+    "backToJourneysLink": "Voltar para a listagem de jornadas",
+    "loadingAriaLabel": "Carregando resumo da jornada",
+    "notAvailable": "—",
+    "notAvailableAriaLabel": "{label}: não disponível",
+    "startingLabel": "Iniciando...",
+    "startErrorMessage": "Não foi possível iniciar a jornada. Tente novamente.",
+    "resumeCurrentJourneyLabel": "Continuar jornada atual",
+    "actionResume": "Continuar jornada",
+    "journeyInProgressMessage": "Você já possui uma jornada em andamento. Finalize ou retome a jornada atual antes de iniciar uma nova."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Sair",
+      "exitAriaLabel": "Sair do questionário",
+      "backAriaLabel": "Voltar para a etapa anterior"
+    },
+    "exitModal": {
+      "title": "Deseja sair do questionário?",
+      "description": "Suas respostas anteriores já foram salvas. Você poderá retomar esta jornada mais tarde a partir deste mesmo ponto.",
+      "cancelButton": "Continuar respondendo",
+      "confirmButton": "Sair da jornada"
+    },
+    "actions": {
+      "back": "Voltar",
+      "saving": "Salvando..."
+    },
+    "retryButton": "Tentar novamente",
+    "errorMessage": "Ocorreu um erro ao buscar os dados do questionário. Tente novamente.",
+    "saveError": "Não foi possível salvar suas respostas. Tente novamente.",
+    "noOngoingJourneyTitle": "Nenhuma jornada em andamento",
+    "noOngoingJourneyMessage": "Não encontramos uma jornada em andamento para você. Inicie ou retome uma jornada a partir da listagem.",
+    "backToJourneysLink": "Voltar para jornadas",
     "areas": {
       "areaIndicator": "Área {current} / {total}",
       "progressAriaLabel": "Progresso do questionário de competências",

@@ -201,6 +201,7 @@ describe("useCompetenciesQuestionnaireVM", () => {
     const saveSpy = vi
       .spyOn(competenciesService, "saveCompetencies")
       .mockResolvedValue([saved(2, true), saved(3, false)]);
+    const invalidateSpy = vi.spyOn(QueryClient.prototype, "invalidateQueries");
     const { result } = await renderVM();
 
     act(() => result.current.handleAnswer(3, false));
@@ -211,6 +212,9 @@ describe("useCompetenciesQuestionnaireVM", () => {
       { competency_id: 2, acquired: true },
       { competency_id: 3, acquired: false },
     ]);
+    // O resumo passa a retomar a jornada a partir das novas respostas
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["journey", "current"] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["journey-summary"] });
   });
 
   it("não deve avançar com a área incompleta", async () => {
@@ -349,11 +353,11 @@ describe("useCompetenciesQuestionnaireVM", () => {
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/jornada/atual/competencias/0"));
   });
 
-  it("deve voltar para a introdução na primeira área e para a área anterior nas demais", async () => {
+  it("deve voltar para o resumo da jornada na primeira área e para a área anterior nas demais", async () => {
     mockLoad();
     const first = await renderVM("0");
     act(() => first.result.current.handleBack());
-    expect(pushMock).toHaveBeenLastCalledWith("/jornada/atual/competencias");
+    expect(pushMock).toHaveBeenLastCalledWith("/jornada/78");
 
     const second = await renderVM("1");
     act(() => second.result.current.handleBack());

@@ -1,5 +1,13 @@
-import CompetenciesIntroView from "@features/competencies-intro";
+import { redirect } from "@shared/i18n/navigation";
+import { getCompetenciesAreaUrl } from "@shared/utils/journeyRoutes";
 
-export default function CompetenciesIntroPage() {
-  return <CompetenciesIntroView />;
+interface CompetenciesPageProps {
+  params: Promise<{ locale: string }>;
+}
+
+// As instruções do questionário passaram para o resumo da jornada: o endereço
+// antigo leva direto à primeira área
+export default async function CompetenciesPage({ params }: CompetenciesPageProps) {
+  const { locale } = await params;
+  redirect({ href: getCompetenciesAreaUrl(0), locale });
 }

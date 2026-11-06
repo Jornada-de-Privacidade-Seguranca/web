@@ -2,28 +2,37 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BookOpen01Icon,
+  CheckListIcon,
+  CheckmarkCircle02Icon,
+  Timer02Icon,
+} from "@hugeicons/core-free-icons";
 import { useRouter } from "@shared/i18n/navigation";
 import { useAuth } from "@hooks/useAuth";
 import { CURRENT_JOURNEY_QUERY_KEY, useJourneyContext } from "@hooks/useJourneyContext";
 import { ApiRequestError } from "@services/httpClient";
-import { createJourney, getCurrentJourney } from "@services/journeyService";
+import { createJourney } from "@services/journeyService";
 import {
   getJourneySummary,
+  getLastProfileScore,
   getProfileSummary,
-  mapJourneyToSummary,
   JourneySummaryRequestError,
 } from "@services/journeySummaryService";
-import { getCurrentJourneyStepUrl } from "@shared/utils/journeyRoutes";
-import { requiresJourneyCreation, resolveJourneyStartUrl } from "./journeySummary.utils";
+import { getCompetenciesAreaUrl } from "@shared/utils/journeyRoutes";
+import { requiresJourneyCreation } from "./journeySummary.utils";
 import type {
   JourneySummaryViewModelReturn,
   JourneySummaryErrorType,
   JourneySummaryLabels,
   JourneySummaryTarget,
-  HowItWorksStep,
+  JourneyInstructionItem,
 } from "./journeySummary.types";
 
-const FIRST_STEP_URL = getCurrentJourneyStepUrl("experiencia-profissional");
+// As instruções ficam no próprio resumo: a jornada começa pela primeira área do
+// questionário de competências
+const START_URL = getCompetenciesAreaUrl(0);
+const JOURNEYS_URL = "/jornadas";
 
 function isJourneyInProgressError(error: unknown): boolean {
   return error instanceof ApiRequestError && error.status === 409;
@@ -63,6 +72,15 @@ export function useJourneySummaryVM(
   const journey = query.data ?? null;
   const isLoading = query.isLoading;
 
+  // Nota da última jornada concluída desse perfil, exibida ao lado do título
+  const profileId = journey?.profileId ?? null;
+  const lastScoreQuery = useQuery({
+    queryKey: ["journey-summary", "last-score", userId, profileId],
+    queryFn: () => getLastProfileScore(userId as number, profileId as string),
+    enabled: Boolean(userId && profileId),
+  });
+  const lastScore = lastScoreQuery.data ?? null;
+
   const error: JourneySummaryErrorType | null = query.isError
     ? query.error instanceof JourneySummaryRequestError
       ? query.error.type
@@ -80,18 +98,8 @@ export function useJourneySummaryVM(
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CURRENT_JOURNEY_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ["assessments"] });
-      router.push(FIRST_STEP_URL);
+      router.push(START_URL);
     },
-  });
-
-  // Leva à etapa em que a jornada em andamento parou (usado após o 409)
-  const resumeMutation = useMutation({
-    mutationFn: async () => {
-      if (!userId) throw new Error("Usuário indisponível.");
-      const current = await getCurrentJourney(userId);
-      return resolveJourneyStartUrl(mapJourneyToSummary(current, locale));
-    },
-    onSuccess: (url) => router.push(url),
   });
 
   // O resumo é da própria jornada em andamento (ou do perfil dela): o botão
@@ -105,7 +113,7 @@ export function useJourneySummaryVM(
   const hasOtherJourneyInProgress = Boolean(currentJourney.journeyId) && !isCurrentJourney;
   const hasConflictOnStart = isJourneyInProgressError(startMutation.error);
 
-  const isStarting = startMutation.isPending || resumeMutation.isPending;
+  const isStarting = startMutation.isPending;
   const isCtaDisabled =
     currentJourney.isLoading || hasOtherJourneyInProgress || hasConflictOnStart || isStarting;
 
@@ -119,28 +127,26 @@ export function useJourneySummaryVM(
 
   const ctaAriaLabel = journey ? `${ctaLabel} — ${journey.title}` : "";
 
+  // Retomar leva à primeira área com competências ainda sem resposta
+  const resumeUrl = getCompetenciesAreaUrl(currentJourney.resumeAreaIndex);
+
   const onStartJourney = () => {
     if (!journey || isCtaDisabled) return;
-    // No resumo do perfil não há o progresso da jornada: busca a jornada em
-    // andamento para seguir da etapa em que ela parou
-    if (isCurrentJourney && isProfileSummary) {
-      resumeMutation.mutate();
-      return;
-    }
-    if (requiresJourneyCreation(journey)) {
+    // A jornada em andamento apenas continua, sem criar outra
+    if (!isCurrentJourney && requiresJourneyCreation(journey)) {
       startMutation.mutate();
       return;
     }
-    router.push(resolveJourneyStartUrl(journey));
+    router.push(isCurrentJourney ? resumeUrl : START_URL);
   };
 
+  // Retoma a jornada que já está em andamento (aviso exibido após o 409)
   const onResumeCurrentJourney = () => {
-    if (resumeMutation.isPending) return;
-    resumeMutation.mutate();
+    router.push(resumeUrl);
   };
 
   const onDismiss = () => {
-    router.back();
+    router.push(JOURNEYS_URL);
   };
 
   // Aviso exibido ao abrir a página ou, se a verificação não pegar o caso,
@@ -149,12 +155,44 @@ export function useJourneySummaryVM(
     hasOtherJourneyInProgress || hasConflictOnStart ? t("journeyInProgressMessage") : null;
 
   const startError =
-    (startMutation.isError && !hasConflictOnStart) || resumeMutation.isError
-      ? t("startErrorMessage")
+    startMutation.isError && !hasConflictOnStart ? t("startErrorMessage")
       : null;
 
-  const rawSteps = t.raw("steps");
-  const steps = (Array.isArray(rawSteps) ? rawSteps : []) as HowItWorksStep[];
+  // Sem domínio informado, usa o texto da jornada conjunta
+  const domainText = t(`instructions.domains.${journey?.domain ?? "joint"}`);
+  const estimatedMinutes = journey?.estimatedMinutes ?? null;
+
+  const instructionItems: JourneyInstructionItem[] = [
+    {
+      id: "objective",
+      icon: CheckListIcon,
+      title: t("instructions.items.objective.title"),
+      description: t("instructions.items.objective.description"),
+    },
+    {
+      id: "sincerity",
+      icon: BookOpen01Icon,
+      title: t("instructions.items.sincerity.title"),
+      description: t("instructions.items.sincerity.description"),
+    },
+    {
+      id: "navigation",
+      icon: CheckmarkCircle02Icon,
+      title: t("instructions.items.navigation.title"),
+      description: t("instructions.items.navigation.description"),
+    },
+    {
+      id: "estimatedTime",
+      icon: Timer02Icon,
+      title: t("instructions.items.estimatedTime.title"),
+      // Sem a duração (resumo de perfil, antes de a jornada existir), o card
+      // mostra o texto sem o tempo
+      description:
+        estimatedMinutes !== null
+          ? t("instructions.items.estimatedTime.description", { minutes: estimatedMinutes })
+          : t("instructions.items.estimatedTime.fallbackDescription"),
+    },
+  ];
 
   const labels: JourneySummaryLabels = {
     loadingTitle: t("loadingTitle"),
@@ -162,22 +200,20 @@ export function useJourneySummaryVM(
     backToJourneysText: t("backToJourneys"),
     backToJourneysAriaLabel: t("backToJourneysAriaLabel"),
     badgeLabel: t("badgeLabel"),
-    stepsCountLabel: t("stepsCountLabel"),
+    domainLabel: journey?.domain ? t(`domainLabels.${journey.domain}`) : null,
+    lastScoreText: (score: number) => t("lastScoreText", { score }),
+    lastScoreAriaLabel: (score: number) => t("lastScoreAriaLabel", { score }),
     durationLabel: t("durationLabel"),
     areasLabel: t("areasLabel"),
     competenciesLabel: t("competenciesLabel"),
-    stepsCountAriaLabel: (count: number) => t("stepsCountAriaLabel", { count }),
-    stepsProgressText: (completed: number, total: number) =>
-      t("stepsProgressText", { completed, total }),
-    stepsProgressAriaLabel: (completed: number, total: number) =>
-      t("stepsProgressAriaLabel", { completed, total }),
     durationAriaLabel: (minutes: number) => t("durationAriaLabel", { minutes }),
     areasAriaLabel: (count: number) => t("areasAriaLabel", { count }),
     competenciesAriaLabel: (count: number) => t("competenciesAriaLabel", { count }),
     estimatedMinutesText: (minutes: number) => t("estimatedMinutesText", { minutes }),
     howItWorksTitle: t("howItWorksTitle"),
-    howItWorksSubtitle: t("howItWorksSubtitle"),
-    steps,
+    instructionsIntro: t("instructions.intro", { domain: domainText }),
+    instructionsAriaLabel: t("instructions.instructionsAriaLabel"),
+    instructionsTip: t("instructions.tip"),
     footerNote: t("footerNote"),
     dismissLabel: t("dismissLabel"),
     dismissAriaLabel: t("dismissAriaLabel"),
@@ -196,6 +232,8 @@ export function useJourneySummaryVM(
 
   return {
     journey,
+    lastScore,
+    instructionItems,
     isLoading,
     error,
     ctaLabel,

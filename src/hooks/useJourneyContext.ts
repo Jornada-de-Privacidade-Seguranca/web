@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import {
   getCurrentJourney,
+  getResumeAreaIndex,
   mapKnowledgeDomain,
   JourneyRequestError,
   type JourneyDomain,
@@ -21,6 +22,8 @@ export interface UseJourneyContextReturn {
   profileName: string | null;
   /** Domínio da jornada, derivado de journey_profile.knowledge_domain.id */
   domain: JourneyDomain | null;
+  /** Área do questionário em que a jornada em andamento deve ser retomada */
+  resumeAreaIndex: number;
   isLoading: boolean;
   /** Falha ao buscar a jornada (inclui o caso de não haver jornada em andamento) */
   isError: boolean;
@@ -64,6 +67,7 @@ export function useJourneyContext(): UseJourneyContextReturn {
     profileId: profile?.id != null ? String(profile.id) : null,
     profileName,
     domain: mapKnowledgeDomain(profile?.knowledge_domain),
+    resumeAreaIndex: query.data ? getResumeAreaIndex(query.data) : 0,
     // Enquanto a sessão carrega a query fica desabilitada; continua "carregando"
     isLoading: query.isLoading || (!userId && isAuthLoading),
     isError: query.isError,

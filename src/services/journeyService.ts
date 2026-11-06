@@ -39,6 +39,11 @@ export interface JourneyAnswersApi {
   higher_education_courses: unknown[];
 }
 
+/** Resposta de uma competência na jornada (Sim ou Não). */
+export interface JourneyAcquiredKnowledgeApi {
+  competency?: { id: number } | null;
+}
+
 /** Subconjunto de GET /journeys/{journey} usado pelo frontend. */
 export interface JourneyDetailApi {
   id: number;
@@ -46,7 +51,7 @@ export interface JourneyDetailApi {
   status: JourneyApiStatus;
   answers?: JourneyAnswersApi;
   professional_certifications?: unknown[];
-  acquired_knowledges?: unknown[];
+  acquired_knowledges?: JourneyAcquiredKnowledgeApi[];
 }
 
 export type JourneyErrorType = "not_found" | "server_error";
@@ -71,8 +76,42 @@ const KNOWLEDGE_DOMAIN_MAP: Record<number, JourneyDomain> = {
 export function mapKnowledgeDomain(
   knowledgeDomain: JourneyKnowledgeDomainApi | null | undefined
 ): JourneyDomain | null {
-  if (!knowledgeDomain) return null;
-  return KNOWLEDGE_DOMAIN_MAP[knowledgeDomain.id] ?? null;
+  return mapKnowledgeDomainId(knowledgeDomain?.id);
+}
+
+/** Mesmo mapeamento, a partir só do id (por exemplo, o `type` de um perfil de jornada). */
+export function mapKnowledgeDomainId(id: number | null | undefined): JourneyDomain | null {
+  if (id == null) return null;
+  return KNOWLEDGE_DOMAIN_MAP[id] ?? null;
+}
+
+/**
+ * Índice da área em que a jornada deve ser retomada: a primeira com alguma
+ * competência sem resposta, ou a última se todas já tiverem resposta. As áreas
+ * seguem a ordem do questionário (id da área; competências sem área no fim).
+ */
+export function getResumeAreaIndex(journey: JourneyDetailApi): number {
+  const answeredIds = new Set(
+    (journey.acquired_knowledges ?? [])
+      .map((knowledge) => knowledge.competency?.id)
+      .filter((id): id is number => id != null)
+  );
+
+  const areas = new Map<number, number[]>();
+  for (const competency of journey.journey_profile?.competencies ?? []) {
+    const sortId = competency.knowledge_area?.id ?? Number.POSITIVE_INFINITY;
+    areas.set(sortId, [...(areas.get(sortId) ?? []), competency.id]);
+  }
+
+  const sortedAreas = [...areas.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, competencyIds]) => competencyIds);
+  if (sortedAreas.length === 0) return 0;
+
+  const firstPending = sortedAreas.findIndex((competencyIds) =>
+    competencyIds.some((id) => !answeredIds.has(id))
+  );
+  return firstPending === -1 ? sortedAreas.length - 1 : firstPending;
 }
 
 const MOCK_COMPETENCIES: JourneyCompetencyApi[] = [

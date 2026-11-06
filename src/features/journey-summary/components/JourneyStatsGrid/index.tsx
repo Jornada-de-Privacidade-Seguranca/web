@@ -2,7 +2,6 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  CheckListIcon,
   Clock01Icon,
   Layers01Icon,
   Shield01Icon,
@@ -14,9 +13,8 @@ import type { StatKey } from "./journeyStatsGrid.types";
 
 const STAT_ICONS: Record<
   StatKey,
-  typeof CheckListIcon | typeof Clock01Icon | typeof Layers01Icon | typeof Shield01Icon
+  typeof Clock01Icon | typeof Layers01Icon | typeof Shield01Icon
 > = {
-  steps: CheckListIcon,
   duration: Clock01Icon,
   areas: Layers01Icon,
   competencies: Shield01Icon,

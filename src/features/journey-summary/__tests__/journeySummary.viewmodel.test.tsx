@@ -17,17 +17,13 @@ vi.mock("next-intl", () => ({
   useLocale: () => "pt",
   useTranslations: () => {
     const t = (key: string, params?: Record<string, unknown>) => {
-      if (key === "stepsCountAriaLabel") return `${params?.count} etapas`;
       if (key === "durationAriaLabel") return `${params?.minutes} minutos de duração`;
       if (key === "areasAriaLabel") return `${params?.count} áreas`;
       if (key === "competenciesAriaLabel") return `${params?.count} competências`;
       if (key === "estimatedMinutesText") return `${params?.minutes} min`;
-      return key;
-    };
-    t.raw = (key: string) => {
-      if (key === "steps") {
-        return [{ title: "Etapa 1", description: "Descrição 1" }];
-      }
+      if (key === "instructions.items.estimatedTime.description") return `${params?.minutes} minutos`;
+      if (key === "instructions.intro") return `intro: ${params?.domain}`;
+      if (key === "lastScoreText") return `Última pontuação ${params?.score}/100`;
       return key;
     };
     return t;
@@ -51,6 +47,7 @@ vi.mock("@hooks/useAuth", () => ({
 let mockCurrentJourneyId: string | null = null;
 let mockCurrentProfileId = "1";
 let mockCurrentJourneyLoading = false;
+let mockResumeAreaIndex = 0;
 
 vi.mock("@hooks/useJourneyContext", () => ({
   CURRENT_JOURNEY_QUERY_KEY: ["journey", "current"],
@@ -59,6 +56,7 @@ vi.mock("@hooks/useJourneyContext", () => ({
     profileId: mockCurrentJourneyId ? mockCurrentProfileId : null,
     profileName: null,
     domain: null,
+    resumeAreaIndex: mockResumeAreaIndex,
     isLoading: mockCurrentJourneyLoading,
     isError: !mockCurrentJourneyId && !mockCurrentJourneyLoading,
     isNotFound: !mockCurrentJourneyId && !mockCurrentJourneyLoading,
@@ -80,20 +78,17 @@ const notStartedJourney: JourneySummary = {
   id: "78",
   profileId: "1",
   title: "Encarregado de Dados",
-  stepsCount: 6,
-  completedStepsCount: 0,
   estimatedMinutes: 3,
   areasCount: 1,
   competenciesCount: 3,
+  domain: "security",
   status: "not_started",
-  progress: { firstStepSlug: "experiencia-profissional", lastAnsweredStepSlug: null },
 };
 
 const completedJourney: JourneySummary = {
   ...notStartedJourney,
   id: "77",
   status: "completed",
-  completedStepsCount: 6,
 };
 
 const profileSummary: JourneySummary = {
@@ -102,23 +97,6 @@ const profileSummary: JourneySummary = {
   estimatedMinutes: null,
   areasCount: null,
   competenciesCount: null,
-};
-
-const currentJourneyDetail = {
-  id: 78,
-  journey_profile: {
-    id: 1,
-    name_pt: "Encarregado de Dados",
-    name_en: "Data Protection Officer",
-    knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
-  },
-  status: "ongoing" as const,
-  answers: {
-    professional_experience: null,
-    english_proficiency: null,
-    profile_experience: null,
-    higher_education_courses: [{ id: 24 }],
-  },
 };
 
 async function renderJourneySummary(summary: JourneySummary) {
@@ -147,11 +125,14 @@ describe("useJourneySummaryVM", () => {
     mockCurrentJourneyId = null;
     mockCurrentProfileId = "1";
     mockCurrentJourneyLoading = false;
+    mockResumeAreaIndex = 0;
+    vi.spyOn(journeySummaryService, "getLastProfileScore").mockResolvedValue(null);
   });
 
   describe("resumo da jornada em andamento", () => {
-    it("deve exibir \"Retomar jornada\" e seguir pela primeira etapa sem criar jornada", async () => {
+    it("deve exibir \"Continuar jornada\" e seguir para a primeira área pendente sem criar jornada", async () => {
       mockCurrentJourneyId = "78";
+      mockResumeAreaIndex = 2;
       const createSpy = vi.spyOn(journeyService, "createJourney");
       const { result } = await renderJourneySummary(notStartedJourney);
 
@@ -163,32 +144,14 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/experiencia-profissional");
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/2");
       expect(createSpy).not.toHaveBeenCalled();
-    });
-
-    it("deve retomar a partir da última etapa respondida", async () => {
-      mockCurrentJourneyId = "78";
-      const { result } = await renderJourneySummary({
-        ...notStartedJourney,
-        status: "in_progress",
-        progress: {
-          firstStepSlug: "experiencia-profissional",
-          lastAnsweredStepSlug: "formacao-academica",
-        },
-      });
-
-      expect(result.current.ctaLabel).toBe("actionResume");
-      act(() => result.current.onStartJourney());
-      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/formacao-academica");
     });
 
     it("resumo do perfil da jornada em andamento deve retomá-la, sem aviso e sem criar outra", async () => {
       mockCurrentJourneyId = "78";
+      mockResumeAreaIndex = 1;
       const createSpy = vi.spyOn(journeyService, "createJourney");
-      const currentSpy = vi
-        .spyOn(journeyService, "getCurrentJourney")
-        .mockResolvedValue(currentJourneyDetail);
       const { result } = await renderProfileSummary();
 
       expect(result.current.ctaLabel).toBe("actionResume");
@@ -197,10 +160,7 @@ describe("useJourneySummaryVM", () => {
 
       act(() => result.current.onStartJourney());
 
-      await waitFor(() => {
-        expect(currentSpy).toHaveBeenCalledWith(2);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/formacao-academica");
-      });
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/1");
       expect(createSpy).not.toHaveBeenCalled();
     });
   });
@@ -224,10 +184,8 @@ describe("useJourneySummaryVM", () => {
       mockCurrentJourneyId = "78";
       // A jornada em andamento é de outro perfil
       mockCurrentProfileId = "9";
+      mockResumeAreaIndex = 3;
       const createSpy = vi.spyOn(journeyService, "createJourney");
-      const currentSpy = vi
-        .spyOn(journeyService, "getCurrentJourney")
-        .mockResolvedValue(currentJourneyDetail);
       const { result } = await renderProfileSummary();
 
       expect(result.current.ctaLabel).toBe("actionStart");
@@ -238,10 +196,7 @@ describe("useJourneySummaryVM", () => {
       expect(createSpy).not.toHaveBeenCalled();
 
       act(() => result.current.onResumeCurrentJourney());
-      await waitFor(() => {
-        expect(currentSpy).toHaveBeenCalledWith(2);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/formacao-academica");
-      });
+      expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/3");
     });
   });
 
@@ -258,11 +213,11 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => {
         expect(createSpy).toHaveBeenCalledWith(2, 1);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/experiencia-profissional");
+        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       });
     });
 
-    it("iniciar a partir do perfil deve criar a jornada e ir para a primeira etapa", async () => {
+    it("iniciar a partir do perfil deve criar a jornada e ir para a primeira área de competências", async () => {
       const createSpy = vi
         .spyOn(journeyService, "createJourney")
         .mockResolvedValue({ id: 79 });
@@ -274,7 +229,7 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => {
         expect(createSpy).toHaveBeenCalledWith(2, 1);
-        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/experiencia-profissional");
+        expect(pushMock).toHaveBeenCalledWith("/jornada/atual/competencias/0");
       });
     });
 
@@ -304,6 +259,37 @@ describe("useJourneySummaryVM", () => {
 
       await waitFor(() => expect(result.current.startError).toBe("startErrorMessage"));
       expect(result.current.journeyInProgressNotice).toBeNull();
+    });
+  });
+
+  describe("instruções do questionário", () => {
+    it("deve montar as instruções com o domínio e a duração estimada da jornada", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      expect(result.current.labels.instructionsIntro).toBe("intro: instructions.domains.security");
+      expect(result.current.instructionItems.map((item) => item.id)).toEqual([
+        "objective",
+        "sincerity",
+        "navigation",
+        "estimatedTime",
+      ]);
+      expect(result.current.instructionItems[3].description).toBe("3 minutos");
+    });
+
+    it("sem domínio e sem duração, deve usar o texto conjunto e o tempo sem minutos", async () => {
+      const { result } = await renderJourneySummary({
+        ...notStartedJourney,
+        id: "80",
+        domain: null,
+        estimatedMinutes: null,
+      });
+
+      expect(result.current.journey?.id).toBe("80");
+
+      expect(result.current.labels.instructionsIntro).toBe("intro: instructions.domains.joint");
+      expect(result.current.instructionItems[3].description).toBe(
+        "instructions.items.estimatedTime.fallbackDescription"
+      );
     });
   });
 
@@ -340,10 +326,41 @@ describe("useJourneySummaryVM", () => {
     await waitFor(() => expect(result.current.error).toBe("server_error"));
   });
 
-  it("onDismiss deve voltar no histórico", async () => {
+  it("onDismiss deve voltar para a listagem de jornadas", async () => {
     const { result } = await renderJourneySummary(notStartedJourney);
 
     act(() => result.current.onDismiss());
-    expect(backMock).toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/jornadas");
+    expect(backMock).not.toHaveBeenCalled();
+  });
+
+  describe("cabeçalho", () => {
+    it("deve trazer o domínio da jornada para a tag", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      expect(result.current.labels.domainLabel).toBe("domainLabels.security");
+    });
+
+    it("sem domínio informado, não deve exibir a tag", async () => {
+      const { result } = await renderJourneySummary({ ...notStartedJourney, domain: null });
+
+      expect(result.current.labels.domainLabel).toBeNull();
+    });
+
+    it("deve buscar a última pontuação do perfil para o usuário", async () => {
+      vi.mocked(journeySummaryService.getLastProfileScore).mockResolvedValue(82);
+      const { result } = await renderProfileSummary();
+
+      await waitFor(() => expect(result.current.lastScore).toBe(82));
+      expect(journeySummaryService.getLastProfileScore).toHaveBeenCalledWith(2, "1");
+      expect(result.current.labels.lastScoreText(82)).toBe("Última pontuação 82/100");
+    });
+
+    it("sem jornada concluída do perfil, não deve haver última pontuação", async () => {
+      const { result } = await renderJourneySummary(notStartedJourney);
+
+      await waitFor(() => expect(journeySummaryService.getLastProfileScore).toHaveBeenCalled());
+      expect(result.current.lastScore).toBeNull();
+    });
   });
 });

@@ -1,18 +1,23 @@
+import type React from "react";
+import type { HugeiconsIcon } from "@hugeicons/react";
 import type {
   JourneyStatus,
-  JourneyProgress,
   JourneySummary,
   JourneySummaryErrorType,
 } from "@services/journeySummaryService";
 
 export type {
   JourneyStatus,
-  JourneyProgress,
   JourneySummary,
   JourneySummaryErrorType,
 };
 
-export interface HowItWorksStep {
+export type JourneyInstructionIcon = React.ComponentProps<typeof HugeiconsIcon>["icon"];
+
+/** Card das instruções do questionário de competências exibidas no resumo. */
+export interface JourneyInstructionItem {
+  id: "objective" | "sincerity" | "navigation" | "estimatedTime";
+  icon: JourneyInstructionIcon;
   title: string;
   description: string;
 }
@@ -23,20 +28,22 @@ export interface JourneySummaryLabels {
   backToJourneysText: string;
   backToJourneysAriaLabel: string;
   badgeLabel: string;
-  stepsCountLabel: string;
+  /** Nome do domínio exibido na tag do cabeçalho; null quando não informado */
+  domainLabel: string | null;
+  lastScoreText: (score: number) => string;
+  lastScoreAriaLabel: (score: number) => string;
   durationLabel: string;
   areasLabel: string;
   competenciesLabel: string;
-  stepsCountAriaLabel: (count: number) => string;
-  stepsProgressText: (completed: number, total: number) => string;
-  stepsProgressAriaLabel: (completed: number, total: number) => string;
   durationAriaLabel: (minutes: number) => string;
   areasAriaLabel: (count: number) => string;
   competenciesAriaLabel: (count: number) => string;
   estimatedMinutesText: (minutes: number) => string;
   howItWorksTitle: string;
-  howItWorksSubtitle: string;
-  steps: HowItWorksStep[];
+  /** Texto de apresentação das instruções, já com o domínio da jornada aplicado */
+  instructionsIntro: string;
+  instructionsAriaLabel: string;
+  instructionsTip: string;
   footerNote: string;
   dismissLabel: string;
   dismissAriaLabel: string;
@@ -56,6 +63,10 @@ export interface JourneySummaryLabels {
 
 export interface JourneySummaryViewModelReturn {
   journey: JourneySummary | null;
+  /** Nota (0 a 100) da última jornada concluída desse perfil; null se não houver */
+  lastScore: number | null;
+  /** Instruções do questionário, exibidas antes de iniciar a jornada */
+  instructionItems: JourneyInstructionItem[];
   isLoading: boolean;
   error: JourneySummaryErrorType | null;
   ctaLabel: string;

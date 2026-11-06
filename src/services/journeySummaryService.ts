@@ -1,23 +1,19 @@
 import {
   getJourney,
   JourneyRequestError,
+  mapKnowledgeDomain,
+  mapKnowledgeDomainId,
   type JourneyDetailApi,
+  type JourneyDomain,
 } from "@services/journeyService";
+import { apiRequest } from "@services/httpClient";
+import { normalizeScore } from "@shared/utils/scoreBand";
 import {
   getJourneyProfile,
   JourneyProfileRequestError,
 } from "@services/journeyProfileService";
-import {
-  PRE_QUESTIONNAIRE_STEPS,
-  type PreQuestionnaireStepSlug,
-} from "@shared/utils/journeyRoutes";
 
 export type JourneyStatus = "not_started" | "in_progress" | "completed";
-
-export interface JourneyProgress {
-  firstStepSlug: string;
-  lastAnsweredStepSlug: string | null;
-}
 
 export interface JourneySummary {
   /** Id da jornada; null no resumo de um perfil (jornada ainda não criada) */
@@ -25,16 +21,13 @@ export interface JourneySummary {
   /** Id do perfil da jornada, usado para criar uma nova jornada ao iniciar/refazer */
   profileId: string | null;
   title: string;
-  /** Total de etapas do fluxo (pré-questionário + competências) */
-  stepsCount: number;
-  /** Etapas com resposta registrada na jornada */
-  completedStepsCount: number;
   /** null quando o dado não está disponível (resumo de perfil) */
   estimatedMinutes: number | null;
   areasCount: number | null;
   competenciesCount: number | null;
+  /** Domínio da jornada, usado no texto das instruções; null quando não informado */
+  domain: JourneyDomain | null;
   status: JourneyStatus;
-  progress: JourneyProgress;
 }
 
 export type JourneySummaryLocale = "pt" | "en";
@@ -51,42 +44,27 @@ export class JourneySummaryRequestError extends Error {
   }
 }
 
-/** Perguntas de escolha do pré-questionário (todas as etapas antes de "competencias"). */
-const PRE_QUESTIONNAIRE_QUESTIONS_COUNT = PRE_QUESTIONNAIRE_STEPS.length - 1;
-
-/** Tempo médio estimado para responder cada pergunta ou competência. */
+/** Tempo médio estimado para responder cada competência. */
 const SECONDS_PER_ANSWER = 20;
 
 /**
- * Duração estimada em minutos: perguntas do pré-questionário mais uma
- * resposta por competência, arredondada para cima (mínimo de 1 minuto).
+ * Duração estimada em minutos: uma resposta por competência, arredondada para
+ * cima (mínimo de 1 minuto).
  */
 export function estimateJourneyMinutes(competenciesCount: number): number {
-  const totalSeconds =
-    (PRE_QUESTIONNAIRE_QUESTIONS_COUNT + competenciesCount) * SECONDS_PER_ANSWER;
+  const totalSeconds = competenciesCount * SECONDS_PER_ANSWER;
   return Math.max(1, Math.ceil(totalSeconds / 60));
 }
 
-const FIRST_STEP_SLUG: PreQuestionnaireStepSlug = "experiencia-profissional";
-
-/**
- * Etapas na ordem oficial do pré-questionário, com o teste que indica se
- * a jornada já tem resposta registrada para cada uma.
- */
-const ANSWERED_STEP_CHECKS: [PreQuestionnaireStepSlug, (j: JourneyDetailApi) => boolean][] = [
-  ["experiencia-profissional", (j) => j.answers?.professional_experience != null],
-  ["english", (j) => j.answers?.english_proficiency != null],
-  ["tempo-atuacao-perfil", (j) => j.answers?.profile_experience != null],
-  ["formacao-academica", (j) => (j.answers?.higher_education_courses?.length ?? 0) > 0],
-  ["certificacoes-profissionais", (j) => (j.professional_certifications?.length ?? 0) > 0],
-  ["competencias", (j) => (j.acquired_knowledges?.length ?? 0) > 0],
+/** Respostas que indicam que a jornada já foi iniciada. */
+const JOURNEY_STARTED_CHECKS: ((j: JourneyDetailApi) => boolean)[] = [
+  (j) => j.answers?.professional_experience != null,
+  (j) => j.answers?.english_proficiency != null,
+  (j) => j.answers?.profile_experience != null,
+  (j) => (j.answers?.higher_education_courses?.length ?? 0) > 0,
+  (j) => (j.professional_certifications?.length ?? 0) > 0,
+  (j) => (j.acquired_knowledges?.length ?? 0) > 0,
 ];
-
-function getAnsweredSteps(journey: JourneyDetailApi): PreQuestionnaireStepSlug[] {
-  return ANSWERED_STEP_CHECKS.filter(([, isAnswered]) => isAnswered(journey)).map(
-    ([slug]) => slug
-  );
-}
 
 export function mapJourneyToSummary(
   journey: JourneyDetailApi,
@@ -99,13 +77,12 @@ export function mapJourneyToSummary(
       .map((competency) => competency.knowledge_area?.id)
       .filter((id): id is number => id != null)
   );
-  const answeredSteps = getAnsweredSteps(journey);
-  const lastAnsweredStepSlug = answeredSteps[answeredSteps.length - 1] ?? null;
+  const hasAnswers = JOURNEY_STARTED_CHECKS.some((isAnswered) => isAnswered(journey));
 
   const status: JourneyStatus =
     journey.status === "completed"
       ? "completed"
-      : lastAnsweredStepSlug
+      : hasAnswers
         ? "in_progress"
         : "not_started";
 
@@ -113,14 +90,11 @@ export function mapJourneyToSummary(
     id: String(journey.id),
     profileId: profile?.id != null ? String(profile.id) : null,
     title: (locale === "en" ? profile?.name_en : profile?.name_pt) ?? "",
-    stepsCount: PRE_QUESTIONNAIRE_STEPS.length,
-    completedStepsCount:
-      status === "completed" ? PRE_QUESTIONNAIRE_STEPS.length : answeredSteps.length,
     estimatedMinutes: estimateJourneyMinutes(competencies.length),
     areasCount: areaIds.size,
     competenciesCount: competencies.length,
+    domain: mapKnowledgeDomain(profile?.knowledge_domain),
     status,
-    progress: { firstStepSlug: FIRST_STEP_SLUG, lastAnsweredStepSlug },
   };
 }
 
@@ -162,13 +136,11 @@ export async function getProfileSummary(
       id: null,
       profileId: String(profile.id),
       title: (locale === "en" ? profile.name_en : profile.name_pt) || profile.name_pt,
-      stepsCount: PRE_QUESTIONNAIRE_STEPS.length,
-      completedStepsCount: 0,
       estimatedMinutes: null,
       areasCount: null,
       competenciesCount: null,
+      domain: mapKnowledgeDomainId(profile.type),
       status: "not_started",
-      progress: { firstStepSlug: FIRST_STEP_SLUG, lastAnsweredStepSlug: null },
     };
   } catch (err: unknown) {
     if (err instanceof JourneyProfileRequestError && err.type === "not_found") {
@@ -181,3 +153,38 @@ export async function getProfileSummary(
   }
 }
 
+/** Item de GET /users/{user}/journeys usado para a última nota. */
+interface CompletedJourneyListItemApi {
+  id: number;
+  score: number | null;
+}
+
+/**
+ * Nota (0 a 100) da jornada concluída mais recente do usuário nesse perfil, ou
+ * null se ele ainda não concluiu nenhuma. A listagem vem ordenada da mais
+ * recente para a mais antiga. Uma falha também resulta em null: a nota é só
+ * informativa e não deve impedir o resumo de abrir.
+ */
+export async function getLastProfileScore(
+  userId: number,
+  profileId: string
+): Promise<number | null> {
+  try {
+    const journeys = await apiRequest<CompletedJourneyListItemApi[]>(
+      `/users/${userId}/journeys`,
+      {
+        params: {
+          status: "completed",
+          journey_profile_id: profileId,
+          page: 1,
+          per_page: 1,
+        },
+      },
+      "Não foi possível carregar a última pontuação."
+    );
+    const last = Array.isArray(journeys) ? journeys[0] : undefined;
+    return last?.score != null ? normalizeScore(last.score) : null;
+  } catch {
+    return null;
+  }
+}

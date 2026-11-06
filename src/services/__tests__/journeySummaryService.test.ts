@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as journeyService from "../journeyService";
+import * as journeyProfileService from "../journeyProfileService";
+import * as httpClient from "../httpClient";
 import type { JourneyDetailApi } from "../journeyService";
 import {
   estimateJourneyMinutes,
   getJourneySummary,
+  getLastProfileScore,
+  getProfileSummary,
   mapJourneyToSummary,
   JourneySummaryRequestError,
 } from "../journeySummaryService";
@@ -49,22 +53,18 @@ describe("journeySummaryService", () => {
         title: "Encarregado pelo Tratamento de Dados Pessoais",
         competenciesCount: 3,
         areasCount: 2,
-        stepsCount: 6,
-        completedStepsCount: 0,
-        // (5 perguntas do pré-questionário + 3 competências) × 20 s = 160 s → 3 min
-        estimatedMinutes: 3,
+        // 3 competências × 20 s = 60 s → 1 min
+        estimatedMinutes: 1,
+        domain: "privacy",
         status: "not_started",
-        progress: {
-          firstStepSlug: "experiencia-profissional",
-          lastAnsweredStepSlug: null,
-        },
       });
+      expect(summary).not.toHaveProperty("progress");
       expect(mapJourneyToSummary(buildJourney(), "en").title).toBe(
         "Data Protection Officer"
       );
     });
 
-    it("deve considerar em andamento a jornada com respostas e apontar a última etapa respondida", () => {
+    it("deve considerar em andamento a jornada com respostas", () => {
       const summary = mapJourneyToSummary(
         buildJourney({
           answers: {
@@ -78,8 +78,6 @@ describe("journeySummaryService", () => {
       );
 
       expect(summary.status).toBe("in_progress");
-      expect(summary.completedStepsCount).toBe(2);
-      expect(summary.progress.lastAnsweredStepSlug).toBe("english");
     });
 
     it("deve marcar como concluída a jornada com status completed", () => {
@@ -89,19 +87,17 @@ describe("journeySummaryService", () => {
       );
 
       expect(summary.status).toBe("completed");
-      expect(summary.completedStepsCount).toBe(6);
-      expect(summary.progress.lastAnsweredStepSlug).toBe("competencias");
     });
   });
 
   describe("estimateJourneyMinutes", () => {
-    it("deve somar 20 s por pergunta do pré-questionário e por competência, arredondando para cima", () => {
-      // (5 + 39) × 20 s = 880 s ≈ 14,7 min → 15 min
-      expect(estimateJourneyMinutes(39)).toBe(15);
-      // (5 + 4) × 20 s = 180 s = 3 min
-      expect(estimateJourneyMinutes(4)).toBe(3);
-      // (5 + 0) × 20 s = 100 s ≈ 1,7 min → 2 min
-      expect(estimateJourneyMinutes(0)).toBe(2);
+    it("deve somar 20 s por competência, arredondando para cima, com mínimo de 1 min", () => {
+      // 39 × 20 s = 780 s = 13 min
+      expect(estimateJourneyMinutes(39)).toBe(13);
+      // 4 × 20 s = 80 s ≈ 1,3 min → 2 min
+      expect(estimateJourneyMinutes(4)).toBe(2);
+      // sem competências, o mínimo é 1 min
+      expect(estimateJourneyMinutes(0)).toBe(1);
     });
   });
 
@@ -128,6 +124,66 @@ describe("journeySummaryService", () => {
       const error = await getJourneySummary("78", "pt").catch((e) => e);
       expect(error).toBeInstanceOf(JourneySummaryRequestError);
       expect(error.type).toBe(expected);
+    });
+  });
+
+  describe("getProfileSummary", () => {
+    it("deve trazer o domínio do perfil, usado no texto das instruções", async () => {
+      vi.spyOn(journeyProfileService, "getJourneyProfile").mockResolvedValueOnce({
+        id: 5,
+        name_pt: "Analista de Segurança da Informação",
+        name_en: "Information Security Analyst",
+        description_pt: null,
+        description_en: null,
+        type: 2,
+      });
+
+      await expect(getProfileSummary("5", "pt")).resolves.toMatchObject({
+        id: null,
+        profileId: "5",
+        domain: "security",
+        estimatedMinutes: null,
+      });
+    });
+
+    it("deve deixar o domínio nulo quando o perfil não o informar", async () => {
+      vi.spyOn(journeyProfileService, "getJourneyProfile").mockResolvedValueOnce({
+        id: 6,
+        name_pt: "Perfil sem domínio",
+        name_en: "Profile without domain",
+        description_pt: null,
+        description_en: null,
+        type: null,
+      });
+
+      await expect(getProfileSummary("6", "pt")).resolves.toMatchObject({ domain: null });
+    });
+  });
+
+  describe("getLastProfileScore", () => {
+    it("deve buscar a jornada concluída mais recente do perfil e devolver a nota", async () => {
+      const spy = vi
+        .spyOn(httpClient, "apiRequest")
+        .mockResolvedValueOnce([{ id: 40, score: 81.6 }]);
+
+      await expect(getLastProfileScore(2, "5")).resolves.toBe(82);
+      expect(spy).toHaveBeenCalledWith(
+        "/users/2/journeys",
+        {
+          params: { status: "completed", journey_profile_id: "5", page: 1, per_page: 1 },
+        },
+        expect.any(String)
+      );
+    });
+
+    it.each([
+      ["sem jornada concluída", () => Promise.resolve([])],
+      ["sem nota na jornada", () => Promise.resolve([{ id: 40, score: null }])],
+      ["com falha na busca", () => Promise.reject(new Error("boom"))],
+    ])("deve devolver null %s", async (_, response) => {
+      vi.spyOn(httpClient, "apiRequest").mockImplementationOnce(response);
+
+      await expect(getLastProfileScore(2, "5")).resolves.toBeNull();
     });
   });
 });

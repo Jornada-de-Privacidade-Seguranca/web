@@ -239,193 +239,22 @@
     "backToJourneys": "Back to journeys",
     "backToJourneysAriaLabel": "Back to the journeys list",
     "badgeLabel": "Journey summary",
-    "stepsCountLabel": "Steps",
+    "domainLabels": {
+      "privacy": "Privacy",
+      "security": "Information Security",
+      "joint": "Joint"
+    },
+    "lastScoreText": "Last score {score}/100",
+    "lastScoreAriaLabel": "Last score: {score} out of 100",
     "durationLabel": "Duration",
     "areasLabel": "Areas",
     "competenciesLabel": "Competencies",
-    "stepsCountAriaLabel": "{count} steps",
-    "stepsProgressText": "{completed} of {total}",
-    "stepsProgressAriaLabel": "{completed} of {total} steps completed",
     "durationAriaLabel": "{minutes} minutes long",
     "areasAriaLabel": "{count} areas",
     "competenciesAriaLabel": "{count} competencies",
     "estimatedMinutesText": "{minutes} min",
     "howItWorksTitle": "How it works",
-    "howItWorksSubtitle": "The journey is split into short steps. You can move at your own pace.",
-    "steps": [
-      {
-        "title": "Professional Experience",
-        "description": "Professional experience in the privacy and/or information security field."
-      },
-      {
-        "title": "English Proficiency Level",
-        "description": "Fluency and knowledge level of the English language."
-      },
-      {
-        "title": "Time in the Chosen Role",
-        "description": "Time spent working in the role chosen for the journey."
-      },
-      {
-        "title": "Academic Background",
-        "description": "Undergraduate, licentiate or technologist degrees, and graduate studies."
-      },
-      {
-        "title": "Professional Certifications",
-        "description": "List of professional certifications in privacy and/or information security."
-      },
-      {
-        "title": "Competencies",
-        "description": "Technical knowledge of privacy and/or information security related to the role chosen for the journey."
-      }
-    ],
-    "footerNote": "Your answers are saved as you progress.",
-    "dismissLabel": "Not now",
-    "dismissAriaLabel": "Go back to the previous page",
-    "actionStart": "Start journey",
-    "actionContinue": "Continue journey",
-    "actionRetake": "Retake journey",
-    "notFoundTitle": "Journey not found",
-    "notFoundMessage": "We couldn't find the requested journey. It may have been removed, or the link may be incorrect.",
-    "serverErrorTitle": "Unable to load the journey",
-    "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
-    "backToJourneysLink": "Back to the journeys list",
-    "loadingAriaLabel": "Loading journey summary",
-    "notAvailable": "—",
-    "notAvailableAriaLabel": "{label}: not available",
-    "startingLabel": "Starting...",
-    "startErrorMessage": "Could not start the journey. Please try again.",
-    "resumeCurrentJourneyLabel": "Continue current journey",
-    "actionResume": "Resume journey",
-    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
-  },
-  "preQuestionnaire": {
-    "header": {
-      "exitButton": "Exit",
-      "exitAriaLabel": "Exit pre-questionnaire",
-      "backAriaLabel": "Go back to previous step",
-      "backToSummaryAriaLabel": "Go back to the journey summary"
-    },
-    "experience": {
-      "stepTag": "PRE-QUESTIONNAIRE · PROFESSIONAL EXPERIENCE",
-      "title": "Tell us about your professional experience",
-      "description": "Time of professional experience in privacy and/or information security.",
-      "questionLabel": {
-        "privacy": "How long is your professional experience in privacy areas?",
-        "security": "How long is your professional experience in information security areas?",
-        "joint": "How long is your professional experience in privacy or information security areas? Consider the sum of both."
-      },
-      "options": {
-        "none": "None",
-        "less-than-1-year": "Less than 1 year",
-        "1-3-years": "Between 1 and 3 years",
-        "4-6-years": "Between 4 and 6 years",
-        "7-10-years": "Between 7 and 10 years",
-        "10-plus-years": "More than 10 years"
-      }
-    },
-    "english": {
-      "stepTag": "PRE-QUESTIONNAIRE · ENGLISH PROFICIENCY LEVEL",
-      "title": "English proficiency level",
-      "description": "This helps us calibrate the complexity of the technical questions presented throughout the journey.",
-      "questionLabel": "English proficiency level",
-      "options": {
-        "none": "None",
-        "basic-reading": "Basic - Reading",
-        "intermediate-reading-writing": "Intermediate - Reading and Writing",
-        "advanced-fluent": "Advanced - Fluent"
-      }
-    },
-    "roleTenure": {
-      "stepTag": "PRE-QUESTIONNAIRE · TIME WORKING IN THIS ROLE",
-      "title": "Time working in this role",
-      "description": "This helps us understand how long you have been working in this role and calibrate the depth of the questions.",
-      "questionLabel": "Time working in this role",
-      "options": {
-        "0-years": "None",
-        "1-3-years": "Between 1 and 3 years",
-        "4-6-years": "Between 4 and 6 years",
-        "7-10-years": "Between 7 and 10 years",
-        "10-plus-years": "More than 10 years"
-      }
-    },
-    "academic": {
-      "stepTag": "PRE-QUESTIONNAIRE · ACADEMIC BACKGROUND",
-      "title": "Academic background",
-      "description": "Select one or more courses that are part of your résumé.",
-      "searchPlaceholder": "Search course...",
-      "searchAriaLabel": "Search course",
-      "groupsAriaLabel": "Degree levels",
-      "emptyLabel": "No courses found.",
-      "counterLabel": "{count} course(s) selected",
-      "removeCourseAriaLabel": "Remove {course}",
-      "typeLegends": {
-        "1": "Bachelor's/Teaching degree/Technologist",
-        "2": "lato sensu",
-        "3": "stricto sensu",
-        "4": "stricto sensu"
-      }
-    },
-    "certifications": {
-      "stepTag": "PRE-QUESTIONNAIRE · PROFESSIONAL CERTIFICATIONS",
-      "title": "Professional certifications",
-      "description": "Select one or more certifications that are part of your résumé.",
-      "searchPlaceholder": "Search certification...",
-      "searchAriaLabel": "Search certification",
-      "groupsAriaLabel": "Knowledge domains",
-      "emptyLabel": "No certifications found.",
-      "counterLabel": "{count} certification(s) selected",
-      "limitReachedLabel": "You have reached the limit of {max} selected certifications.",
-      "removeCertificationAriaLabel": "Remove {certification}",
-      "otherGroupLabel": "Other"
-    },
-    "actions": {
-      "back": "Back",
-      "continue": "Continue",
-      "saving": "Saving..."
-    },
-    "exitModal": {
-      "title": "Do you want to leave the pre-questionnaire?",
-      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
-      "cancelButton": "Keep answering",
-      "confirmButton": "Exit journey"
-    },
-    "loading": "Loading question...",
-    "errorTitle": "Unable to load pre-questionnaire",
-    "errorMessage": "An error occurred while fetching step data. Please try again.",
-    "retryButton": "Try again",
-    "saveError": "Could not save your answer. Please try again.",
-    "notFoundTitle": "Journey not found",
-    "notFoundMessage": "We couldn't find the journey you are trying to access. It may have been removed or the link is incorrect.",
-    "backToJourneysLink": "Back to journeys",
-    "noOngoingJourneyTitle": "No journey in progress",
-    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list."
-  },
-  "questionnaire": {
-    "header": {
-      "exitButton": "Exit",
-      "exitAriaLabel": "Exit questionnaire",
-      "backAriaLabel": "Go back to previous step"
-    },
-    "exitModal": {
-      "title": "Do you want to leave the questionnaire?",
-      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
-      "cancelButton": "Keep answering",
-      "confirmButton": "Exit journey"
-    },
-    "actions": {
-      "back": "Back",
-      "saving": "Saving..."
-    },
-    "retryButton": "Try again",
-    "errorMessage": "An error occurred while fetching questionnaire data. Please try again.",
-    "saveError": "Could not save your answers. Please try again.",
-    "noOngoingJourneyTitle": "No journey in progress",
-    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list.",
-    "backToJourneysLink": "Back to journeys",
-    "intro": {
-      "stepTag": "QUESTIONNAIRE · COMPETENCIES",
-      "title": "Competencies questionnaire",
-      "subtitle": "Read the instructions before starting the questionnaire.",
+    "instructions": {
       "intro": "Next, you will answer a set of questions that assess your knowledge of {domain}. Each answer helps build your competency profile and identify strengths and development opportunities.",
       "domains": {
         "privacy": "privacy",
@@ -452,10 +281,49 @@
           "fallbackDescription": "Set aside some time in a distraction-free environment for better focus."
         }
       },
-      "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement.",
-      "startButton": "Start questionnaire",
-      "loading": "Loading instructions..."
+      "tip": "Tip: when you finish, you will get a detailed result by knowledge profile, highlighting strengths and areas for improvement."
     },
+    "footerNote": "Your answers are saved as you progress.",
+    "dismissLabel": "Not now",
+    "dismissAriaLabel": "Go back to the previous page",
+    "actionStart": "Start journey",
+    "actionRetake": "Retake journey",
+    "notFoundTitle": "Journey not found",
+    "notFoundMessage": "We couldn't find the requested journey. It may have been removed, or the link may be incorrect.",
+    "serverErrorTitle": "Unable to load the journey",
+    "serverErrorMessage": "We couldn't complete the search for this journey's data. Please try again later.",
+    "backToJourneysLink": "Back to the journeys list",
+    "loadingAriaLabel": "Loading journey summary",
+    "notAvailable": "—",
+    "notAvailableAriaLabel": "{label}: not available",
+    "startingLabel": "Starting...",
+    "startErrorMessage": "Could not start the journey. Please try again.",
+    "resumeCurrentJourneyLabel": "Continue current journey",
+    "actionResume": "Continue journey",
+    "journeyInProgressMessage": "You already have a journey in progress. Finish or resume your current journey before starting a new one."
+  },
+  "questionnaire": {
+    "header": {
+      "exitButton": "Exit",
+      "exitAriaLabel": "Exit questionnaire",
+      "backAriaLabel": "Go back to previous step"
+    },
+    "exitModal": {
+      "title": "Do you want to leave the questionnaire?",
+      "description": "Your previous answers have already been saved. You can resume this journey later from this exact step.",
+      "cancelButton": "Keep answering",
+      "confirmButton": "Exit journey"
+    },
+    "actions": {
+      "back": "Back",
+      "saving": "Saving..."
+    },
+    "retryButton": "Try again",
+    "errorMessage": "An error occurred while fetching questionnaire data. Please try again.",
+    "saveError": "Could not save your answers. Please try again.",
+    "noOngoingJourneyTitle": "No journey in progress",
+    "noOngoingJourneyMessage": "We couldn't find a journey in progress for you. Start or resume a journey from the list.",
+    "backToJourneysLink": "Back to journeys",
     "areas": {
       "areaIndicator": "Area {current} / {total}",
       "progressAriaLabel": "Competencies questionnaire progress",
