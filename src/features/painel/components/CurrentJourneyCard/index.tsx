@@ -8,7 +8,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
 import { Button } from "@/components/ui";
-import { EmptyState } from "../EmptyState";
 import { useCurrentJourneyCardVM } from "./currentJourneyCard.viewmodel";
 import type { CurrentJourneyCardProps } from "./currentJourneyCard.types";
 
@@ -29,20 +28,26 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
 
   if (!journey) {
     return (
-      <article className="flex flex-col justify-between rounded-[2rem] border border-border/60 bg-card p-6 shadow-sm">
-        <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
-          {sectionTitle}
-        </h3>
-        <EmptyState message={emptyMessage} className="mb-4" />
-        <Button
-          asChild
-          className="h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-        >
-          <Link href="/jornadas">
-            <span>{exploreCtaText}</span>
-            <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
-          </Link>
-        </Button>
+      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+        <div>
+          <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
+            {sectionTitle}
+          </h3>
+          <p className="text-sm font-medium text-muted-foreground mb-4">
+            {emptyMessage}
+          </p>
+        </div>
+        <div className="mt-8 border-t border-border/40 pt-4">
+          <Button
+            asChild
+            className="h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+          >
+            <Link href="/jornadas">
+              <span>{exploreCtaText}</span>
+              <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+            </Link>
+          </Button>
+        </div>
       </article>
     );
   }
@@ -115,4 +120,3 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
     </article>
   );
 }
-

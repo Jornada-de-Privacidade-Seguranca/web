@@ -8,7 +8,7 @@ import type {
 export function useLastCompletedCardVM(
   props: LastCompletedCardProps
 ): LastCompletedCardViewModelReturn {
-  const { assessment, emptyMessage } = props;
+  const { assessment, emptyMessage, sectionTitle, viewAllResultsText } = props;
   const format = useFormatter();
   const t = useTranslations("painel");
 
@@ -27,14 +27,18 @@ export function useLastCompletedCardVM(
   }
 
   const resultHref = assessment ? getJourneyResultUrl(assessment.id) : "#";
+  const allResultsHref = "/resultados";
 
   return {
     assessment,
     emptyMessage,
+    sectionTitle: sectionTitle || t("completedSectionTitle"),
     formattedDate,
     resultHref,
+    allResultsHref,
     lastCompletionLabel: t("lastCompletionLabel"),
     scoreLabel: t("scoreLabel"),
     viewResultText: t("viewResult"),
+    viewAllResultsText: viewAllResultsText || t("viewAllResults"),
   };
 }

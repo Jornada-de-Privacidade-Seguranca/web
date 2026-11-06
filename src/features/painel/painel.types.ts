@@ -1,3 +1,5 @@
+import type { MetricsGridItem } from "@/components/ui/MetricsGrid/metricsGrid.types";
+
 export type PendingAssessmentStatus = "pending" | "in_progress";
 
 export interface PendingAssessment {
@@ -67,6 +69,7 @@ export interface PainelLabels {
   currentJourneySectionTitle: string;
   currentJourneySectionAriaLabel: string;
   currentJourneyEmpty: string;
+  startFirstJourneyCta: string;
   startNewJourneyCta: string;
   continueJourneyCta: string;
   progressLabel: string;
@@ -92,6 +95,8 @@ export interface PainelLabels {
   lastCompletionLabel: string;
   scoreLabel: string;
   viewResult: string;
+  viewAllResults: string;
+  defaultUserName: string;
   errorTitle: string;
   errorMessage: string;
   retryButton: string;
@@ -111,6 +116,7 @@ export interface PainelViewModelReturn {
   lastCompletedAssessment: LastCompletedAssessment | null;
   history: HistoryItem[];
   metrics: DashboardMetrics;
+  metricsItems: MetricsGridItem[];
   quickActions: QuickActionItem[];
   isLoading: boolean;
   error: string | null;

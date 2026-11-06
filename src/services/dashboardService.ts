@@ -1,4 +1,4 @@
-import { apiRequest } from "@services/httpClient";
+import { ApiRequestError, apiRequest } from "@services/httpClient";
 import { env } from "@shared/config/env";
 import type {
   PendingAssessment,
@@ -8,9 +8,9 @@ import type {
   DashboardDataResponse,
 } from "@features/painel/painel.types";
 
-const MOCK_PENDING_ASSESSMENT: PendingAssessment = {
+export const MOCK_PENDING_ASSESSMENT: PendingAssessment = {
   id: "1",
-  title: "Jornada de Privacidade e Segurança",
+  title: "Encarregado pelo Tratamento de Dados Pessoais",
   description:
     "Avaliação de competências em conformidade com a LGPD e boas práticas de segurança da informação.",
   status: "in_progress",
@@ -21,50 +21,54 @@ const MOCK_PENDING_ASSESSMENT: PendingAssessment = {
   knowledgeDomain: "privacy",
 };
 
-const MOCK_LAST_COMPLETED: LastCompletedAssessment = {
+export const MOCK_LAST_COMPLETED: LastCompletedAssessment = {
   id: "101",
-  title: "Fundamentos de Proteção de Dados (LGPD)",
+  title: "Gestor de Segurança da Informação",
   completedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
   score: 88,
 };
 
-const MOCK_HISTORY: HistoryItem[] = [
+export const MOCK_HISTORY: HistoryItem[] = [
   {
     id: "101",
-    title: "Fundamentos de Proteção de Dados (LGPD)",
+    title: "Gestor de Segurança da Informação",
     completedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
     score: 88,
   },
   {
     id: "102",
-    title: "Segurança da Informação e Gestão de Incidentes",
+    title: "Controlador",
     completedAt: new Date(Date.now() - 15 * 86400000).toISOString(),
     score: 92,
   },
   {
     id: "103",
-    title: "Classificação da Informação e Controle de Acesso",
+    title: "Operador",
     completedAt: new Date(Date.now() - 30 * 86400000).toISOString(),
     score: 79,
   },
 ];
 
-const MOCK_METRICS: DashboardMetrics = {
+export const MOCK_METRICS: DashboardMetrics = {
   completedJourneys: 3,
   pendingJourneys: 1,
   averageScore: 86,
 };
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.status === undefined;
+}
 
 export async function getPendingAssessment(): Promise<PendingAssessment | null> {
   try {
     const data = await apiRequest<PendingAssessment | null>(
       "/dashboard/pending",
       {},
-      "Erro ao carregar a avaliação pendente."
+      "Failed to fetch pending journey."
     );
     return data ?? null;
   } catch (error) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(error)) {
       return MOCK_PENDING_ASSESSMENT;
     }
     throw error;
@@ -76,11 +80,11 @@ export async function getLastCompletedAssessment(): Promise<LastCompletedAssessm
     const data = await apiRequest<LastCompletedAssessment | null>(
       "/dashboard/last-completed",
       {},
-      "Erro ao carregar a última avaliação concluída."
+      "Failed to fetch last completed journey."
     );
     return data ?? null;
   } catch (error) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(error)) {
       return MOCK_LAST_COMPLETED;
     }
     throw error;
@@ -92,11 +96,11 @@ export async function getRecentHistory(limit: number): Promise<HistoryItem[]> {
     const data = await apiRequest<HistoryItem[] | null>(
       "/dashboard/history",
       { params: { limit } },
-      "Erro ao carregar o histórico recente."
+      "Failed to fetch journey history."
     );
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(error)) {
       return MOCK_HISTORY.slice(0, limit);
     }
     throw error;
@@ -108,7 +112,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     const data = await apiRequest<DashboardMetrics | null>(
       "/dashboard/metrics",
       {},
-      "Erro ao carregar as métricas do painel."
+      "Failed to fetch dashboard metrics."
     );
     return (
       data ?? {
@@ -118,7 +122,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
       }
     );
   } catch (error) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(error)) {
       return MOCK_METRICS;
     }
     throw error;

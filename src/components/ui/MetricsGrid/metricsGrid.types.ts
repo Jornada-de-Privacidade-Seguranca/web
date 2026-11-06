@@ -2,6 +2,8 @@ export interface MetricsGridItem {
   id: string;
   label: string;
   value: number | string;
+  subtitle?: string;
+  suffix?: string;
 }
 
 export interface MetricsGridProps {

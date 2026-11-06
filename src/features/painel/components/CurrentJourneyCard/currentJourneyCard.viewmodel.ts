@@ -1,4 +1,9 @@
-import { getCurrentJourneyStepUrl, type PreQuestionnaireStepSlug } from "@/shared/utils/journeyRoutes";
+import {
+  getCompetenciesAreaUrl,
+  getJourneySummaryUrl,
+  getCurrentJourneyStepUrl,
+  type PreQuestionnaireStepSlug,
+} from "@/shared/utils/journeyRoutes";
 import type {
   CurrentJourneyCardProps,
   CurrentJourneyCardViewModelReturn,
@@ -12,12 +17,14 @@ export function useCurrentJourneyCardVM(
   let actionHref = "/jornadas";
 
   if (journey) {
-    if (journey.currentStep) {
+    if (journey.status === "pending") {
+      actionHref = getJourneySummaryUrl(journey.id || "atual");
+    } else if (journey.currentStep && journey.currentStep !== "competencias") {
       actionHref = getCurrentJourneyStepUrl(
         journey.currentStep as PreQuestionnaireStepSlug
       );
     } else {
-      actionHref = "/jornada/atual/experiencia-profissional";
+      actionHref = getCompetenciesAreaUrl(0);
     }
   }
 
@@ -47,4 +54,3 @@ export function useCurrentJourneyCardVM(
     badgeVariant: props.badgeVariant,
   };
 }
-

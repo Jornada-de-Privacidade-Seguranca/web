@@ -2,7 +2,7 @@
 
 import { RefreshIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui";
+import { Button, MetricsGrid } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { usePainelVM } from "./painel.viewmodel";
 import {
@@ -10,7 +10,6 @@ import {
   QuickActions,
   CurrentJourneyCard,
   LastCompletedCard,
-  MetricsGrid,
   RecentHistory,
 } from "./components";
 
@@ -24,7 +23,7 @@ export function PainelView() {
     currentJourney,
     lastCompletedAssessment,
     history,
-    metrics,
+    metricsItems,
     quickActions,
     isLoading,
     error,
@@ -127,7 +126,7 @@ export function PainelView() {
                   journey={currentJourney}
                   sectionTitle={labels.currentJourneySectionTitle}
                   emptyMessage={labels.currentJourneyEmpty}
-                  exploreCtaText={labels.startNewJourneyCta}
+                  exploreCtaText={labels.startFirstJourneyCta}
                   continueCtaText={labels.continueJourneyCta}
                   progressLabel={labels.progressLabel}
                   progressPercentLabel={labels.progressPercentLabel}
@@ -152,22 +151,25 @@ export function PainelView() {
                 <LastCompletedCard
                   assessment={lastCompletedAssessment}
                   emptyMessage={labels.completedEmpty}
+                  sectionTitle={labels.completedSectionTitle}
+                  viewAllResultsText={labels.viewAllResults}
                 />
               </section>
             </div>
 
             {/* Métricas e Indicadores Rápidos */}
-            <MetricsGrid
-              metrics={metrics}
-              sectionTitle={labels.metricsSectionTitle}
-              sectionAriaLabel={labels.metricsSectionAriaLabel}
-              completedTitle={labels.metricsCompletedTitle}
-              completedSubtitle={labels.metricsCompletedSubtitle}
-              pendingTitle={labels.metricsPendingTitle}
-              pendingSubtitle={labels.metricsPendingSubtitle}
-              averageScoreTitle={labels.metricsAverageScoreTitle}
-              averageScoreSubtitle={labels.metricsAverageScoreSubtitle}
-            />
+            <section
+              aria-label={labels.metricsSectionAriaLabel}
+              className="space-y-4"
+            >
+              <h2 className="text-lg font-bold tracking-tight text-foreground">
+                {labels.metricsSectionTitle}
+              </h2>
+              <MetricsGrid
+                items={metricsItems}
+                className="grid-cols-1 sm:grid-cols-3"
+              />
+            </section>
 
             {/* Histórico Recente */}
             <section aria-label={labels.historySectionAriaLabel}>

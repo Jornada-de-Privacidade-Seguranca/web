@@ -4,7 +4,6 @@ import { CheckmarkCircle02Icon, ArrowRight01Icon } from "@hugeicons/core-free-ic
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
 import { Button } from "@/components/ui";
-import { EmptyState } from "../EmptyState";
 import { useLastCompletedCardVM } from "./lastCompletedCard.viewmodel";
 import type { LastCompletedCardProps } from "./lastCompletedCard.types";
 
@@ -12,15 +11,39 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
   const {
     assessment,
     emptyMessage,
+    sectionTitle,
     formattedDate,
     resultHref,
+    allResultsHref,
     lastCompletionLabel,
     scoreLabel,
     viewResultText,
+    viewAllResultsText,
   } = useLastCompletedCardVM(props);
 
   if (!assessment) {
-    return <EmptyState message={emptyMessage} />;
+    return (
+      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+        <div>
+          <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
+            {sectionTitle}
+          </h3>
+          <p className="text-sm font-medium text-muted-foreground">{emptyMessage}</p>
+        </div>
+        <div className="mt-8 border-t border-border/40 pt-4">
+          <Button
+            asChild
+            variant="outline"
+            className="h-11 w-full rounded-full border-border bg-background text-sm font-semibold text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground"
+          >
+            <Link href={allResultsHref}>
+              <span>{viewAllResultsText}</span>
+              <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+            </Link>
+          </Button>
+        </div>
+      </article>
+    );
   }
 
   return (
@@ -58,15 +81,24 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
         </div>
       </div>
 
-      <div className="mt-8 border-t border-border/50 pt-4">
+      <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 border-t border-border/50 pt-4">
         <Button
           asChild
           variant="outline"
-          className="h-11 w-full rounded-full border-border bg-background text-sm font-semibold text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground"
+          className="h-11 w-full sm:flex-1 rounded-full border-border bg-background text-sm font-semibold text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground"
         >
           <Link href={resultHref}>
             <span>{viewResultText}</span>
             <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="ghost"
+          className="h-11 w-full sm:flex-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          <Link href={allResultsHref}>
+            <span>{viewAllResultsText}</span>
           </Link>
         </Button>
       </div>

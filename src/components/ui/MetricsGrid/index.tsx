@@ -37,12 +37,24 @@ export function MetricsGrid({
           >
             {item.label}
           </h3>
-          <p
-            aria-labelledby={`metric-${item.id}-label`}
-            className="mt-2 font-heading text-4xl font-extrabold tracking-tight text-foreground"
-          >
-            {item.value}
-          </p>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <p
+              aria-labelledby={`metric-${item.id}-label`}
+              className="font-heading text-4xl font-extrabold tracking-tight text-foreground"
+            >
+              {item.value}
+            </p>
+            {item.suffix && (
+              <span className="text-sm font-medium text-muted-foreground">
+                {item.suffix}
+              </span>
+            )}
+          </div>
+          {item.subtitle && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {item.subtitle}
+            </p>
+          )}
         </article>
       ))}
     </div>

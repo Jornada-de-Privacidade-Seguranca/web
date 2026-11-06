@@ -58,6 +58,7 @@ export interface AuthenticatedUser {
   role: AuthenticatedUserRole;
   profile: AuthenticatedUserProfile;
   active_status: number;
+  organization?: string;
 }
 
 export interface AuthViewModelReturn {

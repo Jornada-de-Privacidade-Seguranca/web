@@ -6,12 +6,25 @@ import { PainelView } from "../index";
 import * as viewModelModule from "../painel.viewmodel";
 import type { PainelViewModelReturn } from "../painel.types";
 
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-  useFormatter: () => ({
-    dateTime: () => "10/06/2026",
-  }),
-}));
+vi.mock("next-intl", () => {
+  const messages: Record<string, string> = {
+    viewResult: "Ver resultado",
+    viewAllResults: "Ver todos os resultados",
+    completedSectionTitle: "Última conclusão",
+    lastCompletionLabel: "ÚLTIMA CONCLUSÃO",
+    scoreLabel: "PONTUAÇÃO",
+    currentJourneySectionTitle: "Jornada em andamento",
+    metricsSectionTitle: "Indicadores de desempenho",
+    historySectionTitle: "Histórico recente",
+  };
+
+  return {
+    useTranslations: () => (key: string) => messages[key] ?? key,
+    useFormatter: () => ({
+      dateTime: () => "10 de junho de 2026",
+    }),
+  };
+});
 
 vi.mock("@/components/layout/PageShell", () => ({
   PageShell: ({
@@ -47,25 +60,25 @@ const mockBaseReturn: PainelViewModelReturn = {
   greetingSubtitle: "Acompanhe seu progresso e métricas de desempenho.",
   currentJourney: {
     id: "j1",
-    title: "Trilha de Segurança da Informação",
-    description: "Avaliação de competências em segurança e controles.",
+    title: "Encarregado pelo Tratamento de Dados Pessoais",
+    description: "Avaliação de competências em conformidade com a LGPD.",
     status: "in_progress",
     totalQuestions: 20,
     estimatedMinutes: 25,
     currentStep: "competencias",
     progressPercent: 60,
-    knowledgeDomain: "security",
+    knowledgeDomain: "privacy",
   },
   lastCompletedAssessment: {
     id: "c1",
-    title: "LGPD Básico",
+    title: "Gestor de Segurança da Informação",
     completedAt: "2026-06-10T12:00:00Z",
     score: 85,
   },
   history: [
     {
       id: "h1",
-      title: "LGPD Básico",
+      title: "Gestor de Segurança da Informação",
       completedAt: "2026-06-10T12:00:00Z",
       score: 85,
     },
@@ -75,12 +88,33 @@ const mockBaseReturn: PainelViewModelReturn = {
     pendingJourneys: 1,
     averageScore: 85,
   },
+  metricsItems: [
+    {
+      id: "completed-journeys",
+      label: "Jornadas concluídas",
+      value: 2,
+      subtitle: "Jornadas finalizadas com sucesso",
+    },
+    {
+      id: "pending-journeys",
+      label: "Jornadas em andamento",
+      value: 1,
+      subtitle: "Jornadas aguardando conclusão",
+    },
+    {
+      id: "average-score",
+      label: "Média de desempenho",
+      value: 85,
+      suffix: "/ 100",
+      subtitle: "Pontuação média geral",
+    },
+  ],
   quickActions: [
     {
       id: "continue-journey",
       label: "Continuar jornada",
-      description: "Retome sua trilha de onde parou",
-      href: "/jornada/atual/competencias",
+      description: "Retome sua jornada de onde parou",
+      href: "/jornada/atual/competencias/0",
       iconName: "play",
     },
     {
@@ -107,20 +141,21 @@ const mockBaseReturn: PainelViewModelReturn = {
     welcomeSubtitle: "Acompanhe seu progresso e métricas de desempenho.",
     profileRoleFallback: "Colaborador",
     organizationLabel: "Organização: Empresa XPTO",
-    greetingSubtitle: "Pronto para sua próxima avaliação?",
+    greetingSubtitle: "Pronto para sua próxima jornada?",
     quickActionsTitle: "Atalhos rápidos",
     quickActionsSectionAriaLabel: "Ações e atalhos rápidos",
     quickActionContinueJourney: "Continuar jornada",
-    quickActionContinueJourneyDesc: "Retome sua trilha de onde parou",
+    quickActionContinueJourneyDesc: "Retome sua jornada de onde parou",
     quickActionStartJourney: "Iniciar jornada",
-    quickActionStartJourneyDesc: "Escolha uma trilha de aprendizagem",
+    quickActionStartJourneyDesc: "Escolha uma jornada de aprendizagem",
     quickActionViewResults: "Meus resultados",
     quickActionViewResultsDesc: "Veja diagnósticos e notas obtidas",
     quickActionViewProfile: "Meu perfil",
     quickActionViewProfileDesc: "Gerencie seus dados e preferências",
     currentJourneySectionTitle: "Jornada em andamento",
     currentJourneySectionAriaLabel: "Jornada em andamento",
-    currentJourneyEmpty: "Você não possui nenhuma jornada em andamento.",
+    currentJourneyEmpty: "Você não possui nenhuma jornada em andamento no momento.",
+    startFirstJourneyCta: "Inicie sua primeira jornada",
     startNewJourneyCta: "Explorar jornadas",
     continueJourneyCta: "Continuar de onde parou",
     progressLabel: "Progresso da jornada",
@@ -128,31 +163,33 @@ const mockBaseReturn: PainelViewModelReturn = {
     metricsSectionTitle: "Indicadores de desempenho",
     metricsSectionAriaLabel: "Métricas e indicadores de desempenho",
     metricsCompletedTitle: "Jornadas concluídas",
-    metricsCompletedSubtitle: "Trilhas finalizadas com sucesso",
+    metricsCompletedSubtitle: "Jornadas finalizadas com sucesso",
     metricsPendingTitle: "Jornadas em andamento",
-    metricsPendingSubtitle: "Trilhas aguardando conclusão",
+    metricsPendingSubtitle: "Jornadas aguardando conclusão",
     metricsAverageScoreTitle: "Média de desempenho",
     metricsAverageScoreSubtitle: "Pontuação média geral",
-    pendingSectionTitle: "Avaliação em destaque",
+    pendingSectionTitle: "Jornada em destaque",
     completedSectionTitle: "Última conclusão",
     historySectionTitle: "Histórico recente",
-    pendingEmpty: "Nenhuma avaliação pendente no momento.",
-    completedEmpty: "Você ainda não possui avaliações concluídas.",
-    historyEmpty: "Nenhum histórico de avaliações disponível.",
-    badgePending: "AVALIAÇÃO PENDENTE",
+    pendingEmpty: "Nenhuma jornada pendente no momento.",
+    completedEmpty: "Você ainda não possui jornadas concluídas.",
+    historyEmpty: "Nenhum histórico de jornadas disponível.",
+    badgePending: "JORNADA PENDENTE",
     badgeInProgress: "EM ANDAMENTO",
-    startAssessment: "Iniciar avaliação",
-    continueAssessment: "Continuar avaliação",
+    startAssessment: "Iniciar jornada",
+    continueAssessment: "Continuar jornada",
     lastCompletionLabel: "ÚLTIMA CONCLUSÃO",
     scoreLabel: "PONTUAÇÃO",
     viewResult: "Ver resultado",
+    viewAllResults: "Ver todos os resultados",
+    defaultUserName: "Usuário",
     errorTitle: "Falha ao carregar informações",
     errorMessage: "Não foi possível carregar os dados do painel.",
     retryButton: "Tentar novamente",
     loadingAriaLabel: "Carregando dados do painel",
-    pendingSectionAriaLabel: "Avaliação pendente ou em andamento",
-    completedSectionAriaLabel: "Última avaliação concluída",
-    historySectionAriaLabel: "Histórico recente de avaliações",
+    pendingSectionAriaLabel: "Jornada pendente ou em andamento",
+    completedSectionAriaLabel: "Última jornada concluída",
+    historySectionAriaLabel: "Histórico recente de jornadas",
   },
 };
 
@@ -181,7 +218,7 @@ describe("PainelView Component", () => {
       name: /Continuar jornada/i,
     });
     expect(continueLink.getAttribute("href")).toBe(
-      "/jornada/atual/competencias"
+      "/jornada/atual/competencias/0"
     );
 
     const resultsLink = screen.getByRole("link", { name: /Meus resultados/i });
@@ -189,6 +226,18 @@ describe("PainelView Component", () => {
 
     const profileLink = screen.getByRole("link", { name: /Meu perfil/i });
     expect(profileLink.getAttribute("href")).toBe("/perfil");
+  });
+
+  it("deve renderizar o botão 'Ver todos os resultados' ao lado de 'Ver resultado' no card de última conclusão", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue(mockBaseReturn);
+
+    render(<PainelView />);
+
+    const viewResultLink = screen.getByRole("link", { name: /Ver resultado/i });
+    expect(viewResultLink.getAttribute("href")).toBe("/jornada/c1/resultado");
+
+    const viewAllLink = screen.getByRole("link", { name: /Ver todos os resultados/i });
+    expect(viewAllLink.getAttribute("href")).toBe("/resultados");
   });
 
   it("deve renderizar a barra de progresso com atributos de acessibilidade ARIA", () => {
@@ -241,18 +290,33 @@ describe("PainelView Component", () => {
     expect(handleRetryMock).toHaveBeenCalledTimes(1);
   });
 
-  it("deve exibir EmptyState quando não houver jornada em andamento", () => {
+  it("deve exibir os 3 estados vazios corretamente (jornada pendente com estilo tracejado e CTA de primeira jornada, última conclusão e histórico)", () => {
     vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
       ...mockBaseReturn,
       currentJourney: null,
+      lastCompletedAssessment: null,
+      history: [],
     });
 
     render(<PainelView />);
 
+    // 1. Estado vazio da jornada pendente
     expect(
-      screen.getByText("Você não possui nenhuma jornada em andamento.")
+      screen.getByText("Você não possui nenhuma jornada em andamento no momento.")
     ).toBeDefined();
-    const exploreLink = screen.getByRole("link", { name: /Explorar jornadas/i });
-    expect(exploreLink.getAttribute("href")).toBe("/jornadas");
+    const startFirstLink = screen.getByRole("link", { name: /Inicie sua primeira jornada/i });
+    expect(startFirstLink.getAttribute("href")).toBe("/jornadas");
+
+    // 2. Estado vazio da última conclusão com botão 'Ver todos os resultados'
+    expect(
+      screen.getByText("Você ainda não possui jornadas concluídas.")
+    ).toBeDefined();
+    const viewAllInEmpty = screen.getByRole("link", { name: /Ver todos os resultados/i });
+    expect(viewAllInEmpty.getAttribute("href")).toBe("/resultados");
+
+    // 3. Estado vazio do histórico recente
+    expect(
+      screen.getByText("Nenhum histórico de jornadas disponível.")
+    ).toBeDefined();
   });
 });

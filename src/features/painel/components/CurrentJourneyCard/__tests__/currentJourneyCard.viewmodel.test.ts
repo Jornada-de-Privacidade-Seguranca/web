@@ -57,5 +57,41 @@ describe("useCurrentJourneyCardVM", () => {
     expect(result.current.actionHref).toBe("/jornadas");
     expect(result.current.journey).toBeNull();
   });
+
+  it("deve apontar para o resumo da jornada quando status for pending", () => {
+    const { result } = renderHook(() =>
+      useCurrentJourneyCardVM({
+        journey: { ...mockJourney, status: "pending", currentStep: undefined },
+        sectionTitle: "Jornada em andamento",
+        emptyMessage: "Nenhuma jornada",
+        exploreCtaText: "Explorar",
+        continueCtaText: "Iniciar",
+        progressLabel: "Progresso",
+        progressPercentLabel: "{percent}% concluído",
+        badgeLabel: "PENDENTE",
+        badgeVariant: "pending",
+      })
+    );
+
+    expect(result.current.actionHref).toBe("/jornada/j1");
+  });
+
+  it("deve apontar para a área 0 de competências quando status for in_progress sem step", () => {
+    const { result } = renderHook(() =>
+      useCurrentJourneyCardVM({
+        journey: { ...mockJourney, status: "in_progress", currentStep: undefined },
+        sectionTitle: "Jornada em andamento",
+        emptyMessage: "Nenhuma jornada",
+        exploreCtaText: "Explorar",
+        continueCtaText: "Continuar",
+        progressLabel: "Progresso",
+        progressPercentLabel: "{percent}% concluído",
+        badgeLabel: "EM ANDAMENTO",
+        badgeVariant: "in_progress",
+      })
+    );
+
+    expect(result.current.actionHref).toBe("/jornada/atual/competencias/0");
+  });
 });
 

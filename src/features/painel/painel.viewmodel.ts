@@ -5,6 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import { getDashboardData } from "@services/dashboardService";
 import { HISTORY_LIMIT } from "@shared/constants/dashboard";
+import {
+  getCompetenciesAreaUrl,
+  getJourneySummaryUrl,
+} from "@shared/utils/journeyRoutes";
+import type { MetricsGridItem } from "@/components/ui/MetricsGrid/metricsGrid.types";
 import type {
   PainelViewModelReturn,
   QuickActionItem,
@@ -22,14 +27,13 @@ export function usePainelVM(): PainelViewModelReturn {
   const t = useTranslations("painel");
   const { user, isLoading: isAuthLoading } = useAuth();
 
-  const userFirstName = user?.name ? user.name.split(" ")[0] : "Usuário";
+  const userFirstName = user?.name ? user.name.split(" ")[0] : t("defaultUserName");
   const userRoleName =
     user?.profile?.profile_type_name ||
     user?.profile?.label ||
     t("profileRoleFallback");
 
-  const userOrganization =
-    (user as { organization?: string })?.organization || null;
+  const userOrganization = user?.organization ?? null;
 
   const userId = user?.id;
 
@@ -46,36 +50,40 @@ export function usePainelVM(): PainelViewModelReturn {
   });
 
   const isLoading = (isQueryLoading || (isAuthLoading && !userId)) && !data;
-
-  const errorMessage = queryError
-    ? queryError instanceof Error
-      ? queryError.message
-      : t("errorMessage")
-    : null;
+  const errorMessage = queryError ? t("errorMessage") : null;
 
   const currentJourney = data?.pending ?? null;
   const lastCompletedAssessment = data?.lastCompleted ?? null;
   const history = data?.history ?? [];
   const metrics = data?.metrics ?? DEFAULT_METRICS;
 
+  let journeyActionHref = "/jornadas";
+  let journeyActionLabel = t("quickActionStartJourney");
+  let journeyActionDesc = t("quickActionStartJourneyDesc");
+
+  if (currentJourney) {
+    if (currentJourney.status === "pending") {
+      journeyActionHref = getJourneySummaryUrl(currentJourney.id || "atual");
+      journeyActionLabel = t("quickActionStartJourney");
+      journeyActionDesc = t("quickActionStartJourneyDesc");
+    } else {
+      journeyActionHref =
+        currentJourney.currentStep && currentJourney.currentStep !== "competencias"
+          ? `/jornada/atual/${currentJourney.currentStep}`
+          : getCompetenciesAreaUrl(0);
+      journeyActionLabel = t("quickActionContinueJourney");
+      journeyActionDesc = t("quickActionContinueJourneyDesc");
+    }
+  }
+
   const quickActions: QuickActionItem[] = [
-    currentJourney
-      ? {
-          id: "continue-journey",
-          label: t("quickActionContinueJourney"),
-          description: t("quickActionContinueJourneyDesc"),
-          href: currentJourney.currentStep
-            ? `/jornada/atual/${currentJourney.currentStep}`
-            : "/jornada/atual/experiencia-profissional",
-          iconName: "play",
-        }
-      : {
-          id: "start-journey",
-          label: t("quickActionStartJourney"),
-          description: t("quickActionStartJourneyDesc"),
-          href: "/jornadas",
-          iconName: "play",
-        },
+    {
+      id: currentJourney?.status === "in_progress" ? "continue-journey" : "start-journey",
+      label: journeyActionLabel,
+      description: journeyActionDesc,
+      href: journeyActionHref,
+      iconName: "play",
+    },
     {
       id: "view-results",
       label: t("quickActionViewResults"),
@@ -114,6 +122,7 @@ export function usePainelVM(): PainelViewModelReturn {
     currentJourneySectionTitle: t("currentJourneySectionTitle"),
     currentJourneySectionAriaLabel: t("currentJourneySectionAriaLabel"),
     currentJourneyEmpty: t("currentJourneyEmpty"),
+    startFirstJourneyCta: t("startFirstJourneyCta"),
     startNewJourneyCta: t("startNewJourneyCta"),
     continueJourneyCta: t("continueJourneyCta"),
     progressLabel: t("progressLabel"),
@@ -139,6 +148,8 @@ export function usePainelVM(): PainelViewModelReturn {
     lastCompletionLabel: t("lastCompletionLabel"),
     scoreLabel: t("scoreLabel"),
     viewResult: t("viewResult"),
+    viewAllResults: t("viewAllResults"),
+    defaultUserName: t("defaultUserName"),
     errorTitle: t("errorTitle"),
     errorMessage: t("errorMessage"),
     retryButton: t("retryButton"),
@@ -147,6 +158,28 @@ export function usePainelVM(): PainelViewModelReturn {
     completedSectionAriaLabel: t("completedSectionAriaLabel"),
     historySectionAriaLabel: t("historySectionAriaLabel"),
   };
+
+  const metricsItems: MetricsGridItem[] = [
+    {
+      id: "completed-journeys",
+      label: labels.metricsCompletedTitle,
+      value: metrics.completedJourneys,
+      subtitle: labels.metricsCompletedSubtitle,
+    },
+    {
+      id: "pending-journeys",
+      label: labels.metricsPendingTitle,
+      value: metrics.pendingJourneys,
+      subtitle: labels.metricsPendingSubtitle,
+    },
+    {
+      id: "average-score",
+      label: labels.metricsAverageScoreTitle,
+      value: metrics.averageScore,
+      suffix: "/ 100",
+      subtitle: labels.metricsAverageScoreSubtitle,
+    },
+  ];
 
   const handleRetry = () => {
     void refetch();
@@ -162,6 +195,7 @@ export function usePainelVM(): PainelViewModelReturn {
     lastCompletedAssessment,
     history,
     metrics,
+    metricsItems,
     quickActions,
     isLoading,
     error: errorMessage,
