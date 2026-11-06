@@ -1,6 +1,6 @@
-import type { JourneyCardProps } from "./journeyCard.types";
+import type { JourneyCardProps, JourneyCardViewModelReturn } from "./journeyCard.types";
 
-export function useJourneyCardVM(props: JourneyCardProps) {
+export function useJourneyCardVM(props: JourneyCardProps): JourneyCardViewModelReturn {
   const { journey, labels } = props;
 
   const isCompleted = journey.status === "completed";
@@ -17,18 +17,35 @@ export function useJourneyCardVM(props: JourneyCardProps) {
 
   const buttonVariant: "outline" | "default" = isCompleted ? "outline" : "default";
 
-  const questionsText =
-    journey.totalQuestions != null
+  const domainLabelsMap: Record<string, string> = {
+    privacy: labels.filterDomainPrivacy,
+    security: labels.filterDomainSecurity,
+    joint: labels.filterDomainJoint,
+  };
+
+  const domainLabel =
+    journey.domainLabel ||
+    (journey.domain ? domainLabelsMap[journey.domain] : labels.filterDomainPrivacy) ||
+    labels.filterDomainPrivacy;
+
+  const competenciesText =
+    journey.competenciesCount != null
+      ? labels.competenciesCount(journey.competenciesCount)
+      : journey.totalQuestions != null
       ? labels.questionsCount(journey.totalQuestions)
       : null;
+
   const timeText =
     journey.estimatedMinutes != null
       ? labels.estimatedMinutes(journey.estimatedMinutes)
       : null;
-  const hasMeta = questionsText !== null || timeText !== null;
+
+  const hasMeta = competenciesText !== null || timeText !== null;
 
   const badgeText = isCompleted
-    ? labels.statusCompleted
+    ? journey.score != null
+      ? labels.completedScoreBadge(journey.score)
+      : labels.statusCompleted
     : isInProgress
     ? labels.statusInProgress
     : labels.statusNotStarted;
@@ -42,11 +59,12 @@ export function useJourneyCardVM(props: JourneyCardProps) {
     isCompleted,
     isInProgress,
     isNotStarted,
+    domainLabel,
     actionHref,
     buttonText,
     buttonVariant,
     badgeText,
-    questionsText,
+    competenciesText,
     timeText,
     hasMeta,
     ctaAriaLabel,

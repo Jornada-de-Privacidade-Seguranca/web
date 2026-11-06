@@ -4,28 +4,34 @@ import {
   RefreshIcon,
   AlertCircleIcon,
   Search01Icon,
+  FilterHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Input, Message } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { useAssessmentsVM } from "./assessments.viewmodel";
-import { Accordion } from "./components/Accordion";
-import { JourneyCard } from "./components/JourneyCard";
-import { JourneySkeleton } from "./components/JourneySkeleton";
-import { Pagination } from "./components/Pagination";
-import { EmptyState } from "./components/EmptyState";
+import {
+  PendingJourneyCard,
+  JourneyCard,
+  JourneyFilterPanel,
+  CancelJourneyModal,
+  JourneySkeleton,
+  Pagination,
+  EmptyState,
+} from "./components";
 
 export function AssessmentsView() {
   const {
-    pendingJourneys,
-    pendingTotal,
-    pendingPage,
-    pendingTotalPages,
+    pendingJourney,
+    hasPendingJourney,
     isPendingLoading,
     pendingError,
-    isPendingSectionVisible,
-    handlePendingPageChange,
     handleRetryPending,
+
+    isCancelModalOpen,
+    handleOpenCancelModal,
+    handleCloseCancelModal,
+    handleConfirmCancelJourney,
 
     catalogJourneys,
     catalogPage,
@@ -36,79 +42,75 @@ export function AssessmentsView() {
     handleSearchChange,
     handleCatalogPageChange,
     handleRetryCatalog,
-    catalogPageError,
-    dismissCatalogPageError,
 
-    pendingPageError,
-    dismissPendingPageError,
+    isFilterPanelOpen,
+    handleToggleFilterPanel,
+    activeFiltersCount,
+    filters,
+    handleToggleDomainFilter,
+    handleToggleStatusFilter,
+    handleClearFilters,
+
     labels,
   } = useAssessmentsVM();
 
+  const filterButtonLabel =
+    activeFiltersCount > 0
+      ? labels.filtersButtonWithCount(activeFiltersCount)
+      : labels.filtersButton;
+
   return (
     <PageShell title={labels.title} subtitle={labels.subtitle}>
-      <div className="space-y-8">
-        {/* Seção 1: Jornadas Pendentes (Accordion aberto por padrão) */}
-        {isPendingSectionVisible && (
-          <>
-            <section aria-label={labels.pendingSectionTitle}>
-              <Accordion
-                title={labels.pendingSectionTitle}
-                subtitle={labels.pendingSectionSubtitle}
-                count={pendingTotal}
-                defaultOpen={true}
+      <div className="space-y-10">
+        {/* Seção 1: Jornada Pendente em Destaque (No singular; NÃO aparece se não houver pendente) */}
+        {(isPendingLoading || hasPendingJourney || pendingError) && (
+          <section aria-labelledby="pending-journey-section-title" className="space-y-4">
+            <div>
+              <h2
+                id="pending-journey-section-title"
+                className="text-xl font-bold tracking-tight text-foreground font-heading"
               >
-                {isPendingLoading ? (
-                  <JourneySkeleton count={3} />
-                ) : pendingError ? (
-                  <div
-                    data-testid="pending-error-state"
-                    className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
-                  >
-                    <HugeiconsIcon icon={AlertCircleIcon} size={28} />
-                    <p className="text-sm font-medium">{pendingError}</p>
-                    <Button
-                      onClick={handleRetryPending}
-                      variant="outline"
-                      size="sm"
-                      className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
-                    >
-                      <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
-                      {labels.retryButton}
-                    </Button>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {pendingJourneys.map((journey) => (
-                        <JourneyCard
-                          key={journey.id}
-                          journey={journey}
-                          labels={labels}
-                        />
-                      ))}
-                    </div>
+                {labels.pendingSectionTitle}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {labels.pendingSectionSubtitle}
+              </p>
+            </div>
 
-                    <Pagination
-                      currentPage={pendingPage}
-                      totalPages={pendingTotalPages}
-                      onPageChange={handlePendingPageChange}
-                      previousText={labels.paginationPrevious}
-                      nextText={labels.paginationNext}
-                      pageOfText={labels.paginationPageOf}
-                    />
-                  </div>
-                )}
-              </Accordion>
-            </section>
+            {isPendingLoading ? (
+              <JourneySkeleton count={1} />
+            ) : pendingError ? (
+              <div
+                data-testid="pending-error-state"
+                className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive"
+              >
+                <HugeiconsIcon icon={AlertCircleIcon} size={28} />
+                <p className="text-sm font-medium">{pendingError}</p>
+                <Button
+                  onClick={handleRetryPending}
+                  variant="outline"
+                  size="sm"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+                >
+                  <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+                  {labels.retryButton}
+                </Button>
+              </div>
+            ) : pendingJourney ? (
+              <PendingJourneyCard
+                journey={pendingJourney}
+                labels={labels}
+                onCancelJourney={handleOpenCancelModal}
+              />
+            ) : null}
 
-            {/* Divisória sutil */}
             <hr className="my-8 border-border/60" />
-          </>
+          </section>
         )}
 
-        {/* Seção 2: Todas as Jornadas (Catálogo) */}
+        {/* Seção 2: Todas as Jornadas (Catálogo com Busca e Filtros) */}
         <section aria-label={labels.catalogSectionTitle} className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
                 {labels.catalogSectionTitle}
@@ -118,27 +120,51 @@ export function AssessmentsView() {
               </p>
             </div>
 
-            {/* Input de Busca */}
-            <div className="relative w-full sm:w-80">
-              <HugeiconsIcon
-                icon={Search01Icon}
-                size={18}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                type="text"
-                placeholder={labels.catalogSearchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 h-11 rounded-full bg-card/80 border-border/80 text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
-                aria-label={labels.catalogSearchPlaceholder}
-              />
+            {/* Controles de Busca e Filtros */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+              <div className="relative w-full sm:w-80">
+                <HugeiconsIcon
+                  icon={Search01Icon}
+                  size={18}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  type="text"
+                  placeholder={labels.catalogSearchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10 h-11 rounded-full bg-card/80 border-border/80 text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                  aria-label={labels.catalogSearchPlaceholder}
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant={activeFiltersCount > 0 ? "default" : "outline"}
+                onClick={handleToggleFilterPanel}
+                className="h-11 rounded-full px-5 text-sm font-semibold shrink-0"
+                aria-expanded={isFilterPanelOpen}
+                aria-label={labels.filtersButton}
+              >
+                <HugeiconsIcon icon={FilterHorizontalIcon} size={18} className="mr-2" />
+                <span>{filterButtonLabel}</span>
+              </Button>
             </div>
           </div>
 
-          {/* Lista de Jornadas do Catálogo */}
+          {/* Painel expansível de Filtros */}
+          <JourneyFilterPanel
+            isOpen={isFilterPanelOpen}
+            filters={filters}
+            labels={labels}
+            onToggleDomain={handleToggleDomainFilter}
+            onToggleStatus={handleToggleStatusFilter}
+            onClearFilters={handleClearFilters}
+          />
+
+          {/* Grid do Catálogo de Jornadas */}
           {isCatalogLoading ? (
-            <JourneySkeleton count={6} />
+            <JourneySkeleton count={9} />
           ) : catalogError ? (
             <div
               data-testid="catalog-error-state"
@@ -159,7 +185,7 @@ export function AssessmentsView() {
           ) : catalogJourneys.length === 0 ? (
             <EmptyState message={labels.catalogEmpty} />
           ) : (
-            <div>
+            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {catalogJourneys.map((journey) => (
                   <JourneyCard
@@ -183,33 +209,16 @@ export function AssessmentsView() {
         </section>
       </div>
 
-      {/* Toasts pontuais: falha ao trocar de página mantendo os dados anteriores na tela */}
-      {(pendingPageError || catalogPageError) && (
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
-          {pendingPageError && (
-            <Message
-              title={labels.errorTitle}
-              description={pendingPageError}
-              variant="destructive"
-              onClose={dismissPendingPageError}
-              icon={
-                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
-              }
-            />
-          )}
-          {catalogPageError && (
-            <Message
-              title={labels.errorTitle}
-              description={catalogPageError}
-              variant="destructive"
-              onClose={dismissCatalogPageError}
-              icon={
-                <HugeiconsIcon icon={AlertCircleIcon} size={20} className="shrink-0" />
-              }
-            />
-          )}
-        </div>
-      )}
+      {/* Modal de Cancelamento de Jornada */}
+      <CancelJourneyModal
+        isOpen={isCancelModalOpen}
+        title={labels.cancelModalTitle}
+        description={labels.cancelModalDescription}
+        keepLabel={labels.cancelModalKeep}
+        confirmLabel={labels.cancelModalConfirm}
+        onCancel={handleCloseCancelModal}
+        onConfirm={handleConfirmCancelJourney}
+      />
     </PageShell>
   );
 }

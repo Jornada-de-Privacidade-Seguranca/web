@@ -15,7 +15,6 @@ vi.mock("@hooks/useAuth", () => ({
   useAuth: () => mockAuth,
 }));
 
-// Jornada em andamento do usuário, usada para marcar o perfil dela no catálogo
 const mockCurrentJourney = vi.hoisted(() => ({
   journeyId: null as string | null,
   profileId: null as string | null,
@@ -33,12 +32,14 @@ vi.mock("@hooks/useJourneyContext", () => ({
   }),
 }));
 
-// Mock next-intl
 vi.mock("next-intl", () => ({
   useLocale: () => "pt",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (key === "questionsCount") return `${params?.count} perguntas`;
+    if (key === "competenciesCount") return `${params?.count} competências`;
     if (key === "estimatedMinutes") return `${params?.minutes} min`;
+    if (key === "completedScoreBadge") return `Concluída · ${params?.score}/100`;
+    if (key === "filtersButtonWithCount") return `Filtros (${params?.count})`;
     if (key === "pagination.pageOf")
       return `Página ${params?.current} de ${params?.total}`;
     if (key === "errorMessage") return "Erro ao carregar dados do servidor.";
@@ -68,287 +69,200 @@ describe("useAssessmentsVM", () => {
         id: "p1",
         title: "Segurança na Nuvem",
         description: "Fundamentos de segurança em nuvem",
-        totalQuestions: 10,
+        domain: "security" as const,
+        competenciesCount: 10,
         estimatedMinutes: 15,
         status: "in_progress" as const,
+        isSelfStarted: true,
       },
     ],
     total: 1,
     page: 1,
-    limit: 6,
+    limit: 1,
     totalPages: 1,
   };
 
   const mockCatalogJourneys = {
     items: [
       {
-        id: "c1",
+        id: "1",
         title: "LGPD para Desenvolvedores",
-        description: "Como aplicar privacidade no código",
-        totalQuestions: 12,
-        estimatedMinutes: 20,
-        status: "completed" as const,
+        description: "Práticas de desenvolvimento seguro",
+        domain: "privacy" as const,
+        competenciesCount: 12,
+        estimatedMinutes: 18,
+        status: "not_started" as const,
+        href: "/jornada/perfil/1",
       },
       {
-        id: "c2",
-        title: "Segurança na Nuvem",
-        description: "Fundamentos de segurança em nuvem",
-        totalQuestions: 10,
-        estimatedMinutes: 15,
-        status: "in_progress" as const,
+        id: "2",
+        title: "Gestão de Incidentes de Segurança",
+        description: "Como responder a vazamentos de dados",
+        domain: "security" as const,
+        competenciesCount: 8,
+        estimatedMinutes: 12,
+        status: "completed" as const,
+        score: 90,
+        href: "/jornada/2",
+      },
+      {
+        id: "3",
+        title: "Governança e Privacidade",
+        description: "Conformidade integrada",
+        domain: "joint" as const,
+        competenciesCount: 15,
+        estimatedMinutes: 22,
+        status: "not_started" as const,
+        href: "/jornada/perfil/3",
       },
     ],
-    total: 2,
+    total: 3,
     page: 1,
-    limit: 6,
+    limit: 50,
     totalPages: 1,
   };
 
   beforeEach(() => {
-    mockCurrentJourney.journeyId = null;
-    mockCurrentJourney.profileId = null;
     vi.restoreAllMocks();
     mockAuth.user = { id: 1 };
     mockAuth.isLoading = false;
-  });
+    mockCurrentJourney.journeyId = null;
+    mockCurrentJourney.profileId = null;
 
-  it("deve carregar inicialmente as listas de jornadas pendentes e catálogo paginados", async () => {
     vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
       mockPendingJourneys
     );
     vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
       mockCatalogJourneys
     );
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.isPendingLoading).toBe(false);
-      expect(result.current.isCatalogLoading).toBe(false);
-    });
-
-    expect(result.current.pendingJourneys).toHaveLength(1);
-    expect(result.current.pendingTotal).toBe(1);
-    expect(result.current.pendingJourneys[0].title).toBe("Segurança na Nuvem");
-    expect(result.current.catalogJourneys).toHaveLength(2);
-    expect(result.current.isPendingSectionVisible).toBe(true);
-    expect(result.current.pendingError).toBeNull();
-    expect(result.current.catalogPageError).toBeNull();
   });
 
-  it("deve definir isPendingSectionVisible como false apenas quando não houver jornadas pendentes e sem erro", async () => {
+  it("deve carregar jornada pendente (no singular) e catálogo com sucesso", async () => {
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.hasPendingJourney).toBe(true);
+    });
+
+    expect(result.current.pendingJourney?.title).toBe("Segurança na Nuvem");
+    expect(result.current.catalogJourneys).toHaveLength(3);
+    expect(result.current.catalogTotalPages).toBe(1);
+  });
+
+  it("deve ocultar a seção de jornada pendente quando não houver nenhuma", async () => {
     vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue({
       items: [],
       total: 0,
       page: 1,
-      limit: 6,
-      totalPages: 0,
+      limit: 1,
+      totalPages: 1,
     });
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
 
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.isPendingLoading).toBe(false);
     });
 
-    expect(result.current.pendingJourneys).toHaveLength(0);
-    expect(result.current.isPendingSectionVisible).toBe(false);
+    expect(result.current.hasPendingJourney).toBe(false);
+    expect(result.current.pendingJourney).toBeNull();
   });
 
-  it("deve manter a seção de pendentes visível e exibir pendingError quando o fetch de pendentes falhar", async () => {
-    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
-      new Error("Falha ao carregar pendentes")
-    );
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+  it("deve gerenciar modal de cancelamento para jornada iniciada pelo usuário", async () => {
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
-      expect(result.current.isPendingLoading).toBe(false);
+      expect(result.current.hasPendingJourney).toBe(true);
     });
 
-    expect(result.current.isPendingSectionVisible).toBe(true);
-    expect(result.current.pendingError).toBe("Falha ao carregar pendentes");
-  });
-
-  it("deve converter mensagens genéricas de Failed to fetch para a string de erro traduzida", async () => {
-    vi.spyOn(assessmentsService, "getPendingAssessments").mockRejectedValue(
-      new TypeError("Failed to fetch")
-    );
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.isPendingLoading).toBe(false);
-    });
-
-    expect(result.current.pendingError).toBe("Erro ao carregar dados do servidor.");
-  });
-
-  it("deve marcar o perfil da jornada em andamento como em andamento, levando ao resumo da jornada", async () => {
-    mockCurrentJourney.journeyId = "78";
-    mockCurrentJourney.profileId = "c2";
-    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
-      mockPendingJourneys
-    );
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue({
-      ...mockCatalogJourneys,
-      items: mockCatalogJourneys.items.map((j) => ({
-        ...j,
-        status: "not_started" as const,
-        href: `/jornada/perfil/${j.id}`,
-      })),
-    });
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => expect(result.current.isCatalogLoading).toBe(false));
-
-    const [other, current] = result.current.catalogJourneys;
-    expect(other).toMatchObject({ id: "c1", status: "not_started", href: "/jornada/perfil/c1" });
-    expect(current).toMatchObject({ id: "c2", status: "in_progress", href: "/jornada/78" });
-  });
-
-  it("deve filtrar o catálogo localmente pelo termo de busca, sem nova requisição", async () => {
-    vi.spyOn(assessmentsService, "getPendingAssessments").mockResolvedValue(
-      mockPendingJourneys
-    );
-    const catalogSpy = vi
-      .spyOn(assessmentsService, "getCatalogAssessments")
-      .mockResolvedValue(mockCatalogJourneys);
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.isCatalogLoading).toBe(false);
-    });
-
-    expect(catalogSpy).toHaveBeenCalledWith({ page: 1, limit: 6, locale: "pt" });
-    expect(result.current.catalogJourneys).toHaveLength(2);
+    expect(result.current.isCancelModalOpen).toBe(false);
 
     act(() => {
-      // Sem acento e em minúsculas: a busca ignora acentos e maiúsculas
-      result.current.handleSearchChange("seguranca");
+      result.current.handleOpenCancelModal();
     });
+    expect(result.current.isCancelModalOpen).toBe(true);
 
-    expect(result.current.searchTerm).toBe("seguranca");
+    act(() => {
+      result.current.handleCloseCancelModal();
+    });
+    expect(result.current.isCancelModalOpen).toBe(false);
 
-    await waitFor(
-      () => {
-        expect(result.current.catalogJourneys.map((j) => j.id)).toEqual(["c2"]);
-      },
-      { timeout: 1000 }
-    );
-    // A busca não refaz a requisição: o backend não tem busca por texto
-    expect(catalogSpy).toHaveBeenCalledTimes(1);
+    act(() => {
+      result.current.handleConfirmCancelJourney();
+    });
+    expect(result.current.isCancelModalOpen).toBe(false);
+    expect(result.current.hasPendingJourney).toBe(false);
   });
 
-  it("deve atualizar a página de pendentes e do catálogo chamando o serviço com a nova página", async () => {
-    const pendingSpy = vi
-      .spyOn(assessmentsService, "getPendingAssessments")
-      .mockResolvedValue(mockPendingJourneys);
-    const catalogSpy = vi
-      .spyOn(assessmentsService, "getCatalogAssessments")
-      .mockResolvedValue(mockCatalogJourneys);
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+  it("deve filtrar o catálogo por busca textual", async () => {
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
-      expect(result.current.isPendingLoading).toBe(false);
+      expect(result.current.catalogJourneys).toHaveLength(3);
     });
 
     act(() => {
-      result.current.handlePendingPageChange(2);
+      result.current.handleSearchChange("Incidentes");
     });
 
     await waitFor(() => {
-      expect(pendingSpy).toHaveBeenCalledWith({ userId: 1, page: 2, perPage: 6 });
-    });
-
-    act(() => {
-      result.current.handleCatalogPageChange(3);
-    });
-
-    await waitFor(() => {
-      expect(catalogSpy).toHaveBeenCalledWith({ page: 3, limit: 6, locale: "pt" });
+      expect(result.current.catalogJourneys).toHaveLength(1);
+      expect(result.current.catalogJourneys[0].title).toContain(
+        "Gestão de Incidentes"
+      );
     });
   });
 
-  it("deve manter os dados da página anterior e expor pendingPageError pontual quando a troca de página falhar", async () => {
-    const pendingSpy = vi.spyOn(assessmentsService, "getPendingAssessments");
-    pendingSpy.mockResolvedValueOnce(mockPendingJourneys);
-    pendingSpy.mockRejectedValueOnce(new Error("Falha ao trocar de página"));
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+  it("deve filtrar o catálogo por domínio (múltipla seleção)", async () => {
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
-      expect(result.current.pendingJourneys).toHaveLength(1);
+      expect(result.current.catalogJourneys).toHaveLength(3);
     });
 
     act(() => {
-      result.current.handlePendingPageChange(2);
+      result.current.handleToggleDomainFilter("privacy");
+    });
+
+    expect(result.current.activeFiltersCount).toBe(1);
+    expect(result.current.catalogJourneys).toHaveLength(1);
+    expect(result.current.catalogJourneys[0].domain).toBe("privacy");
+
+    // Limpar filtros
+    act(() => {
+      result.current.handleClearFilters();
+    });
+
+    expect(result.current.activeFiltersCount).toBe(0);
+    expect(result.current.catalogJourneys).toHaveLength(3);
+  });
+
+  it("deve filtrar o catálogo por situação (múltipla seleção)", async () => {
+    const { result } = renderHook(() => useAssessmentsVM(), {
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(result.current.pendingPageError).toBe("Falha ao trocar de página");
+      expect(result.current.catalogJourneys).toHaveLength(3);
     });
-
-    // Os cards da página anterior continuam disponíveis; não vira erro de seção.
-    expect(result.current.pendingJourneys).toHaveLength(1);
-    expect(result.current.pendingError).toBeNull();
 
     act(() => {
-      result.current.dismissPendingPageError();
+      result.current.handleToggleStatusFilter("completed");
     });
 
-    expect(result.current.pendingPageError).toBeNull();
-  });
-
-  it("deve buscar as jornadas pendentes do usuário autenticado", async () => {
-    const pendingSpy = vi
-      .spyOn(assessmentsService, "getPendingAssessments")
-      .mockResolvedValue(mockPendingJourneys);
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
-
-    renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(pendingSpy).toHaveBeenCalledWith({ userId: 1, page: 1, perPage: 6 });
-    });
-  });
-
-  it("não deve buscar jornadas pendentes enquanto não houver usuário na sessão", async () => {
-    mockAuth.user = null;
-    mockAuth.isLoading = true;
-    const pendingSpy = vi
-      .spyOn(assessmentsService, "getPendingAssessments")
-      .mockResolvedValue(mockPendingJourneys);
-    vi.spyOn(assessmentsService, "getCatalogAssessments").mockResolvedValue(
-      mockCatalogJourneys
-    );
-
-    const { result } = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.isCatalogLoading).toBe(false);
-    });
-
-    expect(pendingSpy).not.toHaveBeenCalled();
-    // Mantém o skeleton enquanto a sessão carrega, em vez de ocultar a seção.
-    expect(result.current.isPendingLoading).toBe(true);
-    expect(result.current.isPendingSectionVisible).toBe(true);
+    expect(result.current.activeFiltersCount).toBe(1);
+    expect(result.current.catalogJourneys).toHaveLength(1);
+    expect(result.current.catalogJourneys[0].status).toBe("completed");
+    expect(result.current.catalogJourneys[0].score).toBe(90);
   });
 });

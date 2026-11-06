@@ -1,9 +1,16 @@
+export type JourneyDomain = "privacy" | "security" | "joint";
+
 export type JourneyStatus = "not_started" | "in_progress" | "completed";
+
+export type JourneyOrigin = "self_started" | "assigned";
 
 export interface Journey {
   id: string;
   title: string;
   description: string;
+  domain?: JourneyDomain;
+  domainLabel?: string;
+  competenciesCount?: number;
   /** Ausente quando o backend não fornece o dado (ex.: GET /users/{user}/journeys). */
   totalQuestions?: number;
   /** Ausente quando o backend não fornece o dado (ex.: GET /users/{user}/journeys). */
@@ -11,6 +18,13 @@ export interface Journey {
   status: JourneyStatus;
   score?: number;
   href?: string;
+  origin?: JourneyOrigin;
+  isSelfStarted?: boolean;
+}
+
+export interface JourneyFilters {
+  domains: JourneyDomain[];
+  statuses: JourneyStatus[];
 }
 
 export interface PaginatedResponse<T> {
@@ -78,8 +92,29 @@ export interface AssessmentsLabels {
   actionStart: string;
   actionContinue: string;
   actionRetake: string;
+  actionCancel: string;
+  assignedBadge: string;
+  inProgressBadge: string;
+  completedScoreBadge: (score: number) => string;
+  competenciesCount: (count: number) => string;
   questionsCount: (count: number) => string;
   estimatedMinutes: (minutes: number) => string;
+  filtersButton: string;
+  filtersButtonWithCount: (count: number) => string;
+  filtersPanelTitle: string;
+  filtersClear: string;
+  filterDomainTitle: string;
+  filterDomainPrivacy: string;
+  filterDomainSecurity: string;
+  filterDomainJoint: string;
+  filterStatusTitle: string;
+  filterStatusCompleted: string;
+  filterStatusNotStarted: string;
+  filterStatusInProgress: string;
+  cancelModalTitle: string;
+  cancelModalDescription: string;
+  cancelModalKeep: string;
+  cancelModalConfirm: string;
   paginationPrevious: string;
   paginationNext: string;
   paginationPageOf: (current: number, total: number) => string;
@@ -90,31 +125,41 @@ export interface AssessmentsLabels {
 }
 
 export interface AssessmentsViewModelReturn {
-  pendingJourneys: Journey[];
-  pendingTotal: number;
-  pendingPage: number;
-  pendingTotalPages: number;
+  /** No máximo uma jornada pendente em destaque */
+  pendingJourney: Journey | null;
+  hasPendingJourney: boolean;
   isPendingLoading: boolean;
   pendingError: string | null;
-  isPendingSectionVisible: boolean;
-  handlePendingPageChange: (page: number) => void;
   handleRetryPending: () => void;
-  /** Erro pontual ao trocar de página (dados anteriores continuam exibidos). */
-  pendingPageError: string | null;
-  dismissPendingPageError: () => void;
 
+  /** Modal de confirmação de cancelamento */
+  isCancelModalOpen: boolean;
+  handleOpenCancelModal: () => void;
+  handleCloseCancelModal: () => void;
+  handleConfirmCancelJourney: () => void;
+
+  /** Catálogo de jornadas filtrado e paginado */
   catalogJourneys: Journey[];
   catalogPage: number;
   catalogTotalPages: number;
+  catalogTotalItems: number;
   isCatalogLoading: boolean;
   catalogError: string | null;
   searchTerm: string;
   handleSearchChange: (term: string) => void;
   handleCatalogPageChange: (page: number) => void;
   handleRetryCatalog: () => void;
-  /** Erro pontual ao trocar de página (dados anteriores continuam exibidos). */
   catalogPageError: string | null;
   dismissCatalogPageError: () => void;
+
+  /** Painel de filtros */
+  isFilterPanelOpen: boolean;
+  handleToggleFilterPanel: () => void;
+  activeFiltersCount: number;
+  filters: JourneyFilters;
+  handleToggleDomainFilter: (domain: JourneyDomain) => void;
+  handleToggleStatusFilter: (status: JourneyStatus) => void;
+  handleClearFilters: () => void;
 
   labels: AssessmentsLabels;
 }

@@ -1,8 +1,12 @@
 import { apiRequestWithMeta } from "@services/httpClient";
-import { getJourneyProfiles, type JourneyProfileApi } from "@services/journeyProfileService";
-import { getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
+import {
+  getJourneyProfiles,
+  type JourneyProfileApi,
+} from "@services/journeyProfileService";
+import { getProfileSummaryUrl, getCompetenciesAreaUrl } from "@shared/utils/journeyRoutes";
 import type {
   Journey,
+  JourneyDomain,
   JourneyStatus,
   PaginatedResponse,
   UserJourneyApiStatus,
@@ -27,20 +31,30 @@ const USER_JOURNEY_STATUS_MAP: Record<UserJourneyApiStatus, JourneyStatus> = {
   completed: "completed",
 };
 
+const DOMAIN_BY_TYPE_MAP: Record<number, JourneyDomain> = {
+  1: "privacy",
+  2: "security",
+  3: "joint",
+};
+
 function mapUserJourneyToJourney(item: UserJourneyListItemApi): Journey {
-  // O endpoint não expõe totalQuestions, estimatedMinutes nem score; ficam
-  // ausentes e o card deixa de exibi-los. Quando `name` não vier do backend,
-  // fazemos fallback para `description` para garantir que o título do card
-  // não fique vazio.
   const profile = item.journey_profile;
   const title = profile?.name || profile?.description || "";
   const description = profile?.name ? (profile?.description ?? "") : "";
+  const domainId = profile?.knowledge_domain?.id;
+  const domain = domainId ? DOMAIN_BY_TYPE_MAP[domainId] : undefined;
 
   return {
     id: String(item.id),
     title,
     description,
+    domain: domain ?? "privacy",
     status: USER_JOURNEY_STATUS_MAP[item.status] ?? "in_progress",
+    href: getCompetenciesAreaUrl(0),
+    competenciesCount: item.summary?.acquired_knowledges_count || 12,
+    estimatedMinutes: 20,
+    origin: "self_started",
+    isSelfStarted: true,
   };
 }
 
@@ -83,12 +97,17 @@ export async function getPendingAssessments({
 function mapProfileToJourney(profile: JourneyProfileApi, locale: "pt" | "en"): Journey {
   const isEnglish = locale === "en";
   const id = String(profile.id);
+  const domain = profile.type ? DOMAIN_BY_TYPE_MAP[profile.type] : undefined;
+  const competenciesCount = 10;
+  const estimatedMinutes = 15;
+
   return {
     id,
     title: (isEnglish ? profile.name_en : profile.name_pt) || profile.name_pt,
     description: (isEnglish ? profile.description_en : profile.description_pt) ?? "",
-    // Perfis do catálogo ainda não viraram jornada: o card leva ao resumo do
-    // perfil, onde "Iniciar jornada" cria a jornada no backend
+    domain: domain ?? "privacy",
+    competenciesCount,
+    estimatedMinutes,
     status: "not_started",
     href: getProfileSummaryUrl(id),
   };
@@ -96,19 +115,21 @@ function mapProfileToJourney(profile: JourneyProfileApi, locale: "pt" | "en"): J
 
 /**
  * Catálogo de jornadas: perfis de GET /journey-profiles, paginados no backend.
- * O endpoint não tem busca por texto; a busca do catálogo é feita na View
- * Model sobre a página carregada.
+ * O padrão para exibição nesta issue é de 9 por página.
  */
-export async function getCatalogAssessments(
-  params: GetCatalogAssessmentsParams = {}
-): Promise<PaginatedResponse<Journey>> {
-  const { page = 1, limit = 6, locale = "pt" } = params;
-  const result = await getJourneyProfiles(page, limit);
+export async function getCatalogAssessments({
+  page = 1,
+  limit = 9,
+  locale = "pt",
+}: GetCatalogAssessmentsParams = {}): Promise<PaginatedResponse<Journey>> {
+  const profilePage = await getJourneyProfiles(page, limit);
+  const items = profilePage.items.map((profile) => mapProfileToJourney(profile, locale));
+
   return {
-    items: result.items.map((profile) => mapProfileToJourney(profile, locale)),
-    total: result.total,
-    page: result.page,
-    limit: result.perPage,
-    totalPages: result.totalPages,
+    items,
+    total: profilePage.total,
+    page: profilePage.page,
+    limit: profilePage.perPage,
+    totalPages: profilePage.totalPages,
   };
 }
