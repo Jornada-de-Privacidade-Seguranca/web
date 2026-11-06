@@ -97,17 +97,6 @@ describe("cadastroService", () => {
     expect(result).toEqual(createdUser);
   });
 
-  it("deve omitir a empresa quando ela não for informada", async () => {
-    const requestSpy = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, message: "ok", data: createdUser }));
-
-    await registerUser({ ...formData, empresa: "" });
-
-    const sent = requestSpy.mock.calls[0][0].data as Record<string, unknown>;
-    expect(sent).not.toHaveProperty("organization");
-  });
-
   it("deve converter as mensagens do 422 para os campos do formulário", async () => {
     vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
       mockAxiosError(422, {

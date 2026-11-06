@@ -17,14 +17,7 @@ import type {
 /** Nome e sobrenome, a mesma regra do POST /auth/register. */
 const FULL_NAME_PATTERN = /^\S+\s+\S+/u;
 
-interface UseCadastroVMProps {
-  isGeneralSystem?: boolean;
-}
-
-export function useCadastroVM(
-  props?: UseCadastroVMProps,
-): CadastroViewModelReturn {
-  const isGeneralSystem = props?.isGeneralSystem ?? true;
+export function useCadastroVM(): CadastroViewModelReturn {
   const t = useTranslations("auth.register");
 
   const [serverMessage, setServerMessage] =
@@ -70,13 +63,11 @@ export function useCadastroVM(
         .trim()
         .min(1, validationMessages.departmentRequired)
         .max(100, validationMessages.departmentMaxLength),
-      empresa: isGeneralSystem
-        ? z
-            .string()
-            .trim()
-            .min(1, validationMessages.companyRequired)
-            .max(100, validationMessages.companyMaxLength)
-        : z.string().trim().max(100, validationMessages.companyMaxLength).optional(),
+      empresa: z
+        .string()
+        .trim()
+        .min(1, validationMessages.companyRequired)
+        .max(100, validationMessages.companyMaxLength),
       email: z
         .string()
         .trim()
@@ -128,7 +119,7 @@ export function useCadastroVM(
         nomeCompleto: values.nomeCompleto,
         codigoFuncionario: values.codigoFuncionario,
         departamento: values.departamento,
-        empresa: isGeneralSystem ? values.empresa : undefined,
+        empresa: values.empresa,
         email: values.email,
         senha: values.senha,
         confirmarSenha: values.confirmarSenha,
@@ -153,19 +144,15 @@ export function useCadastroVM(
       }
 
       if (type === "validation" && err instanceof CadastroRequestError) {
-        // Cada mensagem vai para o seu campo; a da empresa fica no aviso quando o campo não aparece
-        const bannerMessages = [...err.otherErrors];
+        // Cada mensagem vai para o seu campo; as de campos fora do formulário ficam no aviso
         for (const [field, message] of Object.entries(err.fieldErrors)) {
-          if (!message) continue;
-          if (field === "empresa" && !isGeneralSystem) {
-            bannerMessages.push(message);
-          } else {
+          if (message) {
             form.setError(field as keyof CadastroFormValues, { type: "server", message });
           }
         }
         setServerMessage({
           title: t("serverError.invalidFieldsTitle"),
-          description: bannerMessages.length > 0 ? bannerMessages.join(" ") : undefined,
+          description: err.otherErrors.length > 0 ? err.otherErrors.join(" ") : undefined,
           variant: "destructive",
         });
         return;
@@ -186,7 +173,6 @@ export function useCadastroVM(
     serverMessage,
     onCloseMsg,
     handleSubmit,
-    isGeneralSystem,
     isSuccess,
     labels: {
       title: t("title"),

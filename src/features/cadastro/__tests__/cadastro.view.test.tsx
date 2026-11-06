@@ -68,30 +68,17 @@ describe("CadastroView Component", () => {
         return Promise.resolve();
       }),
       labels: mockLabels,
-      isGeneralSystem: true,
       isSuccess: false,
       ...overrides,
     };
   }
 
-  it("deve renderizar o campo de empresa quando isGeneralSystem é true", () => {
-    vi.spyOn(viewModelModule, "useCadastroVM").mockReturnValue(
-      createMockVMReturn({ isGeneralSystem: true })
-    );
+  it("deve renderizar o campo de empresa", () => {
+    vi.spyOn(viewModelModule, "useCadastroVM").mockReturnValue(createMockVMReturn());
 
     render(<CadastroView />);
 
     expect(screen.getByLabelText("EMPRESA")).toBeDefined();
-  });
-
-  it("não deve renderizar o campo de empresa quando isGeneralSystem é false", () => {
-    vi.spyOn(viewModelModule, "useCadastroVM").mockReturnValue(
-      createMockVMReturn({ isGeneralSystem: false })
-    );
-
-    render(<CadastroView />);
-
-    expect(screen.queryByLabelText("EMPRESA")).toBeNull();
   });
 
   it("deve exibir mensagem do servidor quando serverMessage estiver presente", () => {

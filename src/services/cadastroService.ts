@@ -45,7 +45,7 @@ export function toCadastroPayload(values: CadastroFormData): CadastroPayload {
     email: values.email,
     password: values.senha,
     password_confirmation: values.confirmarSenha,
-    ...(values.empresa ? { organization: values.empresa } : {}),
+    organization: values.empresa,
     department: values.departamento,
     registration_number: values.codigoFuncionario,
   };

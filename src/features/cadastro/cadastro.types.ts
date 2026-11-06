@@ -5,7 +5,7 @@ export interface CadastroFormValues {
   nomeCompleto: string;
   codigoFuncionario: string;
   departamento: string;
-  empresa?: string;
+  empresa: string;
   email: string;
   senha: string;
   confirmarSenha: string;
@@ -21,7 +21,7 @@ export interface CadastroPayload {
   email: string;
   password: string;
   password_confirmation: string;
-  organization?: string;
+  organization: string;
   department: string;
   registration_number: string;
 }
@@ -113,6 +113,5 @@ export interface CadastroViewModelReturn {
   onCloseMsg: () => void;
   handleSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   labels: CadastroLabels;
-  isGeneralSystem: boolean;
   isSuccess: boolean;
 }

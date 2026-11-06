@@ -78,45 +78,6 @@ describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
     });
   });
 
-  it("deve omitir empresa do payload quando isGeneralSystem é false", async () => {
-    const spy = vi
-      .spyOn(cadastroService, "registerUser")
-      .mockResolvedValueOnce(createdUser);
-
-    const { result } = renderHook(() =>
-      useCadastroVM({ isGeneralSystem: false })
-    );
-
-    const formDataNoCompany = {
-      ...validFormData,
-      empresa: "",
-    };
-
-    await act(async () => {
-      Object.entries(formDataNoCompany).forEach(([key, value]) => {
-        result.current.form.setValue(
-          key as keyof typeof validFormData,
-          value
-        );
-      });
-    });
-
-    await act(async () => {
-      await result.current.handleSubmit();
-    });
-
-    expect(spy).toHaveBeenCalledWith({
-      nomeCompleto: "Maria Silva",
-      codigoFuncionario: "00123456",
-      departamento: "Tecnologia",
-      empresa: undefined,
-      email: "maria@empresa.com",
-      senha: "Password123!",
-      confirmarSenha: "Password123!",
-    });
-    expect(result.current.isSuccess).toBe(true);
-  });
-
   it("deve falhar a validação se as senhas não coincidirem", async () => {
     const spy = vi.spyOn(cadastroService, "registerUser");
     const { result } = renderHook(() => useCadastroVM());
@@ -166,6 +127,7 @@ describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
     ["nome com mais de 50 caracteres", { nomeCompleto: `Maria ${"a".repeat(45)}` }, "nomeCompleto", "validation.fullNameMaxLength"],
     ["e-mail com mais de 100 caracteres", { email: `${"a".repeat(90)}@empresa.com` }, "email", "validation.emailMaxLength"],
     ["senha com mais de 100 caracteres", { senha: "a".repeat(101), confirmarSenha: "a".repeat(101) }, "senha", "validation.passwordMaxLength"],
+    ["empresa vazia", { empresa: "" }, "empresa", "validation.companyRequired"],
     ["empresa com mais de 100 caracteres", { empresa: "a".repeat(101) }, "empresa", "validation.companyMaxLength"],
     ["departamento com mais de 100 caracteres", { departamento: "a".repeat(101) }, "departamento", "validation.departmentMaxLength"],
     ["código de funcionário com mais de 50 caracteres", { codigoFuncionario: "a".repeat(51) }, "codigoFuncionario", "validation.employeeCodeMaxLength"],
@@ -220,7 +182,7 @@ describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
     });
   });
 
-  it("deve levar ao aviso as mensagens do 422 sem campo visível no formulário", async () => {
+  it("deve levar ao aviso as mensagens do 422 sem campo no formulário", async () => {
     vi.spyOn(cadastroService, "registerUser").mockRejectedValueOnce(
       new CadastroRequestError(
         "validation",
@@ -229,13 +191,15 @@ describe("Cadastro ViewModel Logic (useCadastroVM)", () => {
         ["Informe um perfil de jornada valido."]
       )
     );
-    const { result } = renderHook(() => useCadastroVM({ isGeneralSystem: false }));
+    const { result } = renderHook(() => useCadastroVM());
 
-    await fillAndSubmit(result, { ...validFormData, empresa: "" });
+    await fillAndSubmit(result);
 
-    expect(result.current.form.formState.errors.empresa).toBeUndefined();
+    expect(result.current.form.formState.errors.empresa?.message).toBe(
+      "Informe o orgao ou empresa."
+    );
     expect(result.current.serverMessage?.description).toBe(
-      "Informe um perfil de jornada valido. Informe o orgao ou empresa."
+      "Informe um perfil de jornada valido."
     );
   });
 
