@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermission } from "@/hooks/usePermission";
 import { usePathname, useRouter } from "@/shared/i18n/navigation";
 import {
   DEFAULT_AUTHENTICATED_PATH,
@@ -10,6 +11,7 @@ import {
   readCurrentLoginRedirectPath,
 } from "@/shared/utils/loginRedirect";
 import { clearSessionMarker } from "@/shared/utils/sessionMarker";
+import type { PermissionCode } from "@/features/auth/auth.types";
 
 /**
  * Redireciona para /login quando não houver sessão autenticada. Se a sessão
@@ -56,4 +58,49 @@ export function useRequireGuest() {
   }, [isLoading, isAuthenticated, router]);
 
   return { isAuthenticated, isLoading };
+}
+
+export interface RequirePermissionOptions {
+  /**
+   * Modo de verificação para múltiplas permissões:
+   * - 'any': Requer ao menos uma das permissões.
+   * - 'all': Requer todas as permissões.
+   *
+   * @default 'any'
+   */
+  mode?: "any" | "all";
+  /**
+   * Rota de redirecionamento caso o usuário não tenha permissão.
+   * @default '/painel?error=access_denied'
+   */
+  redirectTo?: string;
+}
+
+/**
+ * Guarda de permissão para rotas protegidas.
+ * Se o usuário não possuir as permissões necessárias, bloqueia o acesso e redireciona.
+ */
+export function useRequirePermission(
+  requiredPermissions: PermissionCode | PermissionCode[],
+  options?: RequirePermissionOptions
+) {
+  const { can, canAll, isAuthenticated, isLoading } = usePermission();
+  const router = useRouter();
+
+  const mode = options?.mode ?? "any";
+  const redirectTo = options?.redirectTo ?? "/painel?error=access_denied";
+
+  const hasAccess = Array.isArray(requiredPermissions)
+    ? mode === "all"
+      ? canAll(requiredPermissions)
+      : can(requiredPermissions)
+    : can(requiredPermissions);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !hasAccess) {
+      router.replace(redirectTo);
+    }
+  }, [isLoading, isAuthenticated, hasAccess, router, redirectTo]);
+
+  return { hasAccess, isLoading, isAuthenticated };
 }

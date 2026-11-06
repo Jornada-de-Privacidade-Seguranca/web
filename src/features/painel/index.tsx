@@ -2,7 +2,7 @@
 
 import { RefreshIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, MetricsGrid } from "@/components/ui";
+import { Button, Message, MetricsGrid } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { usePainelVM } from "./painel.viewmodel";
 import {
@@ -27,6 +27,8 @@ export function PainelView() {
     quickActions,
     isLoading,
     error,
+    accessDeniedMessage,
+    handleDismissAccessDenied,
     handleRetry,
     labels,
   } = usePainelVM();
@@ -34,6 +36,16 @@ export function PainelView() {
   return (
     <PageShell title={labels.pageTitle} subtitle="">
       <div className="space-y-8">
+        {/* Alerta de Acesso Negado */}
+        {accessDeniedMessage && (
+          <Message
+            variant="destructive"
+            title={labels.accessDeniedTitle}
+            description={accessDeniedMessage}
+            onClose={handleDismissAccessDenied}
+          />
+        )}
+
         {/* Cartão de Boas-Vindas / Resumo */}
         <WelcomeSummary
           userName={userFirstName}

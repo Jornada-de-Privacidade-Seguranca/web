@@ -173,6 +173,10 @@ describe("AdminUserDetailView", () => {
       handleCloseDeleteModal: vi.fn(),
       handleConfirmDelete: vi.fn().mockResolvedValue(undefined),
 
+      canDeleteUser: true,
+      canManageRoles: true,
+      canManageUser: true,
+
       labels: mockLabels,
       ...overrides,
     };

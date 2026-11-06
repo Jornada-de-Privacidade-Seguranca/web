@@ -23,10 +23,18 @@
     "results": "Resultados",
     "profile": "Perfil",
     "admin-panel": "Painel administrativo",
+    "users": "Usuários",
+    "allResults": "Resultados",
     "userMenu": {
       "profile": "Meu perfil",
       "logout": "Sair"
     }
+  },
+  "accessDenied": {
+    "title": "Acesso negado",
+    "description": "Você não tem permissão para acessar esta área ou executar esta ação.",
+    "backToDashboard": "Voltar ao painel",
+    "insufficientPermissions": "Permissões insuficientes para o seu perfil de acesso."
   },
   "switchThemeButton": {
     "light": "Trocar para tema claro",

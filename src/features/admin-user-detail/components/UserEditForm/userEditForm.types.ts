@@ -12,6 +12,8 @@ export interface UserEditFormProps {
   isSaving: boolean;
   saveSuccessMessage: string | null;
   labels: AdminUserDetailLabels;
+  canManageRoles?: boolean;
+  canManageUser?: boolean;
   onFieldChange: (field: keyof UserFormValues, value: string) => void;
   onResetForm: () => void;
   onSaveForm: () => Promise<void>;
@@ -30,6 +32,8 @@ export interface UserEditFormViewModelReturn {
   saveSuccessMessage: string | null;
   labels: AdminUserDetailLabels;
   roleOptions: RoleSelectOption[];
+  canManageRoles: boolean;
+  canManageUser: boolean;
   onFieldChange: (field: keyof UserFormValues, value: string) => void;
   onResetForm: () => void;
   onSubmit: (e: React.FormEvent) => void;

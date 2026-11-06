@@ -41,5 +41,7 @@ export function useUserEditFormVM(
     onFieldChange,
     onResetForm,
     onSubmit,
+    canManageRoles: props.canManageRoles ?? true,
+    canManageUser: props.canManageUser ?? true,
   };
 }

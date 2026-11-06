@@ -49,6 +49,10 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     handleCloseDeleteModal,
     handleConfirmDelete,
 
+    canDeleteUser,
+    canManageRoles,
+    canManageUser,
+
     labels,
   } = useAdminUserDetailVM({ userId });
 
@@ -87,6 +91,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
           user={user}
           labels={labels}
           isTogglingStatus={isTogglingStatus}
+          canManageUser={canManageUser}
           onToggleStatus={handleToggleStatus}
         />
 
@@ -109,6 +114,8 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
           isSaving={isSaving}
           saveSuccessMessage={saveSuccessMessage}
           labels={labels}
+          canManageRoles={canManageRoles}
+          canManageUser={canManageUser}
           onFieldChange={handleFieldChange}
           onResetForm={handleResetForm}
           onSaveForm={handleSaveForm}
@@ -121,48 +128,52 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
           labels={labels}
         />
 
-        {/* Seção: Zona de Perigo (Exclusão Restrita a Esta Tela) */}
-        <section
-          aria-labelledby="danger-zone-title"
-          className="rounded-3xl border border-destructive/30 bg-destructive/5 p-6 space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-destructive">
-                <HugeiconsIcon icon={AlertDiamondIcon} size={20} />
-                <h3
-                  id="danger-zone-title"
-                  className="font-heading text-base font-bold"
-                >
-                  {labels.dangerZoneTitle}
-                </h3>
+        {/* Seção: Zona de Perigo (Exclusão Restrita a Administradores) */}
+        {canDeleteUser && (
+          <section
+            aria-labelledby="danger-zone-title"
+            className="rounded-3xl border border-destructive/30 bg-destructive/5 p-6 space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-destructive">
+                  <HugeiconsIcon icon={AlertDiamondIcon} size={20} />
+                  <h3
+                    id="danger-zone-title"
+                    className="font-heading text-base font-bold"
+                  >
+                    {labels.dangerZoneTitle}
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+                  {labels.dangerZoneDescription}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
-                {labels.dangerZoneDescription}
-              </p>
-            </div>
 
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={handleOpenDeleteModal}
-              className="rounded-full text-xs font-semibold px-4 shrink-0 shadow-sm"
-            >
-              {labels.dangerZoneDeleteButton}
-            </Button>
-          </div>
-        </section>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleOpenDeleteModal}
+                className="rounded-full text-xs font-semibold px-4 shrink-0 shadow-sm"
+              >
+                {labels.dangerZoneDeleteButton}
+              </Button>
+            </div>
+          </section>
+        )}
 
         {/* Modal de Confirmação de Exclusão */}
-        <DeleteUserModal
-          isOpen={isDeleteModalOpen}
-          userName={user.name}
-          isDeleting={isDeleting}
-          labels={labels}
-          onCancel={handleCloseDeleteModal}
-          onConfirm={handleConfirmDelete}
-        />
+        {canDeleteUser && (
+          <DeleteUserModal
+            isOpen={isDeleteModalOpen}
+            userName={user.name}
+            isDeleting={isDeleting}
+            labels={labels}
+            onCancel={handleCloseDeleteModal}
+            onConfirm={handleConfirmDelete}
+          />
+        )}
       </div>
     </PageShell>
   );

@@ -189,7 +189,11 @@ const mockBaseReturn: PainelViewModelReturn = {
     pendingSectionAriaLabel: "Jornada pendente ou em andamento",
     completedSectionAriaLabel: "Última jornada concluída",
     historySectionAriaLabel: "Histórico recente de jornadas",
+    accessDeniedTitle: "Acesso negado",
+    accessDeniedMessage: "Você não tem permissão para acessar esta área.",
   },
+  accessDeniedMessage: null,
+  handleDismissAccessDenied: vi.fn(),
 };
 
 describe("PainelView Component", () => {

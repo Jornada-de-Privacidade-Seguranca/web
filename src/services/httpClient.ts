@@ -94,7 +94,15 @@ function toApiRequestError(error: unknown, defaultErrorMessage: string): ApiRequ
 
 function extractErrorMessage(error: unknown, defaultErrorMessage: string): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as ApiResponse<unknown> | undefined;
+    const data = error.response?.data as
+      | (ApiResponse<unknown> & { code?: string })
+      | undefined;
+    if (error.response?.status === 403 && data?.code === "PERMISSION_DENIED") {
+      return (
+        data.message ||
+        "Acesso negado. Você não tem permissão para realizar esta ação."
+      );
+    }
     if (data && typeof data.message === "string") {
       return data.message;
     }

@@ -7,6 +7,7 @@ export interface UserHeaderProps {
   user: AdminUserDetails;
   labels: AdminUserDetailLabels;
   isTogglingStatus: boolean;
+  canManageUser?: boolean;
   onToggleStatus: () => void;
 }
 
@@ -20,6 +21,7 @@ export interface UserHeaderViewModelReturn {
   isActive: boolean;
   statusToggleText: string;
   isTogglingStatus: boolean;
+  canManageUser: boolean;
   onToggleStatus: () => void;
   backToListText: string;
 }

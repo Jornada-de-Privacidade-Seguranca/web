@@ -103,6 +103,8 @@ export interface PainelLabels {
   pendingSectionAriaLabel: string;
   completedSectionAriaLabel: string;
   historySectionAriaLabel: string;
+  accessDeniedTitle: string;
+  accessDeniedMessage: string;
 }
 
 export interface PainelViewModelReturn {
@@ -119,6 +121,8 @@ export interface PainelViewModelReturn {
   quickActions: QuickActionItem[];
   isLoading: boolean;
   error: string | null;
+  accessDeniedMessage: string | null;
+  handleDismissAccessDenied: () => void;
   handleRetry: () => void;
   labels: PainelLabels;
 }

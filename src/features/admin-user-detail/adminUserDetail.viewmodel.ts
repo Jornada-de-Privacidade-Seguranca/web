@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/shared/i18n/navigation";
+import { usePermission } from "@/hooks/usePermission";
 import {
   getUserById,
   updateUser,
@@ -285,6 +286,11 @@ export function useAdminUserDetailVM({
     deleteSuccess: t("dangerZone.deleteSuccess"),
   };
 
+  const { can } = usePermission();
+  const canDeleteUser = can("users.delete");
+  const canManageRoles = can("users.manage_roles");
+  const canManageUser = can("users.manage");
+
   return {
     user,
     isLoading,
@@ -315,6 +321,10 @@ export function useAdminUserDetailVM({
     handleOpenDeleteModal,
     handleCloseDeleteModal,
     handleConfirmDelete,
+
+    canDeleteUser,
+    canManageRoles,
+    canManageUser,
 
     labels,
   };

@@ -1,36 +1,43 @@
-import { PropsWithChildren } from "react";
+"use client";
+
+import type { PropsWithChildren, ReactNode } from "react";
+import { usePermission } from "@/hooks/usePermission";
+import type { PermissionCode } from "@/features/auth/auth.types";
 
 export interface WithPermissionProps extends PropsWithChildren {
-  permission: string | string[];
+  /** Código de permissão único ou lista de códigos. */
+  permission: PermissionCode | PermissionCode[];
 
   /**
-   * Behaviour for multiple permissions checking. When 'all' is set, user need to have every required permission. If set to 'any', user need only one.
+   * Comportamento na verificação de múltiplas permissões:
+   * - 'all': O usuário precisa ter TODAS as permissões da lista.
+   * - 'any': O usuário precisa ter AO MENOS UMA das permissões da lista.
    *
    * @default 'all'
    */
   needPermissionMode?: "all" | "any";
+
+  /** Conteúdo opcional a ser exibido caso o usuário NÃO tenha permissão (ex: mensagem ou botão desabilitado). */
+  fallback?: ReactNode;
 }
 
 export const WithPermission = ({
   permission,
   children,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   needPermissionMode = "all",
+  fallback = null,
 }: WithPermissionProps) => {
-  let havePermissions = false;
+  const { can, canAll } = usePermission();
 
-  // TODO: implementar verificação de permissões no codigo, a depender de como for feita a autenticação e fetch de perfil/permissoes.
-  if (Array.isArray(permission)) {
-    // TODO: implementar logica para verificação de multiplas permissoes
-    havePermissions = true;
-  } else {
-    // TODO: implementar logica para verificar permissao unica
-    havePermissions = true;
+  const hasAccess = Array.isArray(permission)
+    ? needPermissionMode === "all"
+      ? canAll(permission)
+      : can(permission)
+    : can(permission);
+
+  if (!hasAccess) {
+    return <>{fallback}</>;
   }
 
-  if (!havePermissions) {
-    return null;
-  }
-
-  return children;
+  return <>{children}</>;
 };

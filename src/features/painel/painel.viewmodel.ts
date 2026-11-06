@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
+import { usePermission } from "@hooks/usePermission";
 import { getDashboardData } from "@services/dashboardService";
 import { HISTORY_LIMIT } from "@shared/constants/dashboard";
 import {
@@ -25,7 +28,18 @@ const DEFAULT_METRICS: DashboardMetrics = {
 
 export function usePainelVM(): PainelViewModelReturn {
   const t = useTranslations("painel");
+  const tAccess = useTranslations("accessDenied");
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { can } = usePermission();
+  const searchParams = useSearchParams();
+
+  const [hasDismissedAccessDenied, setHasDismissedAccessDenied] = useState(false);
+  const isAccessDeniedFromUrl = searchParams?.get("error") === "access_denied";
+  const showAccessDenied = isAccessDeniedFromUrl && !hasDismissedAccessDenied;
+
+  const handleDismissAccessDenied = () => {
+    setHasDismissedAccessDenied(true);
+  };
 
   const userFirstName = user?.name ? user.name.split(" ")[0] : t("defaultUserName");
   const userRoleName =
@@ -57,45 +71,51 @@ export function usePainelVM(): PainelViewModelReturn {
   const history = data?.history ?? [];
   const metrics = data?.metrics ?? DEFAULT_METRICS;
 
-  let journeyActionHref = "/jornadas";
-  let journeyActionLabel = t("quickActionStartJourney");
-  let journeyActionDesc = t("quickActionStartJourneyDesc");
+  const quickActions: QuickActionItem[] = [];
 
-  if (currentJourney) {
-    if (currentJourney.status === "pending") {
-      journeyActionHref = getJourneySummaryUrl(currentJourney.id || "atual");
-      journeyActionLabel = t("quickActionStartJourney");
-      journeyActionDesc = t("quickActionStartJourneyDesc");
-    } else {
-      journeyActionHref = getCompetenciesAreaUrl(0);
-      journeyActionLabel = t("quickActionContinueJourney");
-      journeyActionDesc = t("quickActionContinueJourneyDesc");
+  if (can("journeys.take")) {
+    let journeyActionHref = "/jornadas";
+    let journeyActionLabel = t("quickActionStartJourney");
+    let journeyActionDesc = t("quickActionStartJourneyDesc");
+
+    if (currentJourney) {
+      if (currentJourney.status === "pending") {
+        journeyActionHref = getJourneySummaryUrl(currentJourney.id || "atual");
+        journeyActionLabel = t("quickActionStartJourney");
+        journeyActionDesc = t("quickActionStartJourneyDesc");
+      } else {
+        journeyActionHref = getCompetenciesAreaUrl(0);
+        journeyActionLabel = t("quickActionContinueJourney");
+        journeyActionDesc = t("quickActionContinueJourneyDesc");
+      }
     }
-  }
 
-  const quickActions: QuickActionItem[] = [
-    {
+    quickActions.push({
       id: currentJourney?.status === "in_progress" ? "continue-journey" : "start-journey",
       label: journeyActionLabel,
       description: journeyActionDesc,
       href: journeyActionHref,
       iconName: "play",
-    },
-    {
+    });
+  }
+
+  if (can("results.view_own")) {
+    quickActions.push({
       id: "view-results",
       label: t("quickActionViewResults"),
       description: t("quickActionViewResultsDesc"),
       href: "/resultados",
       iconName: "award",
-    },
-    {
-      id: "view-profile",
-      label: t("quickActionViewProfile"),
-      description: t("quickActionViewProfileDesc"),
-      href: "/perfil",
-      iconName: "user",
-    },
-  ];
+    });
+  }
+
+  quickActions.push({
+    id: "view-profile",
+    label: t("quickActionViewProfile"),
+    description: t("quickActionViewProfileDesc"),
+    href: "/perfil",
+    iconName: "user",
+  });
 
   const labels: PainelLabels = {
     pageTitle: t("pageTitle"),
@@ -123,7 +143,7 @@ export function usePainelVM(): PainelViewModelReturn {
     startNewJourneyCta: t("startNewJourneyCta"),
     continueJourneyCta: t("continueJourneyCta"),
     progressLabel: t("progressLabel"),
-    progressPercentLabel: t("progressPercentLabel"),
+    progressPercentLabel: t("progressPercentLabel", { percent: "{percent}" }),
     metricsSectionTitle: t("metricsSectionTitle"),
     metricsSectionAriaLabel: t("metricsSectionAriaLabel"),
     metricsCompletedTitle: t("metricsCompletedTitle"),
@@ -154,6 +174,8 @@ export function usePainelVM(): PainelViewModelReturn {
     pendingSectionAriaLabel: t("pendingSectionAriaLabel"),
     completedSectionAriaLabel: t("completedSectionAriaLabel"),
     historySectionAriaLabel: t("historySectionAriaLabel"),
+    accessDeniedTitle: tAccess("title"),
+    accessDeniedMessage: tAccess("description"),
   };
 
   const metricsItems: MetricsGridItem[] = [
@@ -196,6 +218,8 @@ export function usePainelVM(): PainelViewModelReturn {
     quickActions,
     isLoading,
     error: errorMessage,
+    accessDeniedMessage: showAccessDenied ? labels.accessDeniedMessage : null,
+    handleDismissAccessDenied,
     handleRetry,
     labels,
   };

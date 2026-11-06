@@ -23,10 +23,18 @@
     "results": "Results",
     "profile": "Profile",
     "admin-panel": "Admin Panel",
+    "users": "Users",
+    "allResults": "Results",
     "userMenu": {
       "profile": "My profile",
       "logout": "Log out"
     }
+  },
+  "accessDenied": {
+    "title": "Access Denied",
+    "description": "You do not have permission to access this area or perform this action.",
+    "backToDashboard": "Back to Dashboard",
+    "insufficientPermissions": "Insufficient permissions for your access profile."
   },
   "switchThemeButton": {
     "light": "Switch to light mode",

@@ -125,6 +125,11 @@ export interface AdminUserDetailViewModelReturn {
   handleCloseDeleteModal: () => void;
   handleConfirmDelete: () => Promise<void>;
 
+  // Permissions
+  canDeleteUser: boolean;
+  canManageRoles: boolean;
+  canManageUser: boolean;
+
   labels: AdminUserDetailLabels;
 }
 

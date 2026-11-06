@@ -22,6 +22,7 @@ export function UserHeader(props: UserHeaderProps) {
     isActive,
     statusToggleText,
     isTogglingStatus,
+    canManageUser,
     onToggleStatus,
     backToListText,
   } = useUserHeaderVM(props);
@@ -67,21 +68,23 @@ export function UserHeader(props: UserHeaderProps) {
           </div>
         </div>
 
-        {/* Botão de Controle de Ativação */}
-        <Button
-          type="button"
-          variant={isActive ? "outline" : "default"}
-          onClick={onToggleStatus}
-          disabled={isTogglingStatus}
-          className="rounded-full text-xs font-semibold shrink-0"
-        >
-          <HugeiconsIcon
-            icon={isActive ? Cancel01Icon : CheckmarkCircle02Icon}
-            size={14}
-            className="mr-1.5"
-          />
-          <span>{statusToggleText}</span>
-        </Button>
+        {/* Botão de Controle de Ativação (apenas com permissão de gerenciamento) */}
+        {canManageUser && (
+          <Button
+            type="button"
+            variant={isActive ? "outline" : "default"}
+            onClick={onToggleStatus}
+            disabled={isTogglingStatus}
+            className="rounded-full text-xs font-semibold shrink-0"
+          >
+            <HugeiconsIcon
+              icon={isActive ? Cancel01Icon : CheckmarkCircle02Icon}
+              size={14}
+              className="mr-1.5"
+            />
+            <span>{statusToggleText}</span>
+          </Button>
+        )}
       </div>
     </div>
   );

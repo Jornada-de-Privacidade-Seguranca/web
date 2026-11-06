@@ -48,6 +48,7 @@ export function useUserHeaderVM(
       ? labels.statusDeactivate
       : labels.statusActivate,
     isTogglingStatus,
+    canManageUser: props.canManageUser ?? true,
     onToggleStatus,
     backToListText: labels.backToList,
   };
