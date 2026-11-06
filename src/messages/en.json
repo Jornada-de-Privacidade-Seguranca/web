@@ -510,5 +510,126 @@
       "goToSummaryLink": "Go to the journey overview",
       "retryButton": "Try again"
     }
+  },
+  "adminUsers": {
+    "title": "User Management",
+    "subtitle": "Find employees, manage accounts, and check system access profiles.",
+    "tabs": {
+      "users": "Users",
+      "roles": "Access profiles"
+    },
+    "searchPlaceholder": "Search by name, email, or employee code...",
+    "filters": {
+      "department": "Department",
+      "allDepartments": "All departments",
+      "role": "Access profile",
+      "allRoles": "All profiles",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "active": "Active",
+      "pending": "Pending",
+      "inactive": "Inactive",
+      "clear": "Clear filters",
+      "counter": "Showing {filtered} of {total} users"
+    },
+    "table": {
+      "user": "User",
+      "employeeCode": "Code",
+      "department": "Department",
+      "role": "Profile",
+      "status": "Status",
+      "journeys": "Journeys",
+      "actions": "Actions",
+      "manage": "Manage",
+      "journeysCount": "{count, plural, one {# journey} other {# journeys}}"
+    },
+    "rolesTab": {
+      "title": "Access Profiles and Permissions",
+      "subtitle": "View system pre-configured permission levels.",
+      "defaultBadge": "Default",
+      "permissionsTitle": "Read-only permissions:",
+      "historyNotice": "Profile changes and registration updates are permanently recorded in the audit history."
+    },
+    "empty": {
+      "title": "No users found",
+      "description": "No users match the applied filters or search term.",
+      "clearButton": "Clear filters"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {current} of {total}"
+    },
+    "error": {
+      "title": "Error loading users",
+      "message": "Unable to load system users list.",
+      "retry": "Try again"
+    }
+  },
+  "adminUserDetail": {
+    "backToList": "Back to users",
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "inactive": "Inactive",
+      "activate": "Activate account",
+      "deactivate": "Deactivate account",
+      "accountActive": "Active account",
+      "accountInactive": "Inactive account",
+      "accountPending": "Pending account",
+      "toggleSuccess": "User status updated successfully."
+    },
+    "inactiveBanner": {
+      "title": "Inactive User",
+      "description": "This account is inactive. The user must be activated to access the system and take journeys.",
+      "activateNow": "Activate now",
+      "dismiss": "Close",
+      "dontShowAgain": "Don't show again"
+    },
+    "editForm": {
+      "title": "User Details",
+      "subtitle": "Update registration information and access profile in the system.",
+      "name": "Full name",
+      "organization": "Organization / Company",
+      "employeeCode": "Employee code",
+      "email": "Institutional email",
+      "department": "Department / Sector",
+      "role": "Access profile",
+      "roleAdmin": "Administrator",
+      "roleManager": "Manager",
+      "roleUser": "User",
+      "unsavedChanges": "You have unsaved changes in this form.",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saveSuccess": "User updated successfully!",
+      "validation": {
+        "nameRequired": "Full name is required.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Please enter a valid email address.",
+        "departmentRequired": "Department is required.",
+        "employeeCodeRequired": "Employee code is required."
+      }
+    },
+    "journeys": {
+      "title": "Completed Journeys",
+      "subtitle": "Training tracks completed by this employee.",
+      "viewResult": "View result",
+      "viewAllResults": "View all results for this user",
+      "score": "Score: {score}/100",
+      "completedAt": "Completed on {date}",
+      "emptyTitle": "No journeys completed",
+      "emptyDescription": "This user has not completed any training journeys yet."
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Deletion is permanent and revokes employee access to the system immediately. Audit logs will be preserved.",
+      "deleteButton": "Delete user",
+      "modalTitle": "Delete user permanently?",
+      "modalDescription": "Are you sure you want to delete user {name}? This action cannot be undone.",
+      "modalCancel": "Cancel",
+      "modalConfirm": "Yes, delete user",
+      "deleteSuccess": "User deleted successfully."
+    }
   }
 }

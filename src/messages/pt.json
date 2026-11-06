@@ -510,5 +510,126 @@
       "goToSummaryLink": "Ir para o resumo da jornada",
       "retryButton": "Tentar novamente"
     }
+  },
+  "adminUsers": {
+    "title": "Gestão de Usuários",
+    "subtitle": "Encontre colaboradores, gerencie cadastros e consulte os perfis de acesso do sistema.",
+    "tabs": {
+      "users": "Usuários",
+      "roles": "Perfis de acesso"
+    },
+    "searchPlaceholder": "Buscar por nome, e-mail ou código...",
+    "filters": {
+      "department": "Setor",
+      "allDepartments": "Todos os setores",
+      "role": "Perfil de acesso",
+      "allRoles": "Todos os perfis",
+      "status": "Situação",
+      "allStatuses": "Todas as situações",
+      "active": "Ativo",
+      "pending": "Pendente",
+      "inactive": "Inativo",
+      "clear": "Limpar filtros",
+      "counter": "Mostrando {filtered} de {total} usuários"
+    },
+    "table": {
+      "user": "Usuário",
+      "employeeCode": "Código",
+      "department": "Setor",
+      "role": "Perfil",
+      "status": "Situação",
+      "journeys": "Jornadas",
+      "actions": "Ações",
+      "manage": "Gerenciar",
+      "journeysCount": "{count, plural, one {# jornada} other {# jornadas}}"
+    },
+    "rolesTab": {
+      "title": "Perfis de Acesso e Atribuições",
+      "subtitle": "Consulte os níveis de permissão pré-configurados do sistema.",
+      "defaultBadge": "Padrão",
+      "permissionsTitle": "Permissões de consulta:",
+      "historyNotice": "As mudanças de perfil e alterações cadastrais ficam permanentemente registradas no histórico de auditoria."
+    },
+    "empty": {
+      "title": "Nenhum usuário encontrado",
+      "description": "Nenhum usuário corresponde aos filtros ou termo de busca aplicados.",
+      "clearButton": "Limpar filtros"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próxima",
+      "pageOf": "Página {current} de {total}"
+    },
+    "error": {
+      "title": "Erro ao carregar usuários",
+      "message": "Não foi possível carregar a listagem de usuários do sistema.",
+      "retry": "Tentar novamente"
+    }
+  },
+  "adminUserDetail": {
+    "backToList": "Voltar para usuários",
+    "status": {
+      "active": "Ativo",
+      "pending": "Pendente",
+      "inactive": "Inativo",
+      "activate": "Ativar conta",
+      "deactivate": "Desativar conta",
+      "accountActive": "Conta ativa",
+      "accountInactive": "Conta inativa",
+      "accountPending": "Conta pendente",
+      "toggleSuccess": "Situação do usuário alterada com sucesso."
+    },
+    "inactiveBanner": {
+      "title": "Usuário Inativo",
+      "description": "Esta conta está desativada. O usuário precisa ser ativado para acessar o sistema e responder jornadas.",
+      "activateNow": "Ativar agora",
+      "dismiss": "Fechar",
+      "dontShowAgain": "Não mostrar novamente"
+    },
+    "editForm": {
+      "title": "Dados do Usuário",
+      "subtitle": "Atualize as informações cadastrais e o perfil de acesso no sistema.",
+      "name": "Nome completo",
+      "organization": "Órgão / Empresa",
+      "employeeCode": "Código de funcionário",
+      "email": "E-mail institucional",
+      "department": "Setor / Área",
+      "role": "Perfil de acesso",
+      "roleAdmin": "Administrador",
+      "roleManager": "Gestor",
+      "roleUser": "Usuário",
+      "unsavedChanges": "Você possui alterações não salvas neste formulário.",
+      "cancel": "Cancelar",
+      "save": "Salvar alterações",
+      "saving": "Salvando...",
+      "saveSuccess": "Usuário atualizado com sucesso!",
+      "validation": {
+        "nameRequired": "O nome completo é obrigatório.",
+        "emailRequired": "O e-mail é obrigatório.",
+        "emailInvalid": "Insira um endereço de e-mail válido.",
+        "departmentRequired": "O setor é obrigatório.",
+        "employeeCodeRequired": "O código de funcionário é obrigatório."
+      }
+    },
+    "journeys": {
+      "title": "Jornadas Realizadas",
+      "subtitle": "Trilhas de capacitação concluídas por este colaborador.",
+      "viewResult": "Ver resultado",
+      "viewAllResults": "Ver todos os resultados deste usuário",
+      "score": "Nota: {score}/100",
+      "completedAt": "Concluída em {date}",
+      "emptyTitle": "Nenhuma jornada realizada",
+      "emptyDescription": "Este usuário ainda não concluiu nenhuma jornada no sistema."
+    },
+    "dangerZone": {
+      "title": "Zona de Perigo",
+      "description": "A exclusão é definitiva e revoga imediatamente o acesso do colaborador ao sistema. Os registros de auditoria serão preservados.",
+      "deleteButton": "Excluir usuário",
+      "modalTitle": "Excluir usuário permanentemente?",
+      "modalDescription": "Tem certeza de que deseja excluir o usuário {name}? Esta ação não pode ser desfeita.",
+      "modalCancel": "Cancelar",
+      "modalConfirm": "Sim, excluir usuário",
+      "deleteSuccess": "Usuário excluído com sucesso."
+    }
   }
 }

@@ -183,9 +183,9 @@ function useSidebarVM() {
     {
       label: t("sidebar.admin-panel"),
       icon: Shield01Icon,
-      href: "/admin",
-      active: false,
-      disabled: true,
+      href: "/admin/usuarios",
+      active: pathname.startsWith("/admin"),
+      disabled: false,
     },
   ];
 
