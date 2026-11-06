@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@hooks/useAuth";
 import { getMetrics, getResultsList } from "@services/resultsService";
 import type {
   ResultsViewModelReturn,
@@ -34,9 +35,27 @@ function formatErrorMessage(err: unknown, defaultMsg: string): string {
   return defaultMsg;
 }
 
+function getDomainLabel(
+  domain: string | null | undefined,
+  namePt: string | undefined,
+  nameEn: string | undefined,
+  fallbackLabel: string | undefined,
+  locale: string,
+  t: (key: string) => string
+): string {
+  if (locale === "en" && nameEn) return nameEn;
+  if (locale !== "en" && namePt) return namePt;
+  if (domain === "privacy") return t("filterDomainPrivacy");
+  if (domain === "security") return t("filterDomainSecurity");
+  if (domain === "joint") return t("filterDomainJoint");
+  return fallbackLabel || domain || "";
+}
+
 export function useResultsVM(): ResultsViewModelReturn {
   const t = useTranslations("results");
   const locale = useLocale();
+  const { user } = useAuth();
+  const userId = user?.id ?? 1;
 
   // Pagination & Search States
   const [page, setPage] = useState<number>(1);
@@ -94,8 +113,8 @@ export function useResultsVM(): ResultsViewModelReturn {
 
   // TanStack Query - Metrics
   const metricsQuery = useQuery({
-    queryKey: ["results", "metrics"],
-    queryFn: getMetrics,
+    queryKey: ["results", "metrics", userId],
+    queryFn: () => getMetrics(userId),
     retry: false,
   });
 
@@ -104,15 +123,16 @@ export function useResultsVM(): ResultsViewModelReturn {
     queryKey: [
       "results",
       "list",
+      userId,
       page,
       debouncedSearchTerm,
       filters.domains.join(","),
     ],
     queryFn: () =>
       getResultsList({
+        userId,
         page,
         per_page: 6,
-        limit: 6,
         search: debouncedSearchTerm,
         domains: filters.domains,
       }),
@@ -123,34 +143,17 @@ export function useResultsVM(): ResultsViewModelReturn {
   const metrics: ResultsMetrics | null = rawMetrics
     ? {
         ...rawMetrics,
-        domainMetrics: (rawMetrics.domainMetrics ?? []).map((dm) => {
-          let label = dm.label;
-          if (locale === "en") {
-            label =
-              dm.nameEn ||
-              (dm.domain === "privacy"
-                ? t("filterDomainPrivacy")
-                : dm.domain === "security"
-                ? t("filterDomainSecurity")
-                : dm.domain === "joint"
-                ? t("filterDomainJoint")
-                : dm.label || dm.domain);
-          } else {
-            label =
-              dm.namePt ||
-              (dm.domain === "privacy"
-                ? t("filterDomainPrivacy")
-                : dm.domain === "security"
-                ? t("filterDomainSecurity")
-                : dm.domain === "joint"
-                ? t("filterDomainJoint")
-                : dm.label || dm.domain);
-          }
-          return {
-            ...dm,
-            label,
-          };
-        }),
+        domainMetrics: (rawMetrics.domainMetrics ?? []).map((dm) => ({
+          ...dm,
+          label: getDomainLabel(
+            dm.domain,
+            dm.namePt,
+            dm.nameEn,
+            dm.label,
+            locale,
+            t
+          ),
+        })),
       }
     : null;
 
@@ -170,28 +173,14 @@ export function useResultsVM(): ResultsViewModelReturn {
         ? item.nameEn || item.title
         : item.namePt || item.title;
 
-    let domainLabel = item.domainLabel;
-    if (locale === "en") {
-      domainLabel =
-        item.domainNameEn ||
-        (item.domain === "privacy"
-          ? t("filterDomainPrivacy")
-          : item.domain === "security"
-          ? t("filterDomainSecurity")
-          : item.domain === "joint"
-          ? t("filterDomainJoint")
-          : item.domainLabel);
-    } else {
-      domainLabel =
-        item.domainNamePt ||
-        (item.domain === "privacy"
-          ? t("filterDomainPrivacy")
-          : item.domain === "security"
-          ? t("filterDomainSecurity")
-          : item.domain === "joint"
-          ? t("filterDomainJoint")
-          : item.domainLabel);
-    }
+    const domainLabel = getDomainLabel(
+      item.domain,
+      item.domainNamePt,
+      item.domainNameEn,
+      item.domainLabel,
+      locale,
+      t
+    );
 
     return {
       ...item,

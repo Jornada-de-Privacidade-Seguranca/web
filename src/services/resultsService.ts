@@ -1,4 +1,4 @@
-import { apiRequest } from "@services/httpClient";
+import { apiRequest, ApiRequestError } from "@services/httpClient";
 import type {
   ResultItem,
   ResultsMetrics,
@@ -8,11 +8,16 @@ import type {
 import { env } from "@shared/config/env";
 
 export interface GetResultsListParams {
+  userId?: number | string;
   page?: number;
   per_page?: number;
   limit?: number;
   search?: string;
   domains?: (JourneyDomain | number)[];
+}
+
+function isNetworkError(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.status === undefined;
 }
 
 const MOCK_METRICS: ResultsMetrics = {
@@ -127,10 +132,11 @@ const MOCK_RESULTS: ResultItem[] = [
   },
 ];
 
-export async function getMetrics(): Promise<ResultsMetrics> {
+export async function getMetrics(userId: number | string = 1): Promise<ResultsMetrics> {
+  const targetId = userId ?? 1;
   try {
     const data = await apiRequest<ResultsMetrics>(
-      "/users/me/journeys/metrics",
+      `/users/${targetId}/journeys/metrics`,
       {},
       "Erro ao carregar as métricas de resultados."
     );
@@ -145,7 +151,7 @@ export async function getMetrics(): Promise<ResultsMetrics> {
       domainMetrics: data.domainMetrics ?? [],
     };
   } catch (err: unknown) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(err)) {
       return MOCK_METRICS;
     }
     throw err;
@@ -155,6 +161,7 @@ export async function getMetrics(): Promise<ResultsMetrics> {
 export async function getResultsList(
   params: GetResultsListParams = {}
 ): Promise<PaginatedResponse<ResultItem>> {
+  const targetId = params.userId ?? 1;
   const page = params.page ?? 1;
   const perPage = params.per_page ?? params.limit ?? 6;
   const search = params.search?.trim() ?? "";
@@ -177,12 +184,12 @@ export async function getResultsList(
     }
 
     return await apiRequest<PaginatedResponse<ResultItem>>(
-      "/users/me/journeys",
+      `/users/${targetId}/journeys`,
       { params: queryParams },
       "Não foi possível carregar os resultados das jornadas."
     );
   } catch (err: unknown) {
-    if (env.isDev) {
+    if (env.isDev && isNetworkError(err)) {
       let filtered = MOCK_RESULTS;
 
       if (search) {
