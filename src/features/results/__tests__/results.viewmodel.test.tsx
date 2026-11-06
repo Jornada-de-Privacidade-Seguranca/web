@@ -17,6 +17,9 @@ vi.mock("next-intl", () => ({
       return `Página ${params?.current} de ${params?.total}`;
     if (key === "filtersButtonWithCount")
       return `Filtros (${params?.count})`;
+    if (key === "filterDomainPrivacy") return "Privacidade";
+    if (key === "filterDomainSecurity") return "Segurança da Informação";
+    if (key === "filterDomainJoint") return "Conjunta";
     return key;
   },
   useLocale: () => "pt",
@@ -41,9 +44,9 @@ describe("useResultsVM", () => {
     totalCompleted: 15,
     averageScore: 76,
     domainMetrics: [
-      { domain: "privacy", label: "Privacidade", averageScore: 84 },
-      { domain: "security", label: "Segurança da Informação", averageScore: 60 },
-      { domain: "joint", label: "Conjunta", averageScore: null },
+      { domain: "privacy", label: "Privacidade", namePt: "Privacidade", nameEn: "Privacy", averageScore: 84 },
+      { domain: "security", label: "Segurança da Informação", namePt: "Segurança da Informação", nameEn: "Information Security", averageScore: 60 },
+      { domain: "joint", label: "Conjunta", namePt: "Conjunta", nameEn: "Joint", averageScore: null },
     ],
   };
 
@@ -51,9 +54,11 @@ describe("useResultsVM", () => {
     items: [
       {
         id: "r1",
-        title: "Fundamentos de LGPD",
-        score: 78,
-        completedAt: "2026-05-20T00:00:00Z",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
+        namePt: "Encarregado pelo Tratamento de Dados Pessoais",
+        nameEn: "Data Protection Officer (DPO)",
+        score: 88,
+        completedAt: "2026-05-15T10:00:00Z",
         domain: "privacy" as const,
         domainLabel: "Privacidade",
       },
@@ -102,9 +107,45 @@ describe("useResultsVM", () => {
     expect(result.current.metrics?.domainMetrics).toHaveLength(3);
     expect(result.current.metrics?.domainMetrics[0].label).toBe("Privacidade");
     expect(result.current.results).toHaveLength(1);
-    expect(result.current.results[0].title).toBe("Fundamentos de LGPD");
+    expect(result.current.results[0].title).toBe("Encarregado pelo Tratamento de Dados Pessoais");
     expect(result.current.emptyState).toBe("none");
     expect(result.current.error).toBeNull();
+  });
+
+  it("deve montar dinamicamente os blocos de média a partir dos domínios dos dados, inclusive um domínio novo", async () => {
+    const customMetrics = {
+      totalCompleted: 8,
+      domainMetrics: [
+        { domain: "privacy", label: "Privacidade", namePt: "Privacidade", nameEn: "Privacy", averageScore: 84 },
+        { domain: "ai_governance", label: "Governança de IA", namePt: "Governança de IA", nameEn: "AI Governance", averageScore: 92 },
+      ],
+    };
+
+    vi.spyOn(resultsService, "getMetrics").mockResolvedValue(customMetrics);
+    vi.spyOn(resultsService, "getResultsList").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 6,
+      totalPages: 1,
+    });
+
+    const { result } = renderHook(() => useResultsVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isMetricsLoading).toBe(false);
+    });
+
+    expect(result.current.metrics?.domainMetrics).toHaveLength(2);
+    expect(result.current.metrics?.domainMetrics[1]).toEqual(
+      expect.objectContaining({
+        domain: "ai_governance",
+        label: "Governança de IA",
+        averageScore: 92,
+      })
+    );
   });
 
   it("deve alternar a seleção de filtro de domínio e resetar para a primeira página", async () => {
@@ -202,10 +243,10 @@ describe("useResultsVM", () => {
     });
 
     act(() => {
-      result.current.handleSearchChange("LGPDInexistente");
+      result.current.handleSearchChange("PerfilInexistente");
     });
 
-    expect(result.current.searchTerm).toBe("LGPDInexistente");
+    expect(result.current.searchTerm).toBe("PerfilInexistente");
 
     await waitFor(
       () => {
@@ -217,10 +258,10 @@ describe("useResultsVM", () => {
 
   it("deve sanitizar mensagem técnica crua do backend", async () => {
     vi.spyOn(resultsService, "getMetrics").mockRejectedValue(
-      new Error("The route api/results could not be found.")
+      new Error("The route api/users/me/journeys could not be found.")
     );
     vi.spyOn(resultsService, "getResultsList").mockRejectedValue(
-      new Error("The route api/results could not be found.")
+      new Error("The route api/users/me/journeys could not be found.")
     );
 
     const { result } = renderHook(() => useResultsVM(), {

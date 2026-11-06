@@ -11,6 +11,7 @@ import type {
   ResultsEmptyStateMode,
   ResultsFilters,
   JourneyDomain,
+  ResultsMetrics,
 } from "./results.types";
 
 function formatErrorMessage(err: unknown, defaultMsg: string): string {
@@ -110,6 +111,7 @@ export function useResultsVM(): ResultsViewModelReturn {
     queryFn: () =>
       getResultsList({
         page,
+        per_page: 6,
         limit: 6,
         search: debouncedSearchTerm,
         domains: filters.domains,
@@ -117,7 +119,41 @@ export function useResultsVM(): ResultsViewModelReturn {
     retry: false,
   });
 
-  const metrics = metricsQuery.data ?? null;
+  const rawMetrics = metricsQuery.data ?? null;
+  const metrics: ResultsMetrics | null = rawMetrics
+    ? {
+        ...rawMetrics,
+        domainMetrics: (rawMetrics.domainMetrics ?? []).map((dm) => {
+          let label = dm.label;
+          if (locale === "en") {
+            label =
+              dm.nameEn ||
+              (dm.domain === "privacy"
+                ? t("filterDomainPrivacy")
+                : dm.domain === "security"
+                ? t("filterDomainSecurity")
+                : dm.domain === "joint"
+                ? t("filterDomainJoint")
+                : dm.label || dm.domain);
+          } else {
+            label =
+              dm.namePt ||
+              (dm.domain === "privacy"
+                ? t("filterDomainPrivacy")
+                : dm.domain === "security"
+                ? t("filterDomainSecurity")
+                : dm.domain === "joint"
+                ? t("filterDomainJoint")
+                : dm.label || dm.domain);
+          }
+          return {
+            ...dm,
+            label,
+          };
+        }),
+      }
+    : null;
+
   const isMetricsLoading = metricsQuery.isLoading;
   const isMetricsError = metricsQuery.isError;
   const metricsError = metricsQuery.error
@@ -127,7 +163,42 @@ export function useResultsVM(): ResultsViewModelReturn {
       )
     : null;
 
-  const results = resultsQuery.data?.items ?? [];
+  const rawResults = resultsQuery.data?.items ?? [];
+  const results = rawResults.map((item) => {
+    const title =
+      locale === "en"
+        ? item.nameEn || item.title
+        : item.namePt || item.title;
+
+    let domainLabel = item.domainLabel;
+    if (locale === "en") {
+      domainLabel =
+        item.domainNameEn ||
+        (item.domain === "privacy"
+          ? t("filterDomainPrivacy")
+          : item.domain === "security"
+          ? t("filterDomainSecurity")
+          : item.domain === "joint"
+          ? t("filterDomainJoint")
+          : item.domainLabel);
+    } else {
+      domainLabel =
+        item.domainNamePt ||
+        (item.domain === "privacy"
+          ? t("filterDomainPrivacy")
+          : item.domain === "security"
+          ? t("filterDomainSecurity")
+          : item.domain === "joint"
+          ? t("filterDomainJoint")
+          : item.domainLabel);
+    }
+
+    return {
+      ...item,
+      title,
+      domainLabel,
+    };
+  });
   const totalPages = resultsQuery.data?.totalPages ?? 1;
   const isResultsLoading = resultsQuery.isLoading;
   const isResultsError = resultsQuery.isError;

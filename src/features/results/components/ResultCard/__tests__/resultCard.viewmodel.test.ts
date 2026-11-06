@@ -46,7 +46,7 @@ describe("useResultCardVM", () => {
     const props: ResultCardProps = {
       result: {
         id: "j-123",
-        title: "Fundamentos de LGPD",
+        title: "Encarregado pelo Tratamento de Dados Pessoais",
         score: 78,
         completedAt: "2026-05-15T10:00:00Z",
         domain: "privacy",
@@ -56,13 +56,15 @@ describe("useResultCardVM", () => {
 
     const vm = useResultCardVM(props);
 
-    expect(vm.title).toBe("Fundamentos de LGPD");
+    expect(vm.title).toBe("Encarregado pelo Tratamento de Dados Pessoais");
     expect(vm.domainLabel).toBe("Privacidade");
     expect(vm.completedTagText).toBe("Concluída · 78/100");
     expect(vm.completedAtText).toBe("Concluída em 2026-05-15T10:00:00Z");
     expect(vm.actionHref).toBe("/jornada/j-123/resultado");
     expect(vm.buttonText).toBe("Ver resultado");
-    expect(vm.ctaAriaLabel).toBe("Ver resultado — Fundamentos de LGPD");
+    expect(vm.ctaAriaLabel).toBe(
+      "Ver resultado — Encarregado pelo Tratamento de Dados Pessoais"
+    );
     expect(vm.badgeAriaLabel).toBe("Nota: 78 de 100");
   });
 
@@ -70,7 +72,7 @@ describe("useResultCardVM", () => {
     const props: ResultCardProps = {
       result: {
         id: "j-999",
-        title: "Segurança Avançada",
+        title: "Gestor de Segurança da Informação",
         score: 95,
         completedAt: "2026-05-20T10:00:00Z",
         domain: "security",

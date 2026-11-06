@@ -122,8 +122,8 @@ describe("ResultsView Component", () => {
       results: [
         {
           id: "r1",
-          title: "Fundamentos de LGPD",
-          score: 78,
+          title: "Encarregado pelo Tratamento de Dados Pessoais",
+          score: 88,
           completedAt: "2026-05-20",
           domain: "privacy",
           domainLabel: "Privacidade",
@@ -173,8 +173,10 @@ describe("ResultsView Component", () => {
     expect(screen.getByText("Conjunta")).toBeDefined();
     expect(screen.getByText("—")).toBeDefined();
 
-    expect(screen.getByText("Fundamentos de LGPD")).toBeDefined();
-    expect(screen.getByText("Concluída · 78/100")).toBeDefined();
+    expect(
+      screen.getByText("Encarregado pelo Tratamento de Dados Pessoais")
+    ).toBeDefined();
+    expect(screen.getByText("Concluída · 88/100")).toBeDefined();
     expect(screen.getByText("Ver resultado")).toBeDefined();
   });
 

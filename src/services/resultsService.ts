@@ -5,31 +5,41 @@ import type {
   PaginatedResponse,
   JourneyDomain,
 } from "@features/results/results.types";
-import { env } from "@/shared/config/env";
+import { env } from "@shared/config/env";
 
 export interface GetResultsListParams {
   page?: number;
+  per_page?: number;
   limit?: number;
   search?: string;
-  domains?: JourneyDomain[];
+  domains?: (JourneyDomain | number)[];
 }
 
 const MOCK_METRICS: ResultsMetrics = {
-  totalCompleted: 12,
+  totalCompleted: 6,
   averageScore: 78,
   domainMetrics: [
     {
       domain: "privacy",
+      domainId: 1,
+      namePt: "Privacidade",
+      nameEn: "Privacy",
       label: "Privacidade",
       averageScore: 84,
     },
     {
       domain: "security",
+      domainId: 2,
+      namePt: "Segurança da Informação",
+      nameEn: "Information Security",
       label: "Segurança da Informação",
       averageScore: 60,
     },
     {
       domain: "joint",
+      domainId: 3,
+      namePt: "Conjunta",
+      nameEn: "Joint",
       label: "Conjunta",
       averageScore: null,
     },
@@ -39,58 +49,80 @@ const MOCK_METRICS: ResultsMetrics = {
 const MOCK_RESULTS: ResultItem[] = [
   {
     id: "1",
-    title: "Fundamentos de LGPD",
+    title: "Encarregado pelo Tratamento de Dados Pessoais",
+    namePt: "Encarregado pelo Tratamento de Dados Pessoais",
+    nameEn: "Data Protection Officer (DPO)",
     score: 88,
     completedAt: "2026-05-15T10:00:00Z",
     domain: "privacy",
+    domainId: 1,
+    domainNamePt: "Privacidade",
+    domainNameEn: "Privacy",
     domainLabel: "Privacidade",
   },
   {
     id: "2",
-    title: "Segurança da Informação e Senhas",
+    title: "Gestor de Segurança da Informação",
+    namePt: "Gestor de Segurança da Informação",
+    nameEn: "Information Security Manager",
     score: 68,
     completedAt: "2026-05-18T14:30:00Z",
     domain: "security",
+    domainId: 2,
+    domainNamePt: "Segurança da Informação",
+    domainNameEn: "Information Security",
     domainLabel: "Segurança da Informação",
   },
   {
     id: "3",
-    title: "Proteção contra Phishing e Engenharia Social",
+    title: "Membro de Equipe de Resposta a Incidentes",
+    namePt: "Membro de Equipe de Resposta a Incidentes",
+    nameEn: "Incident Response Team Member",
     score: 52,
     completedAt: "2026-05-20T09:15:00Z",
     domain: "security",
+    domainId: 2,
+    domainNamePt: "Segurança da Informação",
+    domainNameEn: "Information Security",
     domainLabel: "Segurança da Informação",
   },
   {
     id: "4",
-    title: "Governança de Dados Corporativos",
+    title: "Controlador",
+    namePt: "Controlador",
+    nameEn: "Data Controller",
     score: 95,
     completedAt: "2026-05-22T16:00:00Z",
     domain: "privacy",
+    domainId: 1,
+    domainNamePt: "Privacidade",
+    domainNameEn: "Privacy",
     domainLabel: "Privacidade",
   },
   {
     id: "5",
-    title: "Gestão de Incidentes de Privacidade",
+    title: "Operador",
+    namePt: "Operador",
+    nameEn: "Data Processor",
     score: 74,
     completedAt: "2026-05-25T11:20:00Z",
     domain: "privacy",
+    domainId: 1,
+    domainNamePt: "Privacidade",
+    domainNameEn: "Privacy",
     domainLabel: "Privacidade",
   },
   {
     id: "6",
-    title: "Conformidade com Marco Civil da Internet",
-    score: 81,
-    completedAt: "2026-05-28T08:45:00Z",
-    domain: "privacy",
-    domainLabel: "Privacidade",
-  },
-  {
-    id: "7",
-    title: "Auditoria Integrada de TI e Privacidade",
+    title: "Auditor de Conformidade e Segurança",
+    namePt: "Auditor de Conformidade e Segurança",
+    nameEn: "Compliance and Security Auditor",
     score: 77,
     completedAt: "2026-06-02T13:10:00Z",
     domain: "joint",
+    domainId: 3,
+    domainNamePt: "Conjunta",
+    domainNameEn: "Joint",
     domainLabel: "Conjunta",
   },
 ];
@@ -98,17 +130,20 @@ const MOCK_RESULTS: ResultItem[] = [
 export async function getMetrics(): Promise<ResultsMetrics> {
   try {
     const data = await apiRequest<ResultsMetrics>(
-      "/results/metrics",
+      "/users/me/journeys/metrics",
       {},
       "Erro ao carregar as métricas de resultados."
     );
-    if (!data.domainMetrics) {
+    if (!data.domainMetrics && env.isDev) {
       return {
         ...data,
         domainMetrics: MOCK_METRICS.domainMetrics,
       };
     }
-    return data;
+    return {
+      ...data,
+      domainMetrics: data.domainMetrics ?? [],
+    };
   } catch (err: unknown) {
     if (env.isDev) {
       return MOCK_METRICS;
@@ -120,14 +155,29 @@ export async function getMetrics(): Promise<ResultsMetrics> {
 export async function getResultsList(
   params: GetResultsListParams = {}
 ): Promise<PaginatedResponse<ResultItem>> {
-  const { page = 1, limit = 6, search = "", domains = [] } = params;
+  const page = params.page ?? 1;
+  const perPage = params.per_page ?? params.limit ?? 6;
+  const search = params.search?.trim() ?? "";
+  const domains = params.domains ?? [];
+
   try {
-    const queryParams: Record<string, string | number> = { page, limit };
-    if (search.trim()) queryParams.search = search.trim();
-    if (domains.length > 0) queryParams.domains = domains.join(",");
+    const queryParams: Record<string, unknown> = {
+      page,
+      per_page: perPage,
+    };
+    if (search) queryParams.search = search;
+    if (domains.length > 0) {
+      queryParams["domains[]"] = domains.map((d) => {
+        if (typeof d === "number") return d;
+        if (d === "privacy") return 1;
+        if (d === "security") return 2;
+        if (d === "joint") return 3;
+        return d;
+      });
+    }
 
     return await apiRequest<PaginatedResponse<ResultItem>>(
-      "/results",
+      "/users/me/journeys",
       { params: queryParams },
       "Não foi possível carregar os resultados das jornadas."
     );
@@ -135,28 +185,35 @@ export async function getResultsList(
     if (env.isDev) {
       let filtered = MOCK_RESULTS;
 
-      if (search.trim()) {
-        const lowerSearch = search.trim().toLowerCase();
-        filtered = filtered.filter((item) =>
-          item.title.toLowerCase().includes(lowerSearch)
+      if (search) {
+        const lowerSearch = search.toLowerCase();
+        filtered = filtered.filter(
+          (item) =>
+            item.title.toLowerCase().includes(lowerSearch) ||
+            item.namePt?.toLowerCase().includes(lowerSearch) ||
+            item.nameEn?.toLowerCase().includes(lowerSearch)
         );
       }
 
       if (domains.length > 0) {
-        filtered = filtered.filter(
-          (item) => item.domain && domains.includes(item.domain)
-        );
+        filtered = filtered.filter((item) => {
+          if (!item.domain && !item.domainId) return false;
+          return domains.some((d) => {
+            if (typeof d === "number") return item.domainId === d;
+            return item.domain === d;
+          });
+        });
       }
 
-      const startIndex = (page - 1) * limit;
-      const paginatedItems = filtered.slice(startIndex, startIndex + limit);
-      const totalPages = Math.ceil(filtered.length / limit) || 1;
+      const startIndex = (page - 1) * perPage;
+      const paginatedItems = filtered.slice(startIndex, startIndex + perPage);
+      const totalPages = Math.ceil(filtered.length / perPage) || 1;
 
       return {
         items: paginatedItems,
         total: filtered.length,
         page,
-        limit,
+        limit: perPage,
         totalPages,
       };
     }

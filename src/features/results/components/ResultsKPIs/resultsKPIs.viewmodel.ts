@@ -20,7 +20,7 @@ export function useResultsKPIsVM(
     },
     ...domainMetrics.map((dm) => ({
       id: `domain-${dm.domain}`,
-      label: dm.label,
+      label: dm.label || dm.domain || "",
       value:
         dm.averageScore !== null && dm.averageScore !== undefined
           ? labels.kpiDomainScore(Math.round(dm.averageScore))

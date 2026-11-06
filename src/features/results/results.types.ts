@@ -5,17 +5,25 @@ export type { JourneyDomain };
 export interface ResultItem {
   id: string;
   title: string;
+  namePt?: string;
+  nameEn?: string;
   score: number;
   completedAt: string;
   domain?: JourneyDomain;
+  domainId?: number;
   domainLabel?: string;
+  domainNamePt?: string;
+  domainNameEn?: string;
   description?: string;
   questionsCount?: number;
 }
 
 export interface DomainMetric {
   domain: string;
-  label: string;
+  domainId?: number;
+  label?: string;
+  namePt?: string;
+  nameEn?: string;
   averageScore: number | null;
 }
 
