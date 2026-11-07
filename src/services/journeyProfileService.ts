@@ -11,6 +11,11 @@ export interface JourneyProfileApi {
   description_en: string | null;
   /** Id do domínio de conhecimento (1 = privacidade, 2 = segurança, 3 = conjunta) */
   type: number | null;
+  /** Campos estendidos para métricas e status do usuário (issue #147 / #98) */
+  user_status?: string | null;
+  last_score?: number | null;
+  competencies_count?: number | null;
+  estimated_minutes?: number | null;
 }
 
 export interface JourneyProfilePage {

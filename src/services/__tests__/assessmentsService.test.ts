@@ -5,6 +5,7 @@ import {
   getCatalogAssessments,
 } from "../assessmentsService";
 import { axiosInstance } from "../httpClient";
+import { env } from "@shared/config/env";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
   return {
@@ -95,7 +96,7 @@ describe("assessmentsService", () => {
           status: "in_progress",
           href: "/jornada/atual/competencias/0",
           competenciesCount: 8,
-          estimatedMinutes: 25,
+          estimatedMinutes: undefined,
           origin: "self_started",
           isSelfStarted: true,
         },
@@ -136,7 +137,7 @@ describe("assessmentsService", () => {
     expect(result.total).toBe(0);
   });
 
-  it("deve buscar o catálogo em /journey-profiles e mapear competências, tempo e status do perfil", async () => {
+  it("deve buscar o catálogo em /journey-profiles e mapear como not_started e sem nota quando user_status for ausente", async () => {
     const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
       mockResponse({
         success: true,
@@ -174,31 +175,73 @@ describe("assessmentsService", () => {
     );
     expect(result.items).toHaveLength(2);
 
-    // Perfil 1 (Encarregado): concluído com nota e competências específicas
+    // Perfil da API real sem user_status não pode sair como Concluída nem com nota inventada
     expect(result.items[0]).toEqual({
       id: "1",
       title: "Encarregado pelo Tratamento de Dados Pessoais",
       description: "Canal de comunicação",
       domain: "privacy",
-      competenciesCount: 14,
-      estimatedMinutes: 25,
-      status: "completed",
-      score: 88,
+      competenciesCount: undefined,
+      estimatedMinutes: undefined,
+      status: "not_started",
+      score: undefined,
       href: "/jornada/perfil/1",
     });
 
-    // Perfil 4 (Operador): não iniciado com quantidade de competências diferente
+    // Perfil 4: não iniciado e sem campos inventados
     expect(result.items[1]).toEqual({
       id: "4",
       title: "Operador de Dados",
       description: "Tratamento de dados",
       domain: "privacy",
-      competenciesCount: 8,
-      estimatedMinutes: 15,
+      competenciesCount: undefined,
+      estimatedMinutes: undefined,
       status: "not_started",
       score: undefined,
       href: "/jornada/perfil/4",
     });
+  });
+
+  it("deve usar MOCK_CATALOG_PROFILES com metadados do mock em caso de falha de rede em ambiente dev", async () => {
+    const originalIsDev = env.isDev;
+    (env as { isDev: boolean }).isDev = true;
+
+    try {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        new AxiosError("Network Error", "ERR_NETWORK")
+      );
+
+      const result = await getCatalogAssessments({ page: 1, limit: 6, locale: "pt" });
+      expect(result.items).toHaveLength(6);
+
+      // Perfil 1 (Encarregado): concluído com nota e competências do mock #147
+      expect(result.items[0]).toEqual(
+        expect.objectContaining({
+          id: "1",
+          title: "Encarregado pelo Tratamento de Dados Pessoais",
+          domain: "privacy",
+          competenciesCount: 14,
+          estimatedMinutes: 25,
+          status: "completed",
+          score: 88,
+        })
+      );
+
+      // Perfil 4 (Operador): não iniciado no mock
+      expect(result.items[3]).toEqual(
+        expect.objectContaining({
+          id: "4",
+          title: "Operador",
+          domain: "privacy",
+          competenciesCount: 8,
+          estimatedMinutes: 15,
+          status: "not_started",
+          score: undefined,
+        })
+      );
+    } finally {
+      (env as { isDev: boolean }).isDev = originalIsDev;
+    }
   });
 
   it("deve respeitar dados dinâmicos de competências e tempo quando providos no objeto", async () => {
