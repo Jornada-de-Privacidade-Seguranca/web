@@ -9,7 +9,6 @@ export interface PendingAssessment {
   status: PendingAssessmentStatus;
   totalQuestions: number;
   estimatedMinutes: number;
-  currentStep?: string;
   progressPercent?: number;
   knowledgeDomain?: "privacy" | "security" | "joint" | null;
 }

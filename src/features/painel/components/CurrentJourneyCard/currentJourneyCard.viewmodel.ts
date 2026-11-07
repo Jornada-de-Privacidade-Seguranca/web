@@ -1,8 +1,6 @@
 import {
   getCompetenciesAreaUrl,
   getJourneySummaryUrl,
-  getCurrentJourneyStepUrl,
-  type PreQuestionnaireStepSlug,
 } from "@/shared/utils/journeyRoutes";
 import type {
   CurrentJourneyCardProps,
@@ -17,20 +15,15 @@ export function useCurrentJourneyCardVM(
   let actionHref = "/jornadas";
 
   if (journey) {
-    if (journey.status === "pending") {
-      actionHref = getJourneySummaryUrl(journey.id || "atual");
-    } else if (journey.currentStep && journey.currentStep !== "competencias") {
-      actionHref = getCurrentJourneyStepUrl(
-        journey.currentStep as PreQuestionnaireStepSlug
-      );
-    } else {
-      actionHref = getCompetenciesAreaUrl(0);
-    }
+    actionHref =
+      journey.status === "pending"
+        ? getJourneySummaryUrl(journey.id || "atual")
+        : getCompetenciesAreaUrl(0);
   }
 
   const progressPercent = Math.min(
     100,
-    Math.max(0, journey?.progressPercent ?? (journey?.status === "in_progress" ? 50 : 10))
+    Math.max(0, journey?.progressPercent ?? 0)
   );
 
   const progressPercentText = props.progressPercentLabel.replace(

@@ -67,10 +67,7 @@ export function usePainelVM(): PainelViewModelReturn {
       journeyActionLabel = t("quickActionStartJourney");
       journeyActionDesc = t("quickActionStartJourneyDesc");
     } else {
-      journeyActionHref =
-        currentJourney.currentStep && currentJourney.currentStep !== "competencias"
-          ? `/jornada/atual/${currentJourney.currentStep}`
-          : getCompetenciesAreaUrl(0);
+      journeyActionHref = getCompetenciesAreaUrl(0);
       journeyActionLabel = t("quickActionContinueJourney");
       journeyActionDesc = t("quickActionContinueJourneyDesc");
     }

@@ -11,13 +11,12 @@ const mockJourney: PendingAssessment = {
   status: "in_progress",
   totalQuestions: 10,
   estimatedMinutes: 15,
-  currentStep: "formacao-academica",
   progressPercent: 60,
   knowledgeDomain: "privacy",
 };
 
 describe("useCurrentJourneyCardVM", () => {
-  it("deve montar link para a etapa atual da jornada em andamento", () => {
+  it("deve apontar para a área 0 de competências quando a jornada estiver em andamento", () => {
     const { result } = renderHook(() =>
       useCurrentJourneyCardVM({
         journey: mockJourney,
@@ -32,9 +31,7 @@ describe("useCurrentJourneyCardVM", () => {
       })
     );
 
-    expect(result.current.actionHref).toBe(
-      "/jornada/atual/formacao-academica"
-    );
+    expect(result.current.actionHref).toBe("/jornada/atual/competencias/0");
     expect(result.current.progressPercent).toBe(60);
     expect(result.current.progressPercentText).toBe("60% concluído");
   });
@@ -61,7 +58,7 @@ describe("useCurrentJourneyCardVM", () => {
   it("deve apontar para o resumo da jornada quando status for pending", () => {
     const { result } = renderHook(() =>
       useCurrentJourneyCardVM({
-        journey: { ...mockJourney, status: "pending", currentStep: undefined },
+        journey: { ...mockJourney, status: "pending" },
         sectionTitle: "Jornada em andamento",
         emptyMessage: "Nenhuma jornada",
         exploreCtaText: "Explorar",
@@ -76,10 +73,10 @@ describe("useCurrentJourneyCardVM", () => {
     expect(result.current.actionHref).toBe("/jornada/j1");
   });
 
-  it("deve apontar para a área 0 de competências quando status for in_progress sem step", () => {
+  it("deve utilizar 0% de progresso quando a API não informar progressPercent", () => {
     const { result } = renderHook(() =>
       useCurrentJourneyCardVM({
-        journey: { ...mockJourney, status: "in_progress", currentStep: undefined },
+        journey: { ...mockJourney, progressPercent: undefined },
         sectionTitle: "Jornada em andamento",
         emptyMessage: "Nenhuma jornada",
         exploreCtaText: "Explorar",
@@ -91,7 +88,8 @@ describe("useCurrentJourneyCardVM", () => {
       })
     );
 
-    expect(result.current.actionHref).toBe("/jornada/atual/competencias/0");
+    expect(result.current.progressPercent).toBe(0);
+    expect(result.current.progressPercentText).toBe("0% concluído");
   });
 });
 

@@ -138,7 +138,6 @@ describe("Painel ViewModel (usePainelVM)", () => {
         status: "in_progress" as const,
         totalQuestions: 15,
         estimatedMinutes: 20,
-        currentStep: "competencias",
         progressPercent: 70,
         knowledgeDomain: "privacy" as const,
       },

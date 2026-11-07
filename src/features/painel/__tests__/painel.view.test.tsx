@@ -65,7 +65,6 @@ const mockBaseReturn: PainelViewModelReturn = {
     status: "in_progress",
     totalQuestions: 20,
     estimatedMinutes: 25,
-    currentStep: "competencias",
     progressPercent: 60,
     knowledgeDomain: "privacy",
   },

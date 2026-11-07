@@ -16,7 +16,6 @@ export const MOCK_PENDING_ASSESSMENT: PendingAssessment = {
   status: "in_progress",
   totalQuestions: 15,
   estimatedMinutes: 20,
-  currentStep: "competencias",
   progressPercent: 65,
   knowledgeDomain: "privacy",
 };
