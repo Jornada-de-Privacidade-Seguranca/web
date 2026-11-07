@@ -4,18 +4,6 @@ export type JourneyStatus = "not_started" | "in_progress" | "completed";
 
 export type JourneyOrigin = "self_started" | "assigned";
 
-/**
- * Metadados estendidos por perfil conforme o protótipo da tarefa #147,
- * enquanto os campos competencies_count, user_status e last_score não
- * forem providos diretamente pela API na issue #98.
- */
-export interface ProfileMetadata {
-  competenciesCount?: number;
-  estimatedMinutes?: number;
-  status: JourneyStatus;
-  score?: number;
-}
-
 export interface Journey {
   id: string;
   title: string;
