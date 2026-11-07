@@ -55,7 +55,9 @@ export function useResultsVM(): ResultsViewModelReturn {
   const t = useTranslations("results");
   const locale = useLocale();
   const { user } = useAuth();
-  const userId = user?.id ?? 1;
+  // O layout autenticado só renderiza a tela com o usuário carregado; sem ele,
+  // as consultas esperam em vez de buscar os dados de outro usuário
+  const userId = user?.id;
 
   // Pagination & Search States
   const [page, setPage] = useState<number>(1);
@@ -114,7 +116,8 @@ export function useResultsVM(): ResultsViewModelReturn {
   // TanStack Query - Metrics
   const metricsQuery = useQuery({
     queryKey: ["results", "metrics", userId],
-    queryFn: () => getMetrics(userId),
+    queryFn: () => getMetrics(userId as number),
+    enabled: userId != null,
     retry: false,
   });
 
@@ -130,12 +133,13 @@ export function useResultsVM(): ResultsViewModelReturn {
     ],
     queryFn: () =>
       getResultsList({
-        userId,
+        userId: userId as number,
         page,
         per_page: 6,
         search: debouncedSearchTerm,
         domains: filters.domains,
       }),
+    enabled: userId != null,
     retry: false,
   });
 

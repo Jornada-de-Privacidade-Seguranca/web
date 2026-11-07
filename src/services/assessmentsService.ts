@@ -10,7 +10,6 @@ import type {
   JourneyDomain,
   JourneyStatus,
   PaginatedResponse,
-  ProfileMetadata,
   UserJourneyApiStatus,
   UserJourneyListItemApi,
   UserJourneyListMetaApi,
@@ -37,15 +36,6 @@ const DOMAIN_BY_TYPE_MAP: Record<number, JourneyDomain> = {
   1: "privacy",
   2: "security",
   3: "joint",
-};
-
-export const PROFILE_METADATA_MOCK: Record<number, ProfileMetadata> = {
-  1: { competenciesCount: 14, estimatedMinutes: 25, status: "completed", score: 88 },
-  2: { competenciesCount: 16, estimatedMinutes: 30, status: "completed", score: 92 },
-  3: { competenciesCount: 10, estimatedMinutes: 20, status: "in_progress" },
-  4: { competenciesCount: 8, estimatedMinutes: 15, status: "not_started" },
-  5: { competenciesCount: 12, estimatedMinutes: 25, status: "completed", score: 76 },
-  6: { competenciesCount: 15, estimatedMinutes: 30, status: "not_started" },
 };
 
 export const MOCK_CATALOG_PROFILES: JourneyProfileApi[] = [
@@ -134,7 +124,8 @@ function mapUserJourneyToJourney(item: UserJourneyListItemApi): Journey {
     domain: domain ?? "privacy",
     status: USER_JOURNEY_STATUS_MAP[item.status] ?? "in_progress",
     href: getCompetenciesAreaUrl(0),
-    competenciesCount: item.summary?.acquired_knowledges_count ?? undefined,
+    // O resumo traz só quantas competências já foram respondidas, não o total
+    // do perfil; a quantidade fica oculta até a API fornecê-la (#98)
     origin: "self_started",
     isSelfStarted: true,
   };

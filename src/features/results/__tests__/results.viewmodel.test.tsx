@@ -7,6 +7,12 @@ import { useAuthStore } from "@features/auth/auth.store";
 import { useResultsVM } from "../results.viewmodel";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+// Usa o usuário do store sem conferir a sessão em /me, que falharia nos testes
+// e limparia o usuário no meio do caso
+vi.mock("@hooks/useAuth", () => ({
+  useAuth: () => ({ user: useAuthStore.getState().user }),
+}));
+
 // Mock next-intl
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
@@ -110,6 +116,31 @@ describe("useResultsVM", () => {
     expect(result.current.results[0].title).toBe("Encarregado pelo Tratamento de Dados Pessoais");
     expect(result.current.emptyState).toBe("none");
     expect(result.current.error).toBeNull();
+  });
+
+  it("deve buscar os dados com o id do usuário autenticado", async () => {
+    useAuthStore.setState({ user: { ...useAuthStore.getState().user!, id: 42 } });
+    const metricsSpy = vi.spyOn(resultsService, "getMetrics").mockResolvedValue(mockMetrics);
+    const listSpy = vi.spyOn(resultsService, "getResultsList").mockResolvedValue(mockResultsList);
+
+    renderHook(() => useResultsVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(metricsSpy).toHaveBeenCalledWith(42);
+      expect(listSpy).toHaveBeenCalledWith(expect.objectContaining({ userId: 42 }));
+    });
+  });
+
+  it("não deve buscar dados enquanto não houver usuário autenticado", async () => {
+    useAuthStore.setState({ user: null });
+    const metricsSpy = vi.spyOn(resultsService, "getMetrics").mockResolvedValue(mockMetrics);
+    const listSpy = vi.spyOn(resultsService, "getResultsList").mockResolvedValue(mockResultsList);
+
+    renderHook(() => useResultsVM(), { wrapper: createWrapper() });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(metricsSpy).not.toHaveBeenCalled();
+    expect(listSpy).not.toHaveBeenCalled();
   });
 
   it("deve montar dinamicamente os blocos de média a partir dos domínios dos dados, inclusive um domínio novo", async () => {

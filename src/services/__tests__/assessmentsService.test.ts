@@ -95,8 +95,6 @@ describe("assessmentsService", () => {
           domain: "privacy",
           status: "in_progress",
           href: "/jornada/atual/competencias/0",
-          competenciesCount: 8,
-          estimatedMinutes: undefined,
           origin: "self_started",
           isSelfStarted: true,
         },
