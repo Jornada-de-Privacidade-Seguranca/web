@@ -8,7 +8,7 @@ import type {
 import { env } from "@shared/config/env";
 
 export interface GetResultsListParams {
-  userId?: number | string;
+  userId: number | string;
   page?: number;
   per_page?: number;
   limit?: number;
@@ -132,11 +132,10 @@ const MOCK_RESULTS: ResultItem[] = [
   },
 ];
 
-export async function getMetrics(userId: number | string = 1): Promise<ResultsMetrics> {
-  const targetId = userId ?? 1;
+export async function getMetrics(userId: number | string): Promise<ResultsMetrics> {
   try {
     const data = await apiRequest<ResultsMetrics>(
-      `/users/${targetId}/journeys/metrics`,
+      `/users/${userId}/journeys/metrics`,
       {},
       "Erro ao carregar as métricas de resultados."
     );
@@ -159,9 +158,8 @@ export async function getMetrics(userId: number | string = 1): Promise<ResultsMe
 }
 
 export async function getResultsList(
-  params: GetResultsListParams = {}
+  params: GetResultsListParams
 ): Promise<PaginatedResponse<ResultItem>> {
-  const targetId = params.userId ?? 1;
   const page = params.page ?? 1;
   const perPage = params.per_page ?? params.limit ?? 6;
   const search = params.search?.trim() ?? "";
@@ -184,7 +182,7 @@ export async function getResultsList(
     }
 
     return await apiRequest<PaginatedResponse<ResultItem>>(
-      `/users/${targetId}/journeys`,
+      `/users/${params.userId}/journeys`,
       { params: queryParams },
       "Não foi possível carregar os resultados das jornadas."
     );
