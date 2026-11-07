@@ -3,8 +3,6 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "../ui";
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons";
-import { SwitchThemeButton } from "./SwitchThemeButton";
-import { IdiomSwitch } from "./IdiomSwitch";
 import { SIDEBAR_ID } from "@/shared/constants/sidebar";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useIsMobile } from "@/hooks/useMobile";
@@ -93,10 +91,6 @@ export const PageShell = ({ children, title, subtitle }: PageShellProps) => {
           </p>
         )}
 
-        <div className="ml-auto flex items-center space-x-2">
-          <IdiomSwitch />
-          <SwitchThemeButton />
-        </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-[calc(var(--header-height)+2rem)] md:px-8 md:pb-12 md:pt-[calc(var(--header-height)+2rem)]">

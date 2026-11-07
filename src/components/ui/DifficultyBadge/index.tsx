@@ -11,6 +11,7 @@ export function DifficultyBadge(props: DifficultyBadgeProps) {
 
   return (
     <span
+      data-slot="difficulty-badge"
       data-testid="difficulty-badge"
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",

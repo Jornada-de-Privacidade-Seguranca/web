@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useJourneyContext } from "@hooks/useJourneyContext";
 import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
@@ -13,25 +13,12 @@ import {
 import type {
   AssessmentsViewModelReturn,
   AssessmentsLabels,
-  Journey,
-  PaginatedResponse,
+  JourneyDomain,
+  JourneyStatus,
+  JourneyFilters,
 } from "./assessments.types";
 
-const PAGE_ERROR_TOAST_DURATION = 4000;
-
-function formatErrorMessage(err: unknown, defaultMsg: string): string {
-  if (err instanceof Error) {
-    if (
-      err.message.includes("Failed to fetch") ||
-      err.message.includes("NetworkError") ||
-      err.message.includes("fetch failed")
-    ) {
-      return defaultMsg;
-    }
-    return err.message;
-  }
-  return defaultMsg;
-}
+const CATALOG_PAGE_SIZE = 9;
 
 /** Normaliza para busca: sem acentos, em minúsculas e sem espaços nas pontas. */
 function normalizeSearch(value: string): string {
@@ -49,13 +36,23 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
 
-  // Pagination & Search States
-  const [pendingPage, setPendingPage] = useState<number>(1);
-  const [catalogPage, setCatalogPage] = useState<number>(1);
+  // Search & Filter States
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState<boolean>(false);
+  const [filters, setFilters] = useState<JourneyFilters>({
+    domains: [],
+    statuses: [],
+  });
 
-  // Debounce effect for search term (300ms)
+  // Pagination State for Catalog
+  const [catalogPage, setCatalogPage] = useState<number>(1);
+
+  // Cancellation Modal State (simulação local para #148; integração real com backend na issue #121)
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
+  const [isCancelledLocally, setIsCancelledLocally] = useState<boolean>(false);
+
+  // Debounce for search term (300ms)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearchChange = useCallback((term: string) => {
@@ -63,10 +60,9 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    // A busca filtra apenas a página do catálogo já carregada (o backend não
-    // tem busca por texto), então não reinicia a paginação
     debounceTimerRef.current = setTimeout(() => {
       setDebouncedSearchTerm(term);
+      setCatalogPage(1);
     }, 300);
   }, []);
 
@@ -78,154 +74,158 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     };
   }, []);
 
-  // TanStack Query - Pending Journeys
+  // TanStack Query - Pending Journey (at most 1)
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", userId, pendingPage],
+    queryKey: ["assessments", "pending", userId],
     queryFn: () =>
-      getPendingAssessments({ userId: userId as number, page: pendingPage, perPage: 6 }),
+      getPendingAssessments({ userId: userId as number, page: 1, perPage: 1 }),
     enabled: Boolean(userId),
     retry: false,
     placeholderData: keepPreviousData,
   });
 
-  // TanStack Query - Catalog Journeys
+  // TanStack Query - Catalog Profiles / Journeys
   const catalogQuery = useQuery({
-    queryKey: ["assessments", "catalog", catalogPage, locale],
+    queryKey: ["assessments", "catalog", locale],
     queryFn: () =>
       getCatalogAssessments({
-        page: catalogPage,
-        limit: 6,
+        page: 1,
+        // Limite máximo suportado pela API (100) para busca, filtros e paginação no cliente.
+        // A issue #98 moverá a paginação, busca e filtros diretamente para os parâmetros da API.
+        limit: 100,
         locale,
       }),
     placeholderData: keepPreviousData,
     retry: false,
   });
 
-  // `placeholderData: keepPreviousData` já resolve o "meio do caminho": ao
-  // trocar de página, a query mostra os dados da página anterior enquanto
-  // busca a nova (sem cair para `isLoading`). Só que isso não sobrevive a um
-  // erro — se a busca da nova página falhar, `data` volta a `undefined`. Por
-  // isso ainda guardamos o último resultado bem-sucedido de cada seção, só
-  // para esse caso: manter os cards visíveis quando a troca de página falha.
-  const [pendingLastSuccess, setPendingLastSuccess] =
-    useState<PaginatedResponse<Journey> | null>(null);
-  const [catalogLastSuccess, setCatalogLastSuccess] =
-    useState<PaginatedResponse<Journey> | null>(null);
+  // Derived pending journey
+  const rawPendingJourney =
+    !isCancelledLocally && pendingQuery.data?.items && pendingQuery.data.items.length > 0
+      ? pendingQuery.data.items[0]
+      : null;
 
-  useEffect(() => {
-    if (pendingQuery.data) setPendingLastSuccess(pendingQuery.data);
-  }, [pendingQuery.data]);
-
-  useEffect(() => {
-    if (catalogQuery.data) setCatalogLastSuccess(catalogQuery.data);
-  }, [catalogQuery.data]);
-
-  const pendingData = pendingQuery.data ?? pendingLastSuccess;
-  const catalogData = catalogQuery.data ?? catalogLastSuccess;
-
-  const pendingJourneys = pendingData?.items ?? [];
-  const pendingTotal = pendingData?.total ?? 0;
-  const pendingTotalPages = pendingData?.totalPages ?? 1;
-  // Enquanto a sessão carrega a query fica desabilitada (isLoading = false);
-  // mantém o skeleton em vez de ocultar a seção e reexibi-la em seguida.
   const isPendingLoading = pendingQuery.isLoading || (!userId && isAuthLoading);
-  const pendingError =
-    pendingQuery.isError && !pendingLastSuccess
-      ? formatErrorMessage(pendingQuery.error, t("errorMessage"))
-      : null;
+  const pendingError = pendingQuery.isError ? t("errorMessage") : null;
 
+  const hasPendingJourney = rawPendingJourney !== null;
+
+  // Filter and Search logic on catalog items
   const normalizedSearch = normalizeSearch(debouncedSearchTerm);
-  const catalogJourneys = (catalogData?.items ?? [])
-    .map((journey) =>
-      // O perfil da jornada em andamento continua a jornada atual em vez de
-      // levar ao resumo do perfil (que tentaria criar outra jornada)
-      currentJourney.journeyId && journey.id === currentJourney.profileId
-        ? {
-            ...journey,
-            status: "in_progress" as const,
-            href: getJourneySummaryUrl(currentJourney.journeyId),
-          }
-        : journey
-    )
-    .filter(
-      (journey) =>
-        !normalizedSearch ||
-        normalizeSearch(`${journey.title} ${journey.description}`).includes(normalizedSearch)
-    );
-  const catalogTotalPages = catalogData?.totalPages ?? 1;
+
+  const allCatalogItems = useMemo(() => {
+    return (catalogQuery.data?.items ?? []).map((journey) => {
+      if (currentJourney.journeyId && journey.id === currentJourney.profileId) {
+        return {
+          ...journey,
+          status: "in_progress" as const,
+          href: getJourneySummaryUrl(currentJourney.journeyId),
+        };
+      }
+      return journey;
+    });
+  }, [catalogQuery.data?.items, currentJourney.journeyId, currentJourney.profileId]);
+
+  const filteredCatalogItems = useMemo(() => {
+    return allCatalogItems.filter((journey) => {
+      // Filtro de busca textual
+      if (normalizedSearch) {
+        const targetText = normalizeSearch(`${journey.title} ${journey.description}`);
+        if (!targetText.includes(normalizedSearch)) return false;
+      }
+
+      // Filtro por domínio
+      if (filters.domains.length > 0) {
+        if (!journey.domain || !filters.domains.includes(journey.domain)) {
+          return false;
+        }
+      }
+
+      // Filtro por situação
+      if (filters.statuses.length > 0) {
+        if (!filters.statuses.includes(journey.status)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allCatalogItems, normalizedSearch, filters]);
+
+  // Pagination calculation on filtered results
+  const catalogTotalItems = filteredCatalogItems.length;
+  const catalogTotalPages = Math.max(1, Math.ceil(catalogTotalItems / CATALOG_PAGE_SIZE));
+
+  const paginatedCatalogJourneys = useMemo(() => {
+    const startIndex = (catalogPage - 1) * CATALOG_PAGE_SIZE;
+    return filteredCatalogItems.slice(startIndex, startIndex + CATALOG_PAGE_SIZE);
+  }, [filteredCatalogItems, catalogPage]);
+
   const isCatalogLoading = catalogQuery.isLoading;
-  const catalogError =
-    catalogQuery.isError && !catalogLastSuccess
-      ? formatErrorMessage(catalogQuery.error, t("errorMessage"))
-      : null;
+  const catalogError = catalogQuery.isError ? t("errorMessage") : null;
 
-  // Toast pontual: falha ao trocar de página quando já havia dados na tela.
-  const [pendingPageError, setPendingPageError] = useState<string | null>(null);
-  const pendingToastTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const dismissPendingPageError = useCallback(() => {
-    setPendingPageError(null);
-    if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
+  // Handlers for filters
+  const handleToggleDomainFilter = useCallback((domain: JourneyDomain) => {
+    setFilters((prev) => {
+      const exists = prev.domains.includes(domain);
+      const domains = exists
+        ? prev.domains.filter((d) => d !== domain)
+        : [...prev.domains, domain];
+      return { ...prev, domains };
+    });
+    setCatalogPage(1);
   }, []);
 
-  useEffect(() => {
-    if (pendingQuery.isError && pendingLastSuccess) {
-      setPendingPageError(formatErrorMessage(pendingQuery.error, t("errorMessage")));
-      if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
-      pendingToastTimerRef.current = setTimeout(
-        () => setPendingPageError(null),
-        PAGE_ERROR_TOAST_DURATION
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingQuery.isError, pendingQuery.error]);
-
-  const [catalogPageError, setCatalogPageError] = useState<string | null>(null);
-  const catalogToastTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const dismissCatalogPageError = useCallback(() => {
-    setCatalogPageError(null);
-    if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
+  const handleToggleStatusFilter = useCallback((status: JourneyStatus) => {
+    setFilters((prev) => {
+      const exists = prev.statuses.includes(status);
+      const statuses = exists
+        ? prev.statuses.filter((s) => s !== status)
+        : [...prev.statuses, status];
+      return { ...prev, statuses };
+    });
+    setCatalogPage(1);
   }, []);
 
-  useEffect(() => {
-    if (catalogQuery.isError && catalogLastSuccess) {
-      setCatalogPageError(formatErrorMessage(catalogQuery.error, t("errorMessage")));
-      if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
-      catalogToastTimerRef.current = setTimeout(
-        () => setCatalogPageError(null),
-        PAGE_ERROR_TOAST_DURATION
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [catalogQuery.isError, catalogQuery.error]);
-
-  useEffect(() => {
-    return () => {
-      if (pendingToastTimerRef.current) clearTimeout(pendingToastTimerRef.current);
-      if (catalogToastTimerRef.current) clearTimeout(catalogToastTimerRef.current);
-    };
+  const handleClearFilters = useCallback(() => {
+    setFilters({ domains: [], statuses: [] });
+    setCatalogPage(1);
   }, []);
 
-  // Pending section is visible if loading, has journeys, or failed with an error
-  const isPendingSectionVisible =
-    isPendingLoading || pendingJourneys.length > 0 || pendingError !== null;
+  const handleToggleFilterPanel = useCallback(() => {
+    setIsFilterPanelOpen((prev) => !prev);
+  }, []);
 
-  // Handle Page Changes
-  const handlePendingPageChange = (page: number) => {
-    setPendingPage(page);
-  };
+  const activeFiltersCount = filters.domains.length + filters.statuses.length;
 
-  const handleCatalogPageChange = (page: number) => {
+  // Handlers for cancel modal
+  const handleOpenCancelModal = useCallback(() => {
+    setIsCancelModalOpen(true);
+  }, []);
+
+  const handleCloseCancelModal = useCallback(() => {
+    setIsCancelModalOpen(false);
+  }, []);
+
+  const handleConfirmCancelJourney = useCallback(() => {
+    setIsCancelledLocally(true);
+    setIsCancelModalOpen(false);
+  }, []);
+
+  // Handlers for pagination and retry
+  const handleCatalogPageChange = useCallback((page: number) => {
     setCatalogPage(page);
-  };
+  }, []);
 
-  const handleRetryPending = () => {
+  const handleRetryPending = useCallback(() => {
     void pendingQuery.refetch();
-  };
+  }, [pendingQuery]);
 
-  const handleRetryCatalog = () => {
+  const handleRetryCatalog = useCallback(() => {
     void catalogQuery.refetch();
-  };
+  }, [catalogQuery]);
 
+  // Labels
   const labels: AssessmentsLabels = {
     title: t("title"),
     subtitle: t("subtitle"),
@@ -242,8 +242,29 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     actionStart: t("actionStart"),
     actionContinue: t("actionContinue"),
     actionRetake: t("actionRetake"),
+    actionCancel: t("actionCancel"),
+    assignedBadge: t("assignedBadge"),
+    inProgressBadge: t("inProgressBadge"),
+    completedScoreBadge: (score: number) => t("completedScoreBadge", { score }),
+    competenciesCount: (count: number) => t("competenciesCount", { count }),
     questionsCount: (count: number) => t("questionsCount", { count }),
     estimatedMinutes: (minutes: number) => t("estimatedMinutes", { minutes }),
+    filtersButton: t("filtersButton"),
+    filtersButtonWithCount: (count: number) => t("filtersButtonWithCount", { count }),
+    filtersPanelTitle: t("filtersPanelTitle"),
+    filtersClear: t("filtersClear"),
+    filterDomainTitle: t("filterDomainTitle"),
+    filterDomainPrivacy: t("filterDomainPrivacy"),
+    filterDomainSecurity: t("filterDomainSecurity"),
+    filterDomainJoint: t("filterDomainJoint"),
+    filterStatusTitle: t("filterStatusTitle"),
+    filterStatusCompleted: t("filterStatusCompleted"),
+    filterStatusNotStarted: t("filterStatusNotStarted"),
+    filterStatusInProgress: t("filterStatusInProgress"),
+    cancelModalTitle: t("cancelModalTitle"),
+    cancelModalDescription: t("cancelModalDescription"),
+    cancelModalKeep: t("cancelModalKeep"),
+    cancelModalConfirm: t("cancelModalConfirm"),
     paginationPrevious: t("pagination.previous"),
     paginationNext: t("pagination.next"),
     paginationPageOf: (current: number, total: number) =>
@@ -255,29 +276,37 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   };
 
   return {
-    pendingJourneys,
-    pendingTotal,
-    pendingPage,
-    pendingTotalPages,
+    pendingJourney: rawPendingJourney,
+    hasPendingJourney,
     isPendingLoading,
     pendingError,
-    isPendingSectionVisible,
-    handlePendingPageChange,
     handleRetryPending,
-    pendingPageError,
-    dismissPendingPageError,
 
-    catalogJourneys,
+    isCancelModalOpen,
+    handleOpenCancelModal,
+    handleCloseCancelModal,
+    handleConfirmCancelJourney,
+
+    catalogJourneys: paginatedCatalogJourneys,
     catalogPage,
     catalogTotalPages,
+    catalogTotalItems,
     isCatalogLoading,
     catalogError,
     searchTerm,
     handleSearchChange,
     handleCatalogPageChange,
     handleRetryCatalog,
-    catalogPageError,
-    dismissCatalogPageError,
+    catalogPageError: null,
+    dismissCatalogPageError: () => {},
+
+    isFilterPanelOpen,
+    handleToggleFilterPanel,
+    activeFiltersCount,
+    filters,
+    handleToggleDomainFilter,
+    handleToggleStatusFilter,
+    handleClearFilters,
 
     labels,
   };

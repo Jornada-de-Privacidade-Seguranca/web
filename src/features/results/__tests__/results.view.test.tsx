@@ -67,29 +67,40 @@ describe("ResultsView Component", () => {
   const mockLabels: ResultsLabels = {
     title: "Resultados",
     subtitle: "Todas as jornadas que você já concluiu.",
-    kpiTotalCompleted: "JORNADAS CONCLUÍDAS",
-    kpiAverageScore: "MÉDIA DAS NOTAS",
+    kpiTotalCompleted: "Jornadas concluídas",
+    kpiAverageScore: "Média geral",
+    kpiDomainScore: (score: number) => `${score}/100`,
+    kpiEmptyScore: "—",
     sectionTitle: "Jornadas concluídas",
     sectionSubtitle: "Revise os resultados das jornadas que você já finalizou.",
-    searchPlaceholder: "Buscar jornada pelo nome...",
+    searchPlaceholder: "Buscar pelo nome do perfil...",
     searchEmptyTitle: "Nenhum resultado encontrado",
-    searchEmpty: "Nenhum resultado encontrado para o termo buscado.",
-    userEmptyTitle: "Nenhuma jornada concluída",
-    userEmpty: "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui.",
+    searchEmpty: "Nenhum resultado corresponde à busca ou aos filtros aplicados.",
+    userEmptyTitle: "Você ainda não concluiu nenhuma jornada",
+    userEmpty: "Complete uma jornada para acompanhar seus resultados e sua evolução aqui.",
     availableJourneysCta: "Ver jornadas disponíveis",
     completedAt: (dateStr: string) => `Concluída em ${dateStr}`,
+    completedScoreTag: (score: number) => `Concluída · ${score}/100`,
     questionsCount: (count: number) => `${count} perguntas`,
     viewResult: "Ver resultado",
+    filtersButton: "Filtros",
+    filtersButtonWithCount: (count: number) => `Filtros (${count})`,
+    filtersTitle: "Filtros de busca",
+    filtersDomainTitle: "Domínio",
+    filtersClear: "Limpar filtros",
+    filterDomainPrivacy: "Privacidade",
+    filterDomainSecurity: "Segurança da Informação",
+    filterDomainJoint: "Conjunta",
     paginationPrevious: "Anterior",
-    paginationNext: "Próximo",
+    paginationNext: "Próxima",
     paginationPageOf: (current: number, total: number) =>
       `Página ${current} de ${total}`,
     errorTitle: "Erro ao carregar resultados",
     errorMetricsMessage: "Erro ao carregar estatísticas de resultados.",
-    errorMessage: "Não foi possível carregar os resultados das avaliações.",
+    errorMessage: "Não foi possível carregar os resultados das jornadas.",
     retryButton: "Tentar novamente",
-    loadingAriaLabel: "Carregando resultados de avaliações",
-    scoreAriaLabel: (score: number) => `Nota: ${score}`,
+    loadingAriaLabel: "Carregando resultados de jornadas",
+    scoreAriaLabel: (score: number) => `Nota: ${score} de 100`,
   };
 
   function createMockVMReturn(
@@ -99,6 +110,11 @@ describe("ResultsView Component", () => {
       metrics: {
         totalCompleted: 15,
         averageScore: 76,
+        domainMetrics: [
+          { domain: "privacy", label: "Privacidade", averageScore: 84 },
+          { domain: "security", label: "Segurança da Informação", averageScore: 60 },
+          { domain: "joint", label: "Conjunta", averageScore: null },
+        ],
       },
       isMetricsLoading: false,
       isMetricsError: false,
@@ -106,9 +122,11 @@ describe("ResultsView Component", () => {
       results: [
         {
           id: "r1",
-          title: "Fundamentos de LGPD",
-          score: 78,
+          title: "Encarregado pelo Tratamento de Dados Pessoais",
+          score: 88,
           completedAt: "2026-05-20",
+          domain: "privacy",
+          domainLabel: "Privacidade",
         },
       ],
       page: 1,
@@ -122,6 +140,13 @@ describe("ResultsView Component", () => {
       handleSearchChange: vi.fn(),
       handlePageChange: vi.fn(),
 
+      isFilterPanelOpen: false,
+      handleToggleFilterPanel: vi.fn(),
+      activeFiltersCount: 0,
+      filters: { domains: [] },
+      handleToggleDomainFilter: vi.fn(),
+      handleClearFilters: vi.fn(),
+
       isLoading: false,
       error: null,
       serverMessage: null,
@@ -132,52 +157,76 @@ describe("ResultsView Component", () => {
     };
   }
 
-  it("deve renderizar o painel de KPIs e os cards da lista de resultados", () => {
+  it("deve renderizar o painel de KPIs dinâmico por domínio e os cards da lista de resultados", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn()
     );
 
     renderView();
 
-    expect(screen.getByText("JORNADAS CONCLUÍDAS")).toBeDefined();
+    expect(screen.getAllByText("Jornadas concluídas").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("15")).toBeDefined();
-    expect(screen.getByText("MÉDIA DAS NOTAS")).toBeDefined();
-    expect(screen.getByText("76")).toBeDefined();
+    expect(screen.getAllByText("Privacidade").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("84/100")).toBeDefined();
+    expect(screen.getByText("Segurança da Informação")).toBeDefined();
+    expect(screen.getByText("60/100")).toBeDefined();
+    expect(screen.getByText("Conjunta")).toBeDefined();
+    expect(screen.getByText("—")).toBeDefined();
 
-    expect(screen.getByText("Jornadas concluídas")).toBeDefined();
-    expect(screen.getByText("Fundamentos de LGPD")).toBeDefined();
+    expect(
+      screen.getByText("Encarregado pelo Tratamento de Dados Pessoais")
+    ).toBeDefined();
+    expect(screen.getByText("Concluída · 88/100")).toBeDefined();
+    expect(screen.getByText("Ver resultado")).toBeDefined();
   });
 
-  it("deve exibir a cor/status condicional e aria-label da nota no ResultCard conforme limites (75, 74, 60, 59)", () => {
+  it("deve exibir a tag de nota e o botão de resultado com acessibilidade", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn({
         results: [
-          { id: "r1", title: "Alta", score: 75, completedAt: "2026-05-20" },
-          { id: "r2", title: "Media", score: 74, completedAt: "2026-05-20" },
-          { id: "r3", title: "Baixa", score: 59, completedAt: "2026-05-20" },
+          {
+            id: "r1",
+            title: "Alta",
+            score: 78,
+            completedAt: "2026-05-20",
+            domain: "privacy",
+          },
         ],
       })
     );
 
     renderView();
 
-    const scoreTags = screen.getAllByTestId("result-score-tag");
-    expect(scoreTags).toHaveLength(3);
+    const scoreTag = screen.getByTestId("result-score-tag");
+    expect(scoreTag.getAttribute("aria-label")).toBe("Nota: 78 de 100");
+    expect(scoreTag.textContent).toContain("Concluída · 78/100");
 
-    // Score 75 (Alto -> emerald)
-    expect(scoreTags[0].getAttribute("aria-label")).toBe("Nota: 75");
-    expect(scoreTags[0].className).toContain("emerald");
-
-    // Score 74 (Medio -> amber)
-    expect(scoreTags[1].getAttribute("aria-label")).toBe("Nota: 74");
-    expect(scoreTags[1].className).toContain("amber");
-
-    // Score 59 (Baixo -> destructive)
-    expect(scoreTags[2].getAttribute("aria-label")).toBe("Nota: 59");
-    expect(scoreTags[2].className).toContain("destructive");
-
-    // Garantir que não exibe descrição nem contagem de perguntas
+    // Não deve exibir perguntas nem descrição
     expect(screen.queryByText(/perguntas/i)).toBeNull();
+  });
+
+  it("deve abrir o painel de filtros ao clicar no botão Filtros e acionar handlers", () => {
+    const handleToggleFilterPanelMock = vi.fn();
+    const handleToggleDomainFilterMock = vi.fn();
+
+    vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
+      createMockVMReturn({
+        isFilterPanelOpen: true,
+        handleToggleFilterPanel: handleToggleFilterPanelMock,
+        handleToggleDomainFilter: handleToggleDomainFilterMock,
+      })
+    );
+
+    renderView();
+
+    const filterButton = screen.getByRole("button", { name: "Filtros" });
+    fireEvent.click(filterButton);
+    expect(handleToggleFilterPanelMock).toHaveBeenCalled();
+
+    // No painel de filtros aberto, clicar na opção Privacidade
+    const privacyChip = screen.getByRole("button", { name: "Privacidade" });
+    fireEvent.click(privacyChip);
+    expect(handleToggleDomainFilterMock).toHaveBeenCalledWith("privacy");
   });
 
   it("deve exibir Skeletons durante o carregamento dos dados", () => {
@@ -210,13 +259,12 @@ describe("ResultsView Component", () => {
     expect(
       screen.getByText("Erro ao carregar estatísticas de resultados.")
     ).toBeDefined();
-    expect(screen.queryByText("JORNADAS CONCLUÍDAS")).toBeNull();
 
     fireEvent.click(screen.getAllByText("Tentar novamente")[0]);
     expect(handleRetryMock).toHaveBeenCalled();
   });
 
-  it("deve exibir a mensagem de erro especifica da listagem (nao a de metricas) quando isResultsError for true", () => {
+  it("deve exibir a mensagem de erro específica da listagem quando isResultsError for true", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn({
         isResultsError: true,
@@ -224,7 +272,7 @@ describe("ResultsView Component", () => {
         results: [],
         serverMessage: {
           title: "Erro ao carregar resultados",
-          description: "Falha ao carregar as estatisticas de resultados.",
+          description: "Falha ao carregar as estatísticas de resultados.",
           variant: "destructive",
         },
       })
@@ -236,11 +284,11 @@ describe("ResultsView Component", () => {
       screen.getByText("Falha ao carregar a listagem de resultados.")
     ).toBeDefined();
     expect(
-      screen.getByText("Falha ao carregar as estatisticas de resultados.")
+      screen.getByText("Falha ao carregar as estatísticas de resultados.")
     ).toBeDefined();
   });
 
-  it("deve renderizar o ResultsEmptyState com o botao CTA levando a /jornadas quando emptyState = 'no-results'", () => {
+  it("deve renderizar o ResultsEmptyState com o botão CTA levando a /jornadas quando emptyState = 'no-results'", () => {
     vi.spyOn(viewModelModule, "useResultsVM").mockReturnValue(
       createMockVMReturn({
         results: [],
@@ -250,10 +298,12 @@ describe("ResultsView Component", () => {
 
     renderView();
 
-    expect(screen.getByText("Nenhuma jornada concluída")).toBeDefined();
+    expect(
+      screen.getByText("Você ainda não concluiu nenhuma jornada")
+    ).toBeDefined();
     expect(
       screen.getByText(
-        "Você ainda não concluiu nenhuma jornada. Seus resultados aparecerão aqui."
+        "Complete uma jornada para acompanhar seus resultados e sua evolução aqui."
       )
     ).toBeDefined();
 
@@ -271,7 +321,7 @@ describe("ResultsView Component", () => {
     renderView();
 
     const searchInput = screen.getByPlaceholderText(
-      "Buscar jornada pelo nome..."
+      "Buscar pelo nome do perfil..."
     );
     fireEvent.change(searchInput, { target: { value: "LGPD" } });
 

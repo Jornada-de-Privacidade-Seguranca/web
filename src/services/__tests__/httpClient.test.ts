@@ -307,4 +307,22 @@ describe("httpClient", () => {
       expect(unauthorizedHandler).not.toHaveBeenCalled();
     });
   });
+
+  it("should format 403 PERMISSION_DENIED response with access denied message and status", async () => {
+    vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+      mockAxiosError(403, {
+        code: "PERMISSION_DENIED",
+        message: "Você não tem permissão para esta ação.",
+      })
+    );
+
+    const error = (await apiRequest("/restricted").catch(
+      (e: unknown) => e
+    )) as ApiRequestError;
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect(error.status).toBe(403);
+    expect(error.code).toBe("PERMISSION_DENIED");
+    expect(error.message).toBe("Você não tem permissão para esta ação.");
+  });
 });

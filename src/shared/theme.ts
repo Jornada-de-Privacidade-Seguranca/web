@@ -169,8 +169,50 @@ export const lightTheme = {
 }
 
 // ---------------------------------------------------------------------------
+// Tema de Alto Contraste (WCAG AAA - Contraste mínimo 7:1 para texto, 3:1 bordas/foco)
+// ---------------------------------------------------------------------------
+
+export const highContrastTheme = {
+  background: 'oklch(0 0 0)',                 /* preto puro */
+  foreground: 'oklch(1 0 0)',                 /* branco puro — contraste 21:1 */
+
+  card: 'oklch(0 0 0)',
+  cardForeground: 'oklch(1 0 0)',
+
+  popover: 'oklch(0 0 0)',
+  popoverForeground: 'oklch(1 0 0)',
+
+  surfaceElevated: 'oklch(0.08 0 0)',
+
+  primary: 'oklch(0.97 0.2 105)',             /* amarelo puro #ffff00 — contraste 19.5:1 */
+  primaryForeground: 'oklch(0 0 0)',
+
+  secondary: 'oklch(0.12 0 0)',
+  secondaryForeground: 'oklch(1 0 0)',
+
+  muted: 'oklch(0.15 0 0)',
+  mutedForeground: 'oklch(0.98 0 0)',         /* texto secundário com contraste 20:1 */
+
+  accent: 'oklch(0.2 0 0)',
+  accentForeground: 'oklch(0.97 0.2 105)',
+
+  destructive: 'oklch(0.65 0.28 25)',         /* vermelho vibrante — contraste > 7.5:1 */
+  destructiveForeground: 'oklch(1 0 0)',
+
+  success: 'oklch(0.85 0.25 145)',            /* verde vibrante — contraste > 15:1 */
+  successForeground: 'oklch(0 0 0)',
+
+  warning: 'oklch(0.97 0.2 105)',             /* amarelo vibrante */
+  warningForeground: 'oklch(0 0 0)',
+
+  border: 'oklch(1 0 0)',                     /* branco puro — contraste 21:1 */
+  input: 'oklch(1 0 0)',
+  ring: 'oklch(0.97 0.2 105)',                /* amarelo vibrante para foco nítido */
+}
+
+// ---------------------------------------------------------------------------
 // Utilitário: converte os tokens em variáveis CSS
-// Use em generateThemeVars('dark') ou generateThemeVars('light')
+// Use em generateThemeVars('dark'), generateThemeVars('light') ou generateThemeVars('high-contrast')
 // ---------------------------------------------------------------------------
 
 type ThemeTokens = typeof darkTheme
@@ -179,8 +221,10 @@ function toKebab(str: string): string {
   return str.replace(/([A-Z])/g, (match) => `-${match.toLowerCase()}`)
 }
 
-export function generateThemeVars(theme: 'dark' | 'light'): Record<string, string> {
-  const tokens: ThemeTokens = theme === 'dark' ? darkTheme : lightTheme
+export function generateThemeVars(theme: 'dark' | 'light' | 'high-contrast'): Record<string, string> {
+  let tokens: ThemeTokens = darkTheme
+  if (theme === 'light') tokens = lightTheme
+  if (theme === 'high-contrast') tokens = highContrastTheme
 
   return Object.entries(tokens).reduce<Record<string, string>>(
     (acc, [key, value]) => {
@@ -211,7 +255,18 @@ export const theme = {
   breakpoints,
   dark: darkTheme,
   light: lightTheme,
+  highContrast: highContrastTheme,
 } as const
 
 export type Theme = typeof theme
-export type ThemeMode = 'dark' | 'light'
+export const VALID_THEMES = ['dark', 'light', 'high-contrast'] as const
+export type ThemeMode = (typeof VALID_THEMES)[number]
+
+export function isValidTheme(value: unknown): value is ThemeMode {
+  return typeof value === 'string' && (VALID_THEMES as readonly string[]).includes(value)
+}
+
+export function parseTheme(value: unknown, fallback: ThemeMode = 'dark'): ThemeMode {
+  return isValidTheme(value) ? value : fallback
+}
+

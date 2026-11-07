@@ -12,6 +12,7 @@ export const IdiomSwitch = () => {
         <Button
           key={index}
           variant={myLocale === locale ? "default" : "ghost"}
+          aria-pressed={myLocale === locale}
           onClick={() => changeLocale(myLocale)}
         >
           {myLocale.toUpperCase()}

@@ -14,6 +14,7 @@ export function DomainBadge(props: DomainBadgeProps) {
 
   return (
     <span
+      data-slot="domain-badge"
       data-testid="domain-badge"
       className={cn(
         "inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",

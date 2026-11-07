@@ -2,6 +2,7 @@ export { Button } from "./button";
 export { DifficultyBadge } from "./DifficultyBadge";
 export { DomainBadge } from "./DomainBadge";
 export { Input } from "./input";
+export { MetricsGrid } from "./MetricsGrid";
 export { Message } from "./message";
 export { AnimatedMessage } from "./AnimatedMessage";
 export { Pagination } from "./Pagination";

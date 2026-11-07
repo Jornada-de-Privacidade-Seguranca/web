@@ -8,7 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
-import { Button } from "@/components/ui";
+import { Button, DomainBadge } from "@/components/ui";
 import { useJourneyCardVM } from "./journeyCard.viewmodel";
 import type { JourneyCardProps } from "./journeyCard.types";
 
@@ -17,11 +17,12 @@ export function JourneyCard(props: JourneyCardProps) {
     journey,
     isCompleted,
     isInProgress,
+    domainLabel,
     actionHref,
     buttonText,
     buttonVariant,
     badgeText,
-    questionsText,
+    competenciesText,
     timeText,
     hasMeta,
     ctaAriaLabel,
@@ -30,7 +31,9 @@ export function JourneyCard(props: JourneyCardProps) {
   return (
     <article className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-md backdrop-blur-xl transition-all duration-200 hover:border-primary/40 hover:shadow-lg">
       <div>
-        <div className="flex items-center justify-between gap-3 min-h-[24px]">
+        <div className="flex flex-wrap items-center justify-between gap-2 min-h-[24px]">
+          <DomainBadge label={domainLabel} />
+
           {isCompleted ? (
             <span
               data-testid="status-completed-tag"
@@ -60,14 +63,14 @@ export function JourneyCard(props: JourneyCardProps) {
 
         {hasMeta && (
           <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
-            {questionsText && (
+            {competenciesText && (
               <div className="flex items-center gap-1.5">
                 <HugeiconsIcon
                   icon={CheckListIcon}
                   size={16}
                   className="text-primary shrink-0"
                 />
-                <span>{questionsText}</span>
+                <span>{competenciesText}</span>
               </div>
             )}
             {timeText && (

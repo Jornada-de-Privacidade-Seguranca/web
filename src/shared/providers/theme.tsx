@@ -7,7 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { ThemeMode } from "@/shared/theme";
+import { isValidTheme, type ThemeMode } from "@/shared/theme";
 
 export const THEME_STORAGE_KEY = "theme";
 
@@ -15,6 +15,7 @@ interface ThemeContextValue {
   theme: ThemeMode;
   isDark: boolean;
   isLight: boolean;
+  isHighContrast: boolean;
   mounted: boolean; // use para evitar flash de hidratação
   toggleTheme: () => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -22,20 +23,31 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-function getSystemTheme(): ThemeMode {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-function getStoredTheme(): ThemeMode | null {
-  try {
-    // Tema configurado por cookies agora, pode puxar direto do root
-    const theme = document.documentElement.classList.contains("dark")
+export function getSystemTheme(): ThemeMode {
+  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
+  }
+  return "dark";
+}
 
-    return theme;
+export function getStoredTheme(): ThemeMode | null {
+  try {
+    const fromStorage = localStorage.getItem(THEME_STORAGE_KEY);
+    if (isValidTheme(fromStorage)) {
+      return fromStorage;
+    }
+
+    if (document.documentElement.classList.contains("high-contrast")) {
+      return "high-contrast";
+    }
+    if (document.documentElement.classList.contains("dark")) {
+      return "dark";
+    }
+    if (document.documentElement.classList.contains("light")) {
+      return "light";
+    }
   } catch {
     // localStorage indisponível (SSR ou modo privado restrito)
   }
@@ -44,7 +56,7 @@ function getStoredTheme(): ThemeMode | null {
 
 function applyTheme(mode: ThemeMode) {
   const root = document.documentElement;
-  root.classList.remove("dark", "light");
+  root.classList.remove("dark", "light", "high-contrast");
   root.classList.add(mode);
 }
 
@@ -61,25 +73,35 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
     const stored = getStoredTheme();
     const resolved = stored ?? getSystemTheme();
     setTheme(resolved);
-    // applyTheme(resolved);
+    applyTheme(resolved);
     setMounted(true);
 
     // Escuta mudanças na preferência do sistema quando não há preferência salva
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      if (!getStoredTheme()) {
-        const next = media.matches ? "dark" : "light";
-        setTheme(next);
-        applyTheme(next);
-      }
-    };
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = () => {
+        if (!getStoredTheme()) {
+          const next = media.matches ? "dark" : "light";
+          setTheme(next);
+          applyTheme(next);
+        }
+      };
 
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
+      media.addEventListener?.("change", handleChange);
+      return () => media.removeEventListener?.("change", handleChange);
+    }
   }, []);
 
   function toggleTheme() {
-    const next: ThemeMode = theme === "dark" ? "light" : "dark";
+    let next: ThemeMode = "light";
+    if (theme === "light") {
+      next = "dark";
+    } else if (theme === "dark") {
+      next = "high-contrast";
+    } else {
+      next = "light";
+    }
+
     setTheme(next);
     applyTheme(next);
     setThemeCookie(next);
@@ -103,6 +125,7 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
         theme,
         isDark: theme === "dark",
         isLight: theme === "light",
+        isHighContrast: theme === "high-contrast",
         mounted,
         toggleTheme,
         setThemeMode,

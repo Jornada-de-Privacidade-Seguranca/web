@@ -13,9 +13,11 @@ export function ThemeScript() {
             (function() {
               try {
                 var stored = localStorage.getItem('${THEME_STORAGE_KEY}');
-                var theme = (stored === 'dark' || stored === 'light')
+                var hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+                var theme = (stored === 'dark' || stored === 'light' || stored === 'high-contrast')
                   ? stored
-                  : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                  : (hasMatchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : (hasMatchMedia ? 'light' : 'dark'));
+                document.documentElement.classList.remove('dark', 'light', 'high-contrast');
                 document.documentElement.classList.add(theme);
               } catch (e) {}
             })();

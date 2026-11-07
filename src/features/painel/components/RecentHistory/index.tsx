@@ -9,7 +9,14 @@ export function RecentHistory(props: RecentHistoryProps) {
     useRecentHistoryVM(props);
 
   if (!hasHistory) {
-    return <EmptyState message={emptyMessage} />;
+    return (
+      <section className="rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+        <h3 className="mb-4 font-heading text-lg font-bold tracking-tight text-foreground">
+          {sectionTitle}
+        </h3>
+        <EmptyState message={emptyMessage} />
+      </section>
+    );
   }
 
   return (

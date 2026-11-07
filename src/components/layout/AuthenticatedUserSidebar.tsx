@@ -14,29 +14,40 @@ import { Popover } from "radix-ui";
 import { cn } from "@/shared/lib/utils";
 import { useSidebarStore } from "@/store/sidebar.store";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermission } from "@/hooks/usePermission";
 import { useTranslations } from "next-intl";
 import { KeyboardEvent, PropsWithChildren, useEffect, useRef } from "react";
 import { usePathname } from "@/shared/i18n/navigation";
 import { useIsMobile } from "@/hooks/useMobile";
 import { SIDEBAR_ID } from "@/shared/constants/sidebar";
+import { getInitials } from "@/shared/utils/initials";
+
+export interface NavSubItem {
+  label: string;
+  href: string;
+  active: boolean;
+}
+
+export interface NavItem {
+  label: string;
+  icon: typeof DashboardSquare01Icon;
+  href: string;
+  active: boolean;
+  disabled?: boolean;
+  subItems?: NavSubItem[];
+}
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function useSidebarVM() {
+export function useSidebarVM() {
   const isDesktopExpanded = useSidebarStore((state) => state.isExpanded);
   const toggle = useSidebarStore((state) => state.toggle);
   const isMobileOpen = useSidebarStore((state) => state.isMobileOpen);
   const setMobileOpen = useSidebarStore((state) => state.setMobileOpen);
   const isMobile = useIsMobile();
   const { user: authUser, logout, sessionExpired } = useAuth();
+  const { can, userProfileName } = usePermission();
   const t = useTranslations();
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement | null>(null);
@@ -148,50 +159,96 @@ function useSidebarVM() {
     await logout();
   }
 
-  const navItems = [
+  const navItems: NavItem[] = [
     {
       label: t("sidebar.dashboard"),
       icon: DashboardSquare01Icon,
       href: "/painel",
       active: pathname.startsWith("/painel"),
     },
-    {
+  ];
+
+  // "Jornadas" só aparece com journeys.take
+  if (can("journeys.take")) {
+    navItems.push({
       label: t("sidebar.journeys"),
       icon: Task01Icon,
       href: "/jornadas",
       active:
         pathname.startsWith("/jornadas") ||
         pathname.startsWith("/assessments") ||
-        pathname.startsWith("/avaliacoes"),
+        pathname.startsWith("/avaliacoes") ||
+        pathname.startsWith("/jornada"),
       disabled: false,
-    },
-    {
+    });
+  }
+
+  // "Resultados" só aparece com results.view_own
+  if (can("results.view_own")) {
+    navItems.push({
       label: t("sidebar.results"),
       icon: CheckListIcon,
       href: "/results",
       active:
         pathname.startsWith("/results") || pathname.startsWith("/resultados"),
       disabled: false,
-    },
-    {
-      label: t("sidebar.profile"),
-      icon: UserIcon,
-      href: "/perfil",
-      active: false,
-      disabled: true,
-    },
-    {
+    });
+  }
+
+  // "Painel admin" aparece para quem tem users.view ou results.view_all
+  if (can(["users.view", "results.view_all"])) {
+    const adminSubItems: NavSubItem[] = [];
+
+    // Subitem Usuários com users.view
+    if (can("users.view")) {
+      adminSubItems.push({
+        label: t("sidebar.users"),
+        href: "/admin/usuarios",
+        active:
+          pathname.startsWith("/admin/usuarios") ||
+          pathname.startsWith("/admin/users"),
+      });
+    }
+
+    // Subitem Resultados com results.view_all
+    if (can("results.view_all")) {
+      adminSubItems.push({
+        label: t("sidebar.allResults"),
+        href: "/admin/resultados",
+        active: pathname.startsWith("/admin/resultados"),
+      });
+    }
+
+    const defaultAdminHref = can("users.view")
+      ? "/admin/usuarios"
+      : "/admin/resultados";
+
+    navItems.push({
       label: t("sidebar.admin-panel"),
       icon: Shield01Icon,
-      href: "/admin",
-      active: false,
-      disabled: true,
-    },
-  ];
+      href: defaultAdminHref,
+      active: pathname.startsWith("/admin"),
+      disabled: false,
+      subItems: adminSubItems,
+    });
+  }
+
+  // Perfil pessoal
+  navItems.push({
+    label: t("sidebar.profile"),
+    icon: UserIcon,
+    href: "/perfil",
+    active: pathname.startsWith("/perfil") || pathname.startsWith("/profile"),
+    disabled: false,
+  });
 
   const user = {
     name: authUser?.name ?? "Usuário",
-    role: authUser?.profile.label ?? "",
+    role:
+      userProfileName ||
+      authUser?.profile?.name ||
+      authUser?.profile?.label ||
+      "",
     initials: authUser?.name ? getInitials(authUser.name) : "",
   };
 
@@ -353,7 +410,7 @@ export const AuthenticatedUserSidebar = () => {
           <ul className="space-y-1">
             {navItems.map((item) => {
               return (
-                <li key={item.href}>
+                <li key={item.href} className="space-y-1">
                   <a
                     {...(!item.disabled && { href: item.href, onClick: handleNavigate })}
                     aria-disabled={item.disabled}
@@ -361,7 +418,7 @@ export const AuthenticatedUserSidebar = () => {
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-all",
                       item.active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                         : "text-sidebar-accent-foreground hover:bg-sidebar-accent",
                       "data-[state=collapsed]:gap-0 data-[state=collapsed]:w-max",
                       item.disabled && "cursor-not-allowed opacity-50",
@@ -385,6 +442,26 @@ export const AuthenticatedUserSidebar = () => {
                       {item.label}
                     </span>
                   </a>
+
+                  {isExpanded && item.subItems && item.subItems.length > 0 && (
+                    <ul className="ml-6 space-y-1 border-l border-sidebar-border/70 pl-2">
+                      {item.subItems.map((subItem) => (
+                        <li key={subItem.href}>
+                          <a
+                            href={subItem.href}
+                            className={cn(
+                              "flex items-center rounded-md px-2 py-1 text-xs transition-colors",
+                              subItem.active
+                                ? "bg-sidebar-accent/70 font-semibold text-primary"
+                                : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                            )}
+                          >
+                            {subItem.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               );
             })}

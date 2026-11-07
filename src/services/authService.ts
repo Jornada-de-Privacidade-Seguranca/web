@@ -2,19 +2,47 @@ import { ApiRequestError, apiRequest } from "@services/httpClient";
 import type {
   AuthenticatedUser,
   LoginCredentials,
+  PermissionCode,
 } from "@features/auth/auth.types";
 
-const MOCK_DEV_USER: AuthenticatedUser = {
+export const PERMISSIONS_BY_PROFILE: Record<string, PermissionCode[]> = {
+  administrator: [
+    "journeys.take",
+    "journeys.assign",
+    "results.view_own",
+    "results.view_all",
+    "users.view",
+    "users.register",
+    "users.deactivate",
+    "users.manage",
+    "users.change_profile",
+    "catalog.manage",
+  ],
+  manager: [
+    "users.view",
+    "results.view_all",
+    "journeys.assign",
+    "journeys.take",
+    "results.view_own",
+  ],
+  user: ["journeys.take", "results.view_own"],
+};
+
+export const MOCK_DEV_USER: AuthenticatedUser = {
   id: 1,
   name: "Usuário Teste",
   email: "usuario@teste.com",
   role: "common_user",
+  permissions: PERMISSIONS_BY_PROFILE.user,
   profile: {
+    id: "user",
+    name: "Usuário",
     role: "common_user",
     label: "Colaborador",
     user_type_id: 1,
     profile_type_id: 1,
     profile_type_name: "Colaborador",
+    permissions: PERMISSIONS_BY_PROFILE.user,
   },
   active_status: 1,
 };

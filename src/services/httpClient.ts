@@ -94,7 +94,9 @@ function toApiRequestError(error: unknown, defaultErrorMessage: string): ApiRequ
 
 function extractErrorMessage(error: unknown, defaultErrorMessage: string): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as ApiResponse<unknown> | undefined;
+    const data = error.response?.data as
+      | (ApiResponse<unknown> & { code?: string })
+      | undefined;
     if (data && typeof data.message === "string") {
       return data.message;
     }

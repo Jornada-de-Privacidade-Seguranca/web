@@ -1,20 +1,40 @@
-import type { ResultsKPIsProps } from "./resultsKPIs.types";
+import type {
+  ResultsKPIsProps,
+  ResultsKPIsViewModelReturn,
+  KPIItem,
+} from "./resultsKPIs.types";
 
-export function useResultsKPIsVM(props: ResultsKPIsProps) {
+export function useResultsKPIsVM(
+  props: ResultsKPIsProps
+): ResultsKPIsViewModelReturn {
   const { metrics, isLoading, isError = false, onRetry, labels } = props;
 
-  const totalCompleted = metrics?.totalCompleted ?? null;
-  const averageScore = metrics?.averageScore ?? null;
+  const totalCompleted = metrics?.totalCompleted ?? 0;
+  const domainMetrics = metrics?.domainMetrics ?? [];
+
+  const items: KPIItem[] = [
+    {
+      id: "total-completed",
+      label: labels.kpiTotalCompleted,
+      value: totalCompleted,
+    },
+    ...domainMetrics.map((dm) => ({
+      id: `domain-${dm.domain}`,
+      label: dm.label || dm.domain || "",
+      value:
+        dm.averageScore !== null && dm.averageScore !== undefined
+          ? labels.kpiDomainScore(Math.round(dm.averageScore))
+          : labels.kpiEmptyScore,
+    })),
+  ];
 
   return {
-    totalCompleted,
-    averageScore,
+    items,
     isLoading,
     isError: isError || (metrics === null && !isLoading),
     onRetry,
-    labelTotalCompleted: labels.kpiTotalCompleted,
-    labelAverageScore: labels.kpiAverageScore,
     retryButtonText: labels.retryButton,
     errorMessage: labels.errorMetricsMessage,
+    loadingLabel: labels.loadingAriaLabel,
   };
 }

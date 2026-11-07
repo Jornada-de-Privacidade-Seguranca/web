@@ -42,12 +42,41 @@ export interface LoginCredentials {
 
 export type AuthenticatedUserRole = "common_user" | "administrator";
 
+/**
+ * Códigos padronizados de permissões do sistema (#132, PR 64 do backend).
+ * - journeys.take: Iniciar, responder e concluir jornadas.
+ * - journeys.assign: Atribuir jornadas para usuários.
+ * - results.view_own: Ver os próprios resultados de jornadas.
+ * - results.view_all: Ver resultados e relatórios de todos os usuários.
+ * - users.view: Ver a listagem e os dados de usuários.
+ * - users.register: Cadastrar novos usuários no sistema.
+ * - users.deactivate: Ativar e desativar contas de usuários.
+ * - users.manage: Gerenciar usuários (edição, exclusão e administração geral).
+ * - users.change_profile: Alterar o perfil de acesso de usuários.
+ * - catalog.manage: Gerenciar catálogo de jornadas e competências.
+ */
+export type PermissionCode =
+  | "journeys.take"
+  | "journeys.assign"
+  | "results.view_own"
+  | "results.view_all"
+  | "users.view"
+  | "users.register"
+  | "users.deactivate"
+  | "users.manage"
+  | "users.change_profile"
+  | "catalog.manage"
+  | (string & {});
+
 export interface AuthenticatedUserProfile {
+  id?: number | string;
+  name?: string;
   role: AuthenticatedUserRole;
   label: string;
   user_type_id: number | null;
   profile_type_id: number | null;
   profile_type_name: string | null;
+  permissions?: PermissionCode[];
 }
 
 /** Formato do usuário autenticado retornado por /auth/login, /auth/register e /me. */
@@ -57,7 +86,9 @@ export interface AuthenticatedUser {
   email: string;
   role: AuthenticatedUserRole;
   profile: AuthenticatedUserProfile;
+  permissions?: PermissionCode[];
   active_status: number;
+  organization?: string;
 }
 
 export interface AuthViewModelReturn {
