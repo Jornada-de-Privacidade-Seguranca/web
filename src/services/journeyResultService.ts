@@ -1,6 +1,9 @@
-import { ApiRequestError, apiRequest } from "@services/httpClient";
+import axios from "axios";
+import { ApiRequestError, apiRequest, axiosInstance } from "@services/httpClient";
+import { parseContentDispositionFilename } from "@shared/utils/fileDownload";
 import type {
   JourneyResultApi,
+  JourneyResultPdfFile,
   JourneyResultRequestErrorType,
 } from "@features/journey-result/journeyResult.types";
 
@@ -43,6 +46,35 @@ export async function getJourneyResult(journeyId: string): Promise<JourneyResult
     throw new JourneyResultRequestError(
       type,
       err instanceof Error ? err.message : "Não foi possível carregar o resultado da jornada."
+    );
+  }
+}
+
+/**
+ * Baixa o PDF do resultado de uma jornada concluída (GET /journeys/{journey}/pdf),
+ * no idioma informado. O nome do arquivo vem do Content-Disposition; sem o
+ * cabeçalho, usa resultado-jornada-{id}.pdf. Falhas são lançadas como
+ * ApiRequestError com o status HTTP; o 401 já passa pelo tratamento de sessão
+ * expirada do axiosInstance.
+ */
+export async function downloadJourneyResultPdf(
+  journeyId: string,
+  locale: string
+): Promise<JourneyResultPdfFile> {
+  try {
+    const response = await axiosInstance.get<Blob>(
+      `/journeys/${encodeURIComponent(journeyId)}/pdf`,
+      { params: { locale }, responseType: "blob", headers: { Accept: "application/pdf" } }
+    );
+    const header = response.headers["content-disposition"] as string | undefined;
+    return {
+      blob: response.data,
+      filename: parseContentDispositionFilename(header) ?? `resultado-jornada-${journeyId}.pdf`,
+    };
+  } catch (err: unknown) {
+    throw new ApiRequestError(
+      "Não foi possível gerar o PDF do resultado.",
+      axios.isAxiosError(err) ? err.response?.status : undefined
     );
   }
 }

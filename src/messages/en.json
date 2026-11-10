@@ -518,6 +518,11 @@
       "backToResultsLink": "Back to Results",
       "goToSummaryLink": "Go to the journey overview",
       "retryButton": "Try again"
+    },
+    "pdf": {
+      "downloadButton": "Download PDF",
+      "generatingLabel": "Generating PDF…",
+      "error": "We couldn't generate the PDF. Please try again."
     }
   },
   "adminUsers": {

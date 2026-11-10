@@ -48,6 +48,7 @@ const labels: JourneyResultLabels = {
     difficultyPrefix: "Nível",
     domainPrefix: "Domínio",
   },
+  pdf: { downloadButton: "Baixar PDF", generatingLabel: "Gerando PDF…" },
   errors: null,
 };
 
@@ -101,6 +102,10 @@ function buildVM(overrides: Partial<JourneyResultViewModelReturn> = {}): Journey
     error: null,
     labels,
     handleRetry: vi.fn(),
+    canDownloadPdf: true,
+    isDownloadingPdf: false,
+    pdfError: null,
+    handleDownloadPdf: vi.fn(),
     ...overrides,
   };
 }
@@ -205,7 +210,8 @@ describe("JourneyResultView", () => {
     render(<JourneyResultView journeyId="10" />);
 
     const card = screen.getByTestId("score-summary-card");
-    expect(within(card).queryByRole("button")).toBeNull();
+    // O card não é recolhível: nenhum botão dele abre ou fecha conteúdo
+    expect(card.querySelector("button[aria-expanded]")).toBeNull();
     for (const title of [
       "Conhecimentos adquiridos",
       "Competências declaradas",
@@ -280,5 +286,45 @@ describe("JourneyResultView", () => {
     expect(
       within(alert).getByText("Ir para o resumo da jornada").closest("a")?.getAttribute("href")
     ).toBe("/jornada/10");
+  });
+
+  it("deve oferecer o download do PDF entre refazer e voltar", () => {
+    const vm = mockVM();
+    render(<JourneyResultView journeyId="10" />);
+
+    const card = screen.getByTestId("score-summary-card");
+    const button = within(card).getByRole("button", { name: "Baixar PDF" });
+    const actions = Array.from(card.querySelectorAll("a, button")).map((el) => el.textContent?.trim());
+    expect(actions.indexOf("Baixar PDF")).toBeGreaterThan(actions.indexOf("Refazer questionário"));
+    expect(actions.indexOf("Baixar PDF")).toBeLessThan(actions.indexOf("Voltar"));
+
+    fireEvent.click(button);
+    expect(vm.handleDownloadPdf).toHaveBeenCalled();
+  });
+
+  it("deve desabilitar o botão e indicar o carregamento durante o download", () => {
+    mockVM({ isDownloadingPdf: true });
+    render(<JourneyResultView journeyId="10" />);
+
+    const button = screen.getByRole("button", { name: "Gerando PDF…" });
+    expect(button).toHaveProperty("disabled", true);
+    expect(button.getAttribute("aria-busy")).toBe("true");
+  });
+
+  it("deve anunciar a falha no download ao lado do botão", () => {
+    mockVM({ pdfError: "Não foi possível gerar o PDF. Tente novamente." });
+    render(<JourneyResultView journeyId="10" />);
+
+    const alert = screen.getByTestId("pdf-error");
+    expect(alert.getAttribute("role")).toBe("alert");
+    expect(alert.textContent).toBe("Não foi possível gerar o PDF. Tente novamente.");
+    expect(screen.getByRole("button", { name: "Baixar PDF" })).toHaveProperty("disabled", false);
+  });
+
+  it("não deve exibir o botão de PDF quando o download não estiver disponível", () => {
+    mockVM({ canDownloadPdf: false });
+    render(<JourneyResultView journeyId="10" />);
+
+    expect(screen.queryByRole("button", { name: "Baixar PDF" })).toBeNull();
   });
 });

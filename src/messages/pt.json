@@ -518,6 +518,11 @@
       "backToResultsLink": "Voltar para Resultados",
       "goToSummaryLink": "Ir para o resumo da jornada",
       "retryButton": "Tentar novamente"
+    },
+    "pdf": {
+      "downloadButton": "Baixar PDF",
+      "generatingLabel": "Gerando PDF…",
+      "error": "Não foi possível gerar o PDF. Tente novamente."
     }
   },
   "adminUsers": {
