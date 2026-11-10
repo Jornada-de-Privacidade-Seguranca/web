@@ -27,7 +27,7 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
 
   if (!journey) {
     return (
-      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+      <article className="flex min-h-[280px] flex-1 flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
         <div>
           <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
             {sectionTitle}
@@ -52,7 +52,7 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
   }
 
   return (
-    <article className="relative flex flex-col justify-between rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-primary/40">
+    <article className="relative flex flex-1 flex-col justify-between rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-primary/40">
       <div>
         <div className="flex items-center justify-between gap-3">
           <span

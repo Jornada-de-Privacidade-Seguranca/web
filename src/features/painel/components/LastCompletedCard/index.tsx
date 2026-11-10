@@ -23,7 +23,7 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
 
   if (!assessment) {
     return (
-      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+      <article className="flex min-h-[280px] flex-1 flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
         <div>
           <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
             {sectionTitle}
@@ -47,7 +47,7 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
   }
 
   return (
-    <article className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-200 hover:border-primary/30">
+    <article className="relative flex flex-1 flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-200 hover:border-primary/30">
       <div>
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
