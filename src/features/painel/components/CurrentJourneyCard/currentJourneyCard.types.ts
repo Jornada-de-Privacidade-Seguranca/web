@@ -5,9 +5,13 @@ export interface CurrentJourneyCardProps {
   sectionTitle: string;
   emptyMessage: string;
   exploreCtaText: string;
+  /** Texto do botão da jornada ainda não iniciada */
+  startCtaText: string;
+  /** Texto do botão da jornada já iniciada */
   continueCtaText: string;
-  progressLabel: string;
-  progressPercentLabel: string;
+  /** "{n} perguntas" e "{n} min"; null oculta a informação */
+  questionsText: string | null;
+  timeText: string | null;
   badgeLabel: string;
   badgeVariant: "pending" | "in_progress";
 }
@@ -17,12 +21,10 @@ export interface CurrentJourneyCardViewModelReturn {
   sectionTitle: string;
   emptyMessage: string;
   exploreCtaText: string;
-  continueCtaText: string;
-  progressPercent: number;
-  progressPercentText: string;
-  progressAriaLabel: string;
+  actionText: string;
   actionHref: string;
+  questionsText: string | null;
+  timeText: string | null;
   badgeLabel: string;
   badgeVariant: "pending" | "in_progress";
 }
-

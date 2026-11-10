@@ -1,11 +1,14 @@
 "use client";
 
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Link } from "@/shared/i18n/navigation";
 import { EmptyState } from "../EmptyState";
 import { useRecentHistoryVM } from "./recentHistory.viewmodel";
 import type { RecentHistoryProps } from "./recentHistory.types";
 
 export function RecentHistory(props: RecentHistoryProps) {
-  const { history, emptyMessage, sectionTitle, hasHistory } =
+  const { history, emptyMessage, sectionTitle, hasHistory, viewResultText } =
     useRecentHistoryVM(props);
 
   if (!hasHistory) {
@@ -36,31 +39,44 @@ export function RecentHistory(props: RecentHistoryProps) {
                 {item.title}
               </h4>
               <div className="flex items-center gap-3 text-xs">
-                <time
-                  dateTime={item.completedAt}
-                  className="font-medium text-muted-foreground"
+                {item.completedAt && (
+                  <time
+                    dateTime={item.completedAt}
+                    className="font-medium text-muted-foreground"
+                  >
+                    {item.formattedDate}
+                  </time>
+                )}
+                {item.score !== null && (
+                  <span className="rounded-md bg-muted px-2 py-0.5 font-bold text-foreground">
+                    {item.score} / 100
+                  </span>
+                )}
+                <Link
+                  href={item.resultHref}
+                  className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
                 >
-                  {item.formattedDate}
-                </time>
-                <span className="rounded-md bg-muted px-2 py-0.5 font-bold text-foreground">
-                  {item.score} / 100
-                </span>
+                  <span>{viewResultText}</span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+                </Link>
               </div>
             </div>
 
-            <div
-              role="progressbar"
-              aria-valuenow={item.score}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={item.ariaLabel}
-              className="h-2 w-full overflow-hidden rounded-full bg-muted"
-            >
+            {item.score !== null && (
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500"
-                style={{ width: `${item.progressPercent}%` }}
-              />
-            </div>
+                role="progressbar"
+                aria-valuenow={item.score}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={item.ariaLabel}
+                className="h-2 w-full overflow-hidden rounded-full bg-muted"
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500"
+                  style={{ width: `${item.score}%` }}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

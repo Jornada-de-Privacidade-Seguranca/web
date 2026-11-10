@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import { usePermission } from "@hooks/usePermission";
-import { getDashboardData } from "@services/dashboardService";
-import { HISTORY_LIMIT } from "@shared/constants/dashboard";
+import { getDashboardData, getDashboardMetrics } from "@services/dashboardService";
+import { ApiRequestError } from "@services/httpClient";
 import {
   getCompetenciesAreaUrl,
   getJourneySummaryUrl,
@@ -16,18 +16,16 @@ import type { MetricsGridItem } from "@/components/ui/MetricsGrid/metricsGrid.ty
 import type {
   PainelViewModelReturn,
   QuickActionItem,
-  DashboardMetrics,
+  DashboardLocale,
   PainelLabels,
 } from "./painel.types";
 
-const DEFAULT_METRICS: DashboardMetrics = {
-  completedJourneys: 0,
-  pendingJourneys: 0,
-  averageScore: 0,
-};
+/** Conta não ativada: a API explica o motivo e uma nova tentativa não resolve. */
+const ACCOUNT_NOT_ACTIVATED_CODE = "ACCOUNT_NOT_ACTIVATED";
 
 export function usePainelVM(): PainelViewModelReturn {
   const t = useTranslations("painel");
+  const locale: DashboardLocale = useLocale() === "en" ? "en" : "pt";
   const tAccess = useTranslations("accessDenied");
   const { user, isLoading: isAuthLoading } = useAuth();
   const { can } = usePermission();
@@ -41,7 +39,9 @@ export function usePainelVM(): PainelViewModelReturn {
     setHasDismissedAccessDenied(true);
   };
 
-  const userFirstName = user?.name ? user.name.split(" ")[0] : t("defaultUserName");
+  const userFirstName = user?.name
+    ? user.name.split(" ")[0]
+    : t("defaultUserName");
   const userRoleName =
     user?.profile?.profile_type_name ||
     user?.profile?.label ||
@@ -54,22 +54,52 @@ export function usePainelVM(): PainelViewModelReturn {
   const {
     data,
     isLoading: isQueryLoading,
+    isFetching,
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ["dashboard", userId],
-    queryFn: () => getDashboardData(HISTORY_LIMIT),
+    queryKey: ["dashboard", userId, locale],
+    queryFn: () => getDashboardData(userId as number, locale),
     enabled: Boolean(userId),
     retry: false,
   });
 
-  const isLoading = (isQueryLoading || (isAuthLoading && !userId)) && !data;
-  const errorMessage = queryError ? t("errorMessage") : null;
+  // Consulta à parte: sem as métricas, só a seção delas deixa de aparecer
+  const metricsQuery = useQuery({
+    queryKey: ["dashboard-metrics", userId],
+    queryFn: () => getDashboardMetrics(userId as number),
+    enabled: Boolean(userId),
+    retry: false,
+  });
+
+  // Durante a nova tentativa a consulta segue em erro; a tela mostra o carregamento
+  const isRetrying = Boolean(queryError) && isFetching;
+  const isLoading =
+    ((isQueryLoading || (isAuthLoading && !userId)) && !data) || isRetrying;
+
+  const isAccountNotActivated =
+    queryError instanceof ApiRequestError &&
+    queryError.code === ACCOUNT_NOT_ACTIVATED_CODE;
+  let errorMessage: string | null = null;
+  if (queryError && !isRetrying) {
+    errorMessage = isAccountNotActivated
+      ? queryError.message
+      : t("errorMessage");
+  }
 
   const currentJourney = data?.pending ?? null;
   const lastCompletedAssessment = data?.lastCompleted ?? null;
   const history = data?.history ?? [];
-  const metrics = data?.metrics ?? DEFAULT_METRICS;
+  const metrics = metricsQuery.data ?? null;
+
+  const currentJourneyQuestionsText =
+    currentJourney?.totalQuestions != null
+      ? t("questionsCount", { count: currentJourney.totalQuestions })
+      : null;
+  const currentJourneyTimeText =
+    currentJourney?.estimatedMinutes != null
+      ? t("estimatedMinutesText", { minutes: currentJourney.estimatedMinutes })
+      : null;
 
   const quickActions: QuickActionItem[] = [];
 
@@ -80,7 +110,7 @@ export function usePainelVM(): PainelViewModelReturn {
 
     if (currentJourney) {
       if (currentJourney.status === "pending") {
-        journeyActionHref = getJourneySummaryUrl(currentJourney.id || "atual");
+        journeyActionHref = getJourneySummaryUrl(currentJourney.id);
         journeyActionLabel = t("quickActionStartJourney");
         journeyActionDesc = t("quickActionStartJourneyDesc");
       } else {
@@ -142,8 +172,6 @@ export function usePainelVM(): PainelViewModelReturn {
     startFirstJourneyCta: t("startFirstJourneyCta"),
     startNewJourneyCta: t("startNewJourneyCta"),
     continueJourneyCta: t("continueJourneyCta"),
-    progressLabel: t("progressLabel"),
-    progressPercentLabel: t("progressPercentLabel", { percent: "{percent}" }),
     metricsSectionTitle: t("metricsSectionTitle"),
     metricsSectionAriaLabel: t("metricsSectionAriaLabel"),
     metricsCompletedTitle: t("metricsCompletedTitle"),
@@ -178,30 +206,33 @@ export function usePainelVM(): PainelViewModelReturn {
     accessDeniedMessage: tAccess("description"),
   };
 
-  const metricsItems: MetricsGridItem[] = [
-    {
-      id: "completed-journeys",
-      label: labels.metricsCompletedTitle,
-      value: metrics.completedJourneys,
-      subtitle: labels.metricsCompletedSubtitle,
-    },
-    {
-      id: "pending-journeys",
-      label: labels.metricsPendingTitle,
-      value: metrics.pendingJourneys,
-      subtitle: labels.metricsPendingSubtitle,
-    },
-    {
-      id: "average-score",
-      label: labels.metricsAverageScoreTitle,
-      value: metrics.averageScore,
-      suffix: "/ 100",
-      subtitle: labels.metricsAverageScoreSubtitle,
-    },
-  ];
+  const metricsItems: MetricsGridItem[] = metrics
+    ? [
+        {
+          id: "completed-journeys",
+          label: labels.metricsCompletedTitle,
+          value: metrics.completedJourneys,
+          subtitle: labels.metricsCompletedSubtitle,
+        },
+        {
+          id: "pending-journeys",
+          label: labels.metricsPendingTitle,
+          value: metrics.pendingJourneys,
+          subtitle: labels.metricsPendingSubtitle,
+        },
+        {
+          id: "average-score",
+          label: labels.metricsAverageScoreTitle,
+          value: metrics.averageScore,
+          suffix: "/ 100",
+          subtitle: labels.metricsAverageScoreSubtitle,
+        },
+      ]
+    : [];
 
   const handleRetry = () => {
     void refetch();
+    if (metricsQuery.isError) void metricsQuery.refetch();
   };
 
   return {
@@ -211,13 +242,16 @@ export function usePainelVM(): PainelViewModelReturn {
     greetingTitle: labels.welcomeGreeting,
     greetingSubtitle: labels.welcomeSubtitle,
     currentJourney,
+    currentJourneyQuestionsText,
+    currentJourneyTimeText,
     lastCompletedAssessment,
     history,
-    metrics,
     metricsItems,
+    hasMetrics: metrics !== null,
     quickActions,
     isLoading,
     error: errorMessage,
+    canRetry: !isAccountNotActivated,
     accessDeniedMessage: showAccessDenied ? labels.accessDeniedMessage : null,
     handleDismissAccessDenied,
     handleRetry,

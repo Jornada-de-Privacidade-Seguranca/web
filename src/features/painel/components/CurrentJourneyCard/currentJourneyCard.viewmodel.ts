@@ -8,41 +8,28 @@ import type {
 } from "./currentJourneyCard.types";
 
 export function useCurrentJourneyCardVM(
-  props: CurrentJourneyCardProps
+  props: CurrentJourneyCardProps,
 ): CurrentJourneyCardViewModelReturn {
   const { journey } = props;
+  const isStarted = journey?.status === "in_progress";
 
+  // Iniciada, retoma as competências; ainda não iniciada, começa pelo resumo
   let actionHref = "/jornadas";
-
   if (journey) {
-    actionHref =
-      journey.status === "pending"
-        ? getJourneySummaryUrl(journey.id || "atual")
-        : getCompetenciesAreaUrl(0);
+    actionHref = isStarted
+      ? getCompetenciesAreaUrl(0)
+      : getJourneySummaryUrl(journey.id);
   }
-
-  const progressPercent = Math.min(
-    100,
-    Math.max(0, journey?.progressPercent ?? 0)
-  );
-
-  const progressPercentText = props.progressPercentLabel.replace(
-    "{percent}",
-    String(progressPercent)
-  );
-
-  const progressAriaLabel = `${props.progressLabel}: ${progressPercentText}`;
 
   return {
     journey,
     sectionTitle: props.sectionTitle,
     emptyMessage: props.emptyMessage,
     exploreCtaText: props.exploreCtaText,
-    continueCtaText: props.continueCtaText,
-    progressPercent,
-    progressPercentText,
-    progressAriaLabel,
+    actionText: isStarted ? props.continueCtaText : props.startCtaText,
     actionHref,
+    questionsText: props.questionsText,
+    timeText: props.timeText,
     badgeLabel: props.badgeLabel,
     badgeVariant: props.badgeVariant,
   };

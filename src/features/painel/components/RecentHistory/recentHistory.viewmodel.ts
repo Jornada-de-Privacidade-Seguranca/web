@@ -1,4 +1,5 @@
 import { useFormatter, useTranslations } from "next-intl";
+import { getJourneyResultUrl } from "@shared/utils/journeyRoutes";
 import type {
   RecentHistoryProps,
   RecentHistoryViewModelReturn,
@@ -6,7 +7,7 @@ import type {
 } from "./recentHistory.types";
 
 export function useRecentHistoryVM(
-  props: RecentHistoryProps
+  props: RecentHistoryProps,
 ): RecentHistoryViewModelReturn {
   const t = useTranslations("painel");
   const format = useFormatter();
@@ -32,14 +33,13 @@ export function useRecentHistoryVM(
       }
     }
 
-    const progressPercent = Math.min(100, Math.max(0, item.score));
     const ariaLabel = t("progressBarAriaLabel", { title: item.title });
 
     return {
       ...item,
       formattedDate,
-      progressPercent,
       ariaLabel,
+      resultHref: getJourneyResultUrl(item.id),
     };
   });
 
@@ -48,5 +48,6 @@ export function useRecentHistoryVM(
     emptyMessage,
     sectionTitle,
     hasHistory: history.length > 0,
+    viewResultText: t("viewResult"),
   };
 }

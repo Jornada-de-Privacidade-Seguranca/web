@@ -2,8 +2,8 @@ import type { HistoryItem } from "../../painel.types";
 
 export interface FormattedHistoryItem extends HistoryItem {
   formattedDate: string;
-  progressPercent: number;
   ariaLabel: string;
+  resultHref: string;
 }
 
 export interface RecentHistoryProps {
@@ -17,4 +17,5 @@ export interface RecentHistoryViewModelReturn {
   emptyMessage: string;
   sectionTitle: string;
   hasHistory: boolean;
+  viewResultText: string;
 }

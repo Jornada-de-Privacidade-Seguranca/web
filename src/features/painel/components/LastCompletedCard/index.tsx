@@ -54,31 +54,35 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
             <span>{lastCompletionLabel}</span>
           </span>
-          <time
-            dateTime={assessment.completedAt}
-            className="text-xs font-medium text-muted-foreground"
-          >
-            {formattedDate}
-          </time>
+          {assessment.completedAt && (
+            <time
+              dateTime={assessment.completedAt}
+              className="text-xs font-medium text-muted-foreground"
+            >
+              {formattedDate}
+            </time>
+          )}
         </div>
 
         <h3 className="mt-4 font-heading text-xl font-bold tracking-tight text-card-foreground">
           {assessment.title}
         </h3>
 
-        <div className="mt-6 flex items-baseline gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
-          <div className="flex flex-col">
-            <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              {scoreLabel}
-            </span>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold tracking-tight text-foreground">
-                {assessment.score}
+        {assessment.score !== null && (
+          <div className="mt-6 flex items-baseline gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
+            <div className="flex flex-col">
+              <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {scoreLabel}
               </span>
-              <span className="text-sm font-medium text-muted-foreground">/ 100</span>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold tracking-tight text-foreground">
+                  {assessment.score}
+                </span>
+                <span className="text-sm font-medium text-muted-foreground">/ 100</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 border-t border-border/50 pt-4">
