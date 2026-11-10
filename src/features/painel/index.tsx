@@ -187,7 +187,7 @@ export function PainelView() {
                 </h2>
                 <MetricsGrid
                   items={metricsItems}
-                  className="grid-cols-1 sm:grid-cols-3"
+                  className="grid-cols-1 sm:grid-cols-3 md:grid-cols-3"
                 />
               </section>
             )}
