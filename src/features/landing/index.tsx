@@ -2,7 +2,9 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  ArrowDown02Icon,
   ArrowRight01Icon,
+  ArrowRight02Icon,
   Shield01Icon,
 } from "@hugeicons/core-free-icons";
 
@@ -13,7 +15,7 @@ import { SwitchThemeButton } from "@/components/layout/SwitchThemeButton";
 import { useLandingVM } from "./landing.viewmodel";
 
 export function LandingView() {
-  const { labels, steps, isReady, handleScrollToHowItWorks, handleScrollToTop } =
+  const { labels, steps, extra, isReady, handleScrollToHowItWorks, handleScrollToTop } =
     useLandingVM();
 
   if (!isReady) {
@@ -22,28 +24,20 @@ export function LandingView() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_28%),linear-gradient(180deg,color-mix(in_oklab,var(--background)_92%,var(--primary)_8%),var(--background)_42%)] text-foreground">
-      {/* <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 top-12 h-72 w-72 rounded-full bg-primary/12 blur-3xl" />
-        <div className="absolute -right-20 top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-background/95 to-transparent" />
-      </div> */}
-
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-8 pt-4 md:px-8">
-        <header 
-        // className="flex items-center gap-4 rounded-full border border-border/70 bg-background/70 px-4 py-3 shadow-sm backdrop-blur-xl"
-        className='flex items-center gap-4 background-transparent'
-        >
-          <div
+        <header className="flex items-center gap-4 bg-transparent">
+          <button
+            type="button"
             className="flex min-w-0 cursor-pointer items-center gap-2 transition-opacity hover:opacity-80"
             onClick={handleScrollToTop}
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/15">
-              <HugeiconsIcon icon={Shield01Icon} size={16} />
+              <HugeiconsIcon icon={Shield01Icon} size={16} aria-hidden="true" />
             </div>
             <span className="truncate text-sm font-semibold text-foreground">
               {labels.brand}
             </span>
-          </div>
+          </button>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a
@@ -87,7 +81,7 @@ export function LandingView() {
               >
                 <Link href="/login">
                   {labels.hero.primaryAction}
-                  <HugeiconsIcon icon={ArrowRight01Icon} />
+                  <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
                 </Link>
               </Button>
 
@@ -97,10 +91,7 @@ export function LandingView() {
                 size="lg"
                 className="rounded-full px-6 text-foreground/80"
               >
-                <a
-                  href="#como-funciona"
-                  onClick={handleScrollToHowItWorks}
-                >
+                <a href="#como-funciona" onClick={handleScrollToHowItWorks}>
                   {labels.hero.secondaryAction}
                 </a>
               </Button>
@@ -117,30 +108,72 @@ export function LandingView() {
               {labels.steps.description}
             </p>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <ol className="mt-10 grid grid-cols-1 md:grid-cols-3 md:gap-x-8">
               {steps.map((step) => (
-                <article
-                  key={step.number}
-                  className="group rounded-[1.5rem] border border-border/70 bg-card/80 p-6 text-left shadow-sm backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                      <HugeiconsIcon icon={step.icon} size={20} />
-                    </div>
-                    <span className="text-xs font-medium tracking-[0.18em] text-muted-foreground">
-                      {step.number}
-                    </span>
+                <li key={step.number} className="flex flex-col">
+                  <div className="relative flex-1">
+                    <article className="group flex h-full flex-col rounded-[1.5rem] border border-border/70 bg-card/80 p-6 text-left shadow-sm backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                          <HugeiconsIcon icon={step.icon} size={20} aria-hidden="true" />
+                        </div>
+                        <span className="text-xs font-medium tracking-[0.18em] text-muted-foreground">
+                          {step.number}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-6 text-lg font-semibold text-foreground">
+                        {step.title}
+                      </h3>
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        {step.description}
+                      </p>
+                    </article>
+
+                    {step.showRightArrowOnDesktop && (
+                      <div
+                        aria-hidden="true"
+                        data-testid={`step-${step.number}-arrow-right`}
+                        className="pointer-events-none absolute -right-8 top-1/2 hidden w-8 -translate-y-1/2 items-center justify-center text-muted-foreground/70 md:flex"
+                      >
+                        <HugeiconsIcon icon={ArrowRight02Icon} size={18} />
+                      </div>
+                    )}
                   </div>
 
-                  <h3 className="mt-6 text-lg font-semibold text-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {step.description}
-                  </p>
-                </article>
+                  <div
+                    aria-hidden="true"
+                    data-testid={`step-${step.number}-arrow-down`}
+                    className="flex h-9 items-center justify-center text-muted-foreground/70"
+                  >
+                    <HugeiconsIcon
+                      icon={ArrowDown02Icon}
+                      size={18}
+                      className={step.showDownArrowOnDesktop ? undefined : "md:hidden"}
+                    />
+                  </div>
+                </li>
               ))}
-            </div>
+            </ol>
+
+            {/* Bloco Extra: largura total com borda tracejada */}
+            <article className="rounded-[1.5rem] border-2 border-dashed border-primary/40 bg-card/65 p-6 text-left shadow-sm backdrop-blur-sm high-contrast:border-primary">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                  <HugeiconsIcon icon={extra.icon} size={20} aria-hidden="true" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {extra.badge}
+                </span>
+              </div>
+
+              <h3 className="mt-6 text-lg font-semibold text-foreground">
+                {extra.title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {extra.description}
+              </p>
+            </article>
           </div>
         </section>
 

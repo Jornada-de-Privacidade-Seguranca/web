@@ -52,20 +52,31 @@
     },
     "hero": {
       "eyebrow": "Plataforma corporativa de privacidade e segurança",
-      "title": "Descubra seu perfil em privacidade e segurança da informação",
-      "description": "Avaliações inteligentes que mapeiam o conhecimento da sua equipe e revelam onde investir em desenvolvimento.",
+      "title": "Descubra seu nível de conhecimento em privacidade e segurança da informação",
+      "description": "Questionários de autodiagnóstico que mapeiam o nível de conhecimento da sua equipe e mostram onde investir em capacitação.",
       "primaryAction": "Acessar plataforma",
       "secondaryAction": "Ver como funciona"
     },
     "steps": {
       "title": "Como funciona",
-      "description": "Três passos simples para diagnosticar e evoluir.",
+      "description": "Seis passos para diagnosticar e evoluir.",
       "oneTitle": "Faça login",
-      "oneDescription": "Acesse com sua conta e visualize as avaliações designadas para você.",
-      "twoTitle": "Responda a avaliação",
-      "twoDescription": "Questionário objetivo, com perguntas ajustadas para cada perfil tipo de perfil.",
-      "threeTitle": "Receba seu perfil",
-      "threeDescription": "Detalhamento por área e recomendações para fortalecer pontos a desenvolver."
+      "oneDescription": "Acesse com sua conta corporativa.",
+      "twoTitle": "Escolha o perfil",
+      "twoDescription": "Selecione o perfil profissional para o qual deseja fazer a jornada.",
+      "threeTitle": "Responda o questionário",
+      "threeDescription": "Responda às perguntas sobre suas competências no perfil.",
+      "fourTitle": "Receba o diagnóstico",
+      "fourDescription": "Veja o seu nível de conhecimento em relação ao perfil, por área.",
+      "fiveTitle": "Busque conhecimento",
+      "fiveDescription": "Com base no resultado, identifique as áreas em que está menos capacitado e invista nelas.",
+      "sixTitle": "Refaça o questionário",
+      "sixDescription": "Responda novamente para comparar com o resultado anterior, repetindo sempre que precisar."
+    },
+    "extra": {
+      "badge": "Extra",
+      "title": "Vá além",
+      "description": "Atingiu 100% na jornada de um perfil? Faça a jornada de outro perfil."
     },
     "footer": {
       "left": "Privacy Compass. Todos os direitos reservados.",

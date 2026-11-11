@@ -52,20 +52,31 @@
     },
     "hero": {
       "eyebrow": "Corporate privacy and security platform",
-      "title": "Discover your privacy and information security profile",
-      "description": "Smart assessments that map your team’s knowledge and reveal where to invest in development.",
+      "title": "Discover your knowledge level in privacy and information security",
+      "description": "Self-diagnostic questionnaires that map your team's knowledge level and show where to invest in training.",
       "primaryAction": "Access platform",
       "secondaryAction": "See how it works"
     },
     "steps": {
       "title": "How it works",
-      "description": "Three simple steps to diagnose and evolve.",
+      "description": "Six steps to diagnose and evolve.",
       "oneTitle": "Sign in",
-      "oneDescription": "Use your account and see the assessments assigned to you.",
-      "twoTitle": "Answer the assessment",
-      "twoDescription": "A concise questionnaire with questions adjusted for each profile.",
-      "threeTitle": "Receive your profile",
-      "threeDescription": "Area-by-area details and recommendations to strengthen what needs improvement."
+      "oneDescription": "Access with your corporate account.",
+      "twoTitle": "Choose your profile",
+      "twoDescription": "Select the professional profile for which you want to take the journey.",
+      "threeTitle": "Answer the questionnaire",
+      "threeDescription": "Answer the questions about your competencies in the profile.",
+      "fourTitle": "Receive your diagnosis",
+      "fourDescription": "See your knowledge level for the profile, broken down by area.",
+      "fiveTitle": "Seek knowledge",
+      "fiveDescription": "Based on your result, identify the areas where you need more training and invest in them.",
+      "sixTitle": "Retake the questionnaire",
+      "sixDescription": "Answer again to compare with your previous result, repeating whenever you need."
+    },
+    "extra": {
+      "badge": "Extra",
+      "title": "Go further",
+      "description": "Reached 100% on one profile's journey? Take another profile's journey."
     },
     "footer": {
       "left": "Privacy Compass. All rights reserved.",
