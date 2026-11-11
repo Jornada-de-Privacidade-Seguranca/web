@@ -10,27 +10,50 @@ export interface UserProfile {
   department: string;
 }
 
+/** Médias de 0 a 100; null quando não há jornada concluída no domínio. */
 export interface ProfileActivity {
   completedJourneys: number;
   inProgressJourneys: number;
   averageByDomain: {
-    privacy: number;
-    security: number;
-    combined: number;
+    privacy: number | null;
+    security: number | null;
+    combined: number | null;
   };
-}
-
-export interface ProfileData {
-  user: UserProfile;
-  activity: ProfileActivity;
 }
 
 export type ProfileFormValues = UserProfile;
 
-export type ProfileUpdatePayload = Pick<
-  UserProfile,
-  "name" | "organization" | "email" | "department"
+export type ProfileEditableField = "name" | "organization" | "email" | "department";
+
+/** Só os campos alterados vão para o PATCH /me. */
+export type ProfileUpdatePayload = Partial<Pick<UserProfile, ProfileEditableField>>;
+
+/** Dados de GET /me e PATCH /me (AuthenticatedUserResource) usados pelo perfil. */
+export interface OwnProfileApi {
+  id: number;
+  name: string | null;
+  email: string | null;
+  organization: string | null;
+  department: string | null;
+  registration_number: string | null;
+}
+
+/** Corpo do PATCH /me, com os nomes de campo da API. */
+export type OwnProfileUpdateApi = Partial<
+  Pick<OwnProfileApi, "name" | "email" | "organization" | "department">
 >;
+
+/** Partes de GET /users/{user}/journeys/metrics usadas no resumo de atividade. */
+export interface ProfileMetricsApi {
+  summary: {
+    completed_journeys: number;
+    ongoing_journeys: number;
+  };
+  domains: {
+    domain_id: number;
+    average_score: number | null;
+  }[];
+}
 
 export interface ProfileServerMessage {
   title: string;
@@ -62,6 +85,8 @@ export interface ProfileLabels {
   loadErrorTitle: string;
   loadErrorDescription: string;
   retry: string;
+  activityLoadError: string;
+  notAvailable: string;
   successTitle: string;
   successDescription: string;
   errorTitle: string;
@@ -81,6 +106,7 @@ export interface ProfileLabels {
     departmentRequired: string;
     departmentMaxLength: string;
     employeeCodeImmutable: string;
+    emailInUse: string;
   };
   preferencesTitle: string;
   language: string;
@@ -92,11 +118,13 @@ export interface ProfileLabels {
 }
 
 export interface ProfileViewModelReturn {
-  profile: ProfileData | null;
+  profile: UserProfile | null;
   initials: string;
   form: UseFormReturn<ProfileFormValues>;
   isLoading: boolean;
   isLoadError: boolean;
+  isActivityLoading: boolean;
+  isActivityError: boolean;
   isEditing: boolean;
   isSubmitting: boolean;
   serverMessage: ProfileServerMessage | null;
@@ -107,6 +135,7 @@ export interface ProfileViewModelReturn {
   handleCancel: () => void;
   handleSubmit: (event?: React.BaseSyntheticEvent) => Promise<void>;
   handleRetry: () => void;
+  handleRetryActivity: () => void;
   handleCloseMessage: () => void;
   handleThemeChange: (mode: ThemeMode) => void;
 }

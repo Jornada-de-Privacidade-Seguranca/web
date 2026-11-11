@@ -57,6 +57,8 @@ const labels = {
   loadErrorTitle: "Erro ao carregar",
   loadErrorDescription: "Tente novamente.",
   retry: "Tentar novamente",
+  activityLoadError: "Erro ao carregar a atividade",
+  notAvailable: "—",
   successTitle: "Perfil atualizado",
   successDescription: "Dados salvos.",
   errorTitle: "Erro ao salvar",
@@ -76,6 +78,7 @@ const labels = {
     departmentRequired: "Setor obrigatório.",
     departmentMaxLength: "Máximo 100 caracteres.",
     employeeCodeImmutable: "Código não editável.",
+    emailInUse: "E-mail já usado.",
   },
   preferencesTitle: "Preferências",
   language: "Idioma",
@@ -102,23 +105,18 @@ function makeViewModel(
 
   return {
     profile: {
-      user: {
-        name: "Ana Souza",
-        organization: "Instituto Exemplo",
-        email: "ana@example.com",
-        employeeCode: "E-21",
-        department: "Privacidade",
-      },
-      activity: {
-        completedJourneys: 4,
-        inProgressJourneys: 1,
-        averageByDomain: { privacy: 80, security: 70, combined: 75 },
-      },
+      name: "Ana Souza",
+      organization: "Instituto Exemplo",
+      email: "ana@example.com",
+      employeeCode: "E-21",
+      department: "Privacidade",
     },
     initials: "AS",
     form,
     isLoading: false,
     isLoadError: false,
+    isActivityLoading: false,
+    isActivityError: false,
     isEditing: false,
     isSubmitting: false,
     serverMessage: null,
@@ -135,6 +133,7 @@ function makeViewModel(
     handleCancel: vi.fn(),
     handleSubmit: vi.fn(async () => {}),
     handleRetry: vi.fn(),
+    handleRetryActivity: vi.fn(),
     handleCloseMessage: vi.fn(),
     handleThemeChange: vi.fn(),
     ...overrides,
@@ -202,6 +201,21 @@ describe("ProfileView", () => {
     expect(screen.getByRole("alert").textContent).toContain("Erro de servidor.");
     expect(screen.getByRole("button", { name: "Salvar" })).toHaveProperty("disabled", true);
     expect(screen.getByRole("button", { name: "Cancelar" })).toHaveProperty("disabled", true);
+  });
+
+  it("shows the activity error with its own retry and keeps the personal data", () => {
+    const handleRetryActivity = vi.fn();
+    vi.spyOn(viewModelModule, "useProfileVM").mockReturnValue(
+      makeViewModel({ isActivityError: true, handleRetryActivity }),
+    );
+    render(<ProfileView />);
+
+    expect(screen.getByText("Erro ao carregar a atividade")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Ana Souza" })).toBeTruthy();
+    expect(screen.queryByText("Jornadas concluídas")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    expect(handleRetryActivity).toHaveBeenCalledTimes(1);
   });
 
   it("offers light, dark and high contrast themes and calls handleThemeChange", () => {

@@ -14,6 +14,8 @@ export function ProfileView() {
     form,
     isLoading,
     isLoadError,
+    isActivityLoading,
+    isActivityError,
     isEditing,
     isSubmitting,
     serverMessage,
@@ -24,6 +26,7 @@ export function ProfileView() {
     handleCancel,
     handleSubmit,
     handleRetry,
+    handleRetryActivity,
     handleCloseMessage,
     handleThemeChange,
   } = useProfileVM();
@@ -78,10 +81,10 @@ export function ProfileView() {
                     ) : (
                       <>
                         <h2 className="truncate font-heading text-xl font-semibold text-foreground">
-                          {profile?.user.name}
+                          {profile?.name}
                         </h2>
                         <p className="mt-1 truncate text-sm text-muted-foreground">
-                          {profile?.user.organization || labels.notProvided}
+                          {profile?.organization || labels.notProvided}
                         </p>
                       </>
                     )}
@@ -191,7 +194,7 @@ export function ProfileView() {
                               </label>
                               <Input
                                 id="profile-employee-code"
-                                value={profile?.user.employeeCode ?? ""}
+                                value={profile?.employeeCode ?? ""}
                                 disabled
                                 aria-describedby="profile-employee-code-help"
                               />
@@ -240,11 +243,11 @@ export function ProfileView() {
                     ) : (
                       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {[
-                          [labels.fullName, profile?.user.name],
-                          [labels.organization, profile?.user.organization],
-                          [labels.email, profile?.user.email],
-                          [labels.employeeCode, profile?.user.employeeCode],
-                          [labels.department, profile?.user.department],
+                          [labels.fullName, profile?.name],
+                          [labels.organization, profile?.organization],
+                          [labels.email, profile?.email],
+                          [labels.employeeCode, profile?.employeeCode],
+                          [labels.department, profile?.department],
                         ].map(([label, value]) => (
                           <div
                             key={label}
@@ -272,11 +275,24 @@ export function ProfileView() {
               >
                 {labels.activityTitle}
               </h2>
-              <MetricsGrid
-                items={metrics}
-                isLoading={isLoading}
-                loadingLabel={labels.loading}
-              />
+              {isActivityError ? (
+                <div className="space-y-4">
+                  <Message
+                    title={labels.activityLoadError}
+                    description={labels.loadErrorDescription}
+                    variant="destructive"
+                  />
+                  <Button type="button" variant="outline" onClick={handleRetryActivity}>
+                    {labels.retry}
+                  </Button>
+                </div>
+              ) : (
+                <MetricsGrid
+                  items={metrics}
+                  isLoading={isActivityLoading}
+                  loadingLabel={labels.loading}
+                />
+              )}
             </section>
 
             <section

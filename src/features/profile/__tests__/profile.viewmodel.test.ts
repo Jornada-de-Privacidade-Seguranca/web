@@ -34,23 +34,24 @@ const authenticatedUser = {
   active_status: 1,
 };
 
-const profileData = {
-  user: {
-    name: authenticatedUser.name,
-    organization: "Instituto Exemplo",
-    email: authenticatedUser.email,
-    employeeCode: "E-21",
-    department: "Privacidade",
-  },
-  activity: {
-    completedJourneys: 4,
-    inProgressJourneys: 1,
-    averageByDomain: { privacy: 80, security: 70, combined: 75 },
-  },
+const userProfile = {
+  name: authenticatedUser.name,
+  organization: "Instituto Exemplo",
+  email: authenticatedUser.email,
+  employeeCode: "E-21",
+  department: "Privacidade",
 };
 
+const activity = {
+  completedJourneys: 4,
+  inProgressJourneys: 1,
+  averageByDomain: { privacy: 80.4, security: 70, combined: null },
+};
+
+let queryClient: QueryClient;
+
 function createWrapper() {
-  const queryClient = new QueryClient({
+  queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return function Wrapper({ children }: PropsWithChildren) {
@@ -62,6 +63,12 @@ function createWrapper() {
   };
 }
 
+async function renderLoadedVM() {
+  const hook = renderHook(() => useProfileVM(), { wrapper: createWrapper() });
+  await waitFor(() => expect(hook.result.current.profile).toEqual(userProfile));
+  return hook;
+}
+
 describe("useProfileVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -70,57 +77,123 @@ describe("useProfileVM", () => {
       isAuthenticated: true,
       isLoading: false,
     });
-    vi.spyOn(profileService, "getUserProfile").mockResolvedValue(profileData);
+    vi.spyOn(profileService, "getOwnProfile").mockResolvedValue(userProfile);
+    vi.spyOn(profileService, "getProfileActivity").mockResolvedValue(activity);
   });
 
-  it("loads the authenticated profile, populates the form, and saves editable fields", async () => {
-    const updateSpy = vi
-      .spyOn(profileService, "updateUserProfile")
-      .mockImplementation(async (_user, current, payload) => ({
-        ...current,
-        user: { ...current.user, ...payload },
-      }));
+  it("carrega os dados do /me e o resumo de atividade do usuário", async () => {
+    const { result } = await renderLoadedVM();
 
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    expect(profileService.getProfileActivity).toHaveBeenCalledWith(21);
     expect(result.current.form.getValues("name")).toBe("Ana Souza");
     expect(result.current.initials).toBe("AS");
 
+    await waitFor(() => expect(result.current.isActivityLoading).toBe(false));
+    expect(result.current.metrics.map((metric) => metric.value)).toEqual([
+      4,
+      1,
+      80,
+      70,
+      "profile.notAvailable",
+    ]);
+  });
+
+  it("envia só os campos alterados e atualiza o cache e o usuário da barra lateral", async () => {
+    const savedProfile = {
+      ...userProfile,
+      name: "Ana Silva",
+      department: "Segurança",
+    };
+    const updateSpy = vi
+      .spyOn(profileService, "updateOwnProfile")
+      .mockResolvedValue(savedProfile);
+
+    const { result } = await renderLoadedVM();
+
     await act(async () => {
       result.current.handleEdit();
-      result.current.form.setValue("name", "Ana Silva");
-      result.current.form.setValue("organization", "Instituto Atualizado");
-      result.current.form.setValue("email", "ana.silva@example.com");
+      result.current.form.setValue("name", "  Ana Silva ");
       result.current.form.setValue("department", "Segurança");
       await result.current.handleSubmit();
     });
 
-    await waitFor(() => {
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(result.current.serverMessage?.variant).toBe("success");
-    });
-    expect(updateSpy).toHaveBeenCalledWith(
-      authenticatedUser,
-      profileData,
-      {
-        name: "Ana Silva",
-        organization: "Instituto Atualizado",
-        email: "ana.silva@example.com",
-        department: "Segurança",
-      },
-    );
+    await waitFor(() => expect(result.current.serverMessage?.variant).toBe("success"));
+    expect(updateSpy).toHaveBeenCalledWith({ name: "Ana Silva", department: "Segurança" });
     expect(result.current.serverMessage?.title).toBe("profile.successTitle");
     expect(result.current.isEditing).toBe(false);
+    expect(result.current.profile).toEqual(savedProfile);
+    expect(queryClient.getQueryData(["profile", 21])).toEqual(savedProfile);
+    expect(useAuthStore.getState().user).toMatchObject({
+      id: 21,
+      name: "Ana Silva",
+      email: "ana@example.com",
+      organization: "Instituto Exemplo",
+    });
+  });
+
+  it("sai da edição sem chamar o backend quando nada mudou", async () => {
+    const updateSpy = vi.spyOn(profileService, "updateOwnProfile");
+    const { result } = await renderLoadedVM();
+
+    await act(async () => {
+      result.current.handleEdit();
+      result.current.form.setValue("name", "Ana Souza ");
+      await result.current.handleSubmit();
+    });
+
+    expect(updateSpy).not.toHaveBeenCalled();
+    expect(result.current.isEditing).toBe(false);
+    expect(result.current.serverMessage).toBeNull();
+  });
+
+  it("mostra a mensagem própria no campo quando o e-mail já é usado por outra conta", async () => {
+    vi.spyOn(profileService, "updateOwnProfile").mockRejectedValue(
+      new ApiRequestError("Ja existe uma conta cadastrada com este e-mail.", 409, "EMAIL_ALREADY_IN_USE", {
+        email: ["Informe outro e-mail."],
+      }),
+    );
+    const { result } = await renderLoadedVM();
+
+    await act(async () => {
+      result.current.handleEdit();
+      result.current.form.setValue("email", "outra@example.com");
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.form.getFieldState("email").error?.message).toBe(
+      "profile.validation.emailInUse",
+    );
+    expect(result.current.serverMessage).toBeNull();
+    expect(result.current.isEditing).toBe(true);
+  });
+
+  it("mostra em cada campo os erros de validação do backend", async () => {
+    vi.spyOn(profileService, "updateOwnProfile").mockRejectedValue(
+      new ApiRequestError("Validation error.", 422, "VALIDATION_ERROR", {
+        name: ["Informe nome e sobrenome."],
+        department: ["O setor deve ter no maximo 100 caracteres."],
+      }),
+    );
+    const { result } = await renderLoadedVM();
+
+    await act(async () => {
+      result.current.handleEdit();
+      result.current.form.setValue("name", "Ana Maria");
+      result.current.form.setValue("department", "TI");
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.form.getFieldState("name").error?.message).toBe(
+      "Informe nome e sobrenome.",
+    );
+    expect(result.current.form.getFieldState("department").error?.message).toBe(
+      "O setor deve ter no maximo 100 caracteres.",
+    );
+    expect(result.current.serverMessage).toBeNull();
   });
 
   it("discards unsaved edits when cancelling", async () => {
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    const { result } = await renderLoadedVM();
 
     act(() => {
       result.current.handleEdit();
@@ -135,12 +208,8 @@ describe("useProfileVM", () => {
   });
 
   it("rejects missing fields, invalid email, and changes to the immutable employee code", async () => {
-    const updateSpy = vi.spyOn(profileService, "updateUserProfile");
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    const updateSpy = vi.spyOn(profileService, "updateOwnProfile");
+    const { result } = await renderLoadedVM();
 
     await act(async () => {
       result.current.handleEdit();
@@ -163,12 +232,8 @@ describe("useProfileVM", () => {
   });
 
   it("validates first and last name, and maximum character lengths", async () => {
-    const updateSpy = vi.spyOn(profileService, "updateUserProfile");
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    const updateSpy = vi.spyOn(profileService, "updateOwnProfile");
+    const { result } = await renderLoadedVM();
 
     await act(async () => {
       result.current.handleEdit();
@@ -194,16 +259,14 @@ describe("useProfileVM", () => {
     [401, "profile.unauthorizedError"],
     [500, "profile.serverError"],
   ])("returns destructive feedback for HTTP %i", async (status, message) => {
-    vi.spyOn(profileService, "updateUserProfile").mockRejectedValue(
+    vi.spyOn(profileService, "updateOwnProfile").mockRejectedValue(
       new ApiRequestError("request failed", status),
     );
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    const { result } = await renderLoadedVM();
 
     await act(async () => {
       result.current.handleEdit();
+      result.current.form.setValue("department", "Outro setor");
       await result.current.handleSubmit();
     });
 
@@ -214,12 +277,41 @@ describe("useProfileVM", () => {
     });
   });
 
+  it("mostra o erro só no resumo quando as métricas falham e tenta de novo", async () => {
+    const activitySpy = vi
+      .spyOn(profileService, "getProfileActivity")
+      .mockRejectedValueOnce(new ApiRequestError("Erro", 500))
+      .mockResolvedValue(activity);
+    const { result } = await renderLoadedVM();
+
+    await waitFor(() => expect(result.current.isActivityError).toBe(true));
+    expect(result.current.isLoadError).toBe(false);
+
+    act(() => result.current.handleRetryActivity());
+
+    await waitFor(() => expect(result.current.isActivityError).toBe(false));
+    expect(activitySpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("mostra o erro de carregamento e tenta de novo os dados e o resumo", async () => {
+    const profileSpy = vi
+      .spyOn(profileService, "getOwnProfile")
+      .mockRejectedValueOnce(new ApiRequestError("Erro", 500))
+      .mockResolvedValue(userProfile);
+    const { result } = renderHook(() => useProfileVM(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isLoadError).toBe(true));
+
+    act(() => result.current.handleRetry());
+
+    await waitFor(() => expect(result.current.profile).toEqual(userProfile));
+    expect(profileSpy).toHaveBeenCalledTimes(2);
+    expect(profileService.getProfileActivity).toHaveBeenCalledTimes(2);
+  });
+
   it("does not persist invalid form values", async () => {
-    const updateSpy = vi.spyOn(profileService, "updateUserProfile");
-    const { result } = renderHook(() => useProfileVM(), {
-      wrapper: createWrapper(),
-    });
-    await waitFor(() => expect(result.current.profile).toEqual(profileData));
+    const updateSpy = vi.spyOn(profileService, "updateOwnProfile");
+    const { result } = await renderLoadedVM();
 
     await act(async () => {
       result.current.handleEdit();

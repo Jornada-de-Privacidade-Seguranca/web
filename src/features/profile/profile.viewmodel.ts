@@ -7,21 +7,50 @@ import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { ApiRequestError } from "@services/httpClient";
-import { getUserProfile, updateUserProfile } from "@services/profileService";
+import {
+  getOwnProfile,
+  getProfileActivity,
+  updateOwnProfile,
+} from "@services/profileService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useTheme } from "@hooks/useTheme";
 import type { ThemeMode } from "@shared/theme";
 import type {
-  ProfileData,
+  ProfileEditableField,
   ProfileFormValues,
   ProfileLabels,
   ProfileServerMessage,
   ProfileUpdatePayload,
   ProfileViewModelReturn,
+  UserProfile,
 } from "./profile.types";
 import { getInitials } from "@/shared/utils/initials";
 
 const FULL_NAME_PATTERN = /^\S+\s+\S+/u;
+
+const EDITABLE_FIELDS: ProfileEditableField[] = [
+  "name",
+  "organization",
+  "email",
+  "department",
+];
+
+/** Campos editáveis que mudaram em relação ao perfil salvo, já sem espaços nas pontas. */
+function getChangedFields(
+  values: ProfileFormValues,
+  current: UserProfile,
+): ProfileUpdatePayload {
+  const payload: ProfileUpdatePayload = {};
+  for (const field of EDITABLE_FIELDS) {
+    const value = values[field].trim();
+    if (value !== current[field]) payload[field] = value;
+  }
+  return payload;
+}
+
+function isEditableField(field: string): field is ProfileEditableField {
+  return (EDITABLE_FIELDS as string[]).includes(field);
+}
 
 export function useProfileVM(): ProfileViewModelReturn {
   const t = useTranslations("profile");
@@ -57,6 +86,8 @@ export function useProfileVM(): ProfileViewModelReturn {
     loadErrorTitle: t("loadErrorTitle"),
     loadErrorDescription: t("loadErrorDescription"),
     retry: t("retry"),
+    activityLoadError: t("activityLoadError"),
+    notAvailable: t("notAvailable"),
     successTitle: t("successTitle"),
     successDescription: t("successDescription"),
     errorTitle: t("errorTitle"),
@@ -76,6 +107,7 @@ export function useProfileVM(): ProfileViewModelReturn {
       departmentRequired: t("validation.departmentRequired"),
       departmentMaxLength: t("validation.departmentMaxLength"),
       employeeCodeImmutable: t("validation.employeeCodeImmutable"),
+      emailInUse: t("validation.emailInUse"),
     },
     preferencesTitle: t("preferencesTitle"),
     language: t("language"),
@@ -86,18 +118,24 @@ export function useProfileVM(): ProfileViewModelReturn {
     themeHighContrastUnavailable: t("themeHighContrastUnavailable"),
   };
 
+  const userId = user?.id;
+
   const profileQuery = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: () => {
-      if (!user) {
-        throw new Error(labels.loadErrorDescription);
-      }
-      return getUserProfile(user);
-    },
-    enabled: Boolean(user),
+    queryKey: ["profile", userId],
+    queryFn: getOwnProfile,
+    enabled: userId != null,
     retry: false,
   });
   const profile = profileQuery.data ?? null;
+
+  // Consulta separada: se as métricas falharem, os dados pessoais continuam na tela
+  const activityQuery = useQuery({
+    queryKey: ["profile", "activity", userId],
+    queryFn: () => getProfileActivity(userId as number),
+    enabled: userId != null,
+    retry: false,
+  });
+  const activity = activityQuery.data ?? null;
 
   const schema = useMemo(
     () =>
@@ -128,7 +166,7 @@ export function useProfileVM(): ProfileViewModelReturn {
             .max(100, labels.validation.departmentMaxLength),
         })
         .superRefine((values, context) => {
-          if (profile && values.employeeCode !== profile.user.employeeCode) {
+          if (profile && values.employeeCode !== profile.employeeCode) {
             context.addIssue({
               code: "custom",
               path: ["employeeCode"],
@@ -155,24 +193,22 @@ export function useProfileVM(): ProfileViewModelReturn {
 
   useEffect(() => {
     if (profile) {
-      reset(profile.user);
+      reset(profile);
     }
   }, [profile, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      currentProfile,
-      payload,
-    }: {
-      currentProfile: ProfileData;
-      payload: ProfileUpdatePayload;
-    }) => {
-      if (!user) {
-        throw new Error(labels.genericError);
-      }
-      return updateUserProfile(user, currentProfile, payload);
-    },
+    mutationFn: (payload: ProfileUpdatePayload) => updateOwnProfile(payload),
   });
+
+  const showSuccess = () => {
+    setIsEditing(false);
+    setServerMessage({
+      title: labels.successTitle,
+      description: labels.successDescription,
+      variant: "success",
+    });
+  };
 
   const handleSubmit = form.handleSubmit(async (values) => {
     if (!user || !profile) {
@@ -185,36 +221,47 @@ export function useProfileVM(): ProfileViewModelReturn {
     }
 
     setServerMessage(null);
-    const payload: ProfileUpdatePayload = {
-      name: values.name.trim(),
-      organization: values.organization.trim(),
-      email: values.email.trim(),
-      department: values.department.trim(),
-    };
+    const payload = getChangedFields(values, profile);
+
+    // Nada mudou: só sai da edição, sem chamar o backend
+    if (Object.keys(payload).length === 0) {
+      reset(profile);
+      setIsEditing(false);
+      return;
+    }
 
     try {
-      const savedProfile = await updateMutation.mutateAsync({
-        currentProfile: profile,
-        payload,
+      const savedProfile = await updateMutation.mutateAsync(payload);
+      queryClient.setQueryData(["profile", user.id], savedProfile);
+      // O usuário do store é o /me carregado na sessão: atualiza o nome da barra lateral
+      setAuth({
+        ...user,
+        name: savedProfile.name,
+        email: savedProfile.email,
+        organization: savedProfile.organization,
       });
-      const updatedProfile: ProfileData = {
-        ...savedProfile,
-        user: {
-          ...savedProfile.user,
-          employeeCode: profile.user.employeeCode,
-        },
-      };
-      queryClient.setQueryData(["profile", user.id], updatedProfile);
-      setAuth({ ...user, name: updatedProfile.user.name, email: updatedProfile.user.email });
-      reset(updatedProfile.user);
-      setIsEditing(false);
-      setServerMessage({
-        title: labels.successTitle,
-        description: labels.successDescription,
-        variant: "success",
-      });
+      reset(savedProfile);
+      showSuccess();
     } catch (error: unknown) {
-      const status = error instanceof ApiRequestError ? error.status : undefined;
+      const apiError = error instanceof ApiRequestError ? error : undefined;
+      const status = apiError?.status;
+
+      if (status === 409 && apiError?.code === "EMAIL_ALREADY_IN_USE") {
+        form.setError("email", { type: "server", message: labels.validation.emailInUse });
+        return;
+      }
+
+      if (status === 422 && apiError?.errors) {
+        let hasFieldError = false;
+        for (const [field, messages] of Object.entries(apiError.errors)) {
+          if (isEditableField(field) && messages[0]) {
+            form.setError(field, { type: "server", message: messages[0] });
+            hasFieldError = true;
+          }
+        }
+        if (hasFieldError) return;
+      }
+
       const description =
         status === 401
           ? labels.unauthorizedError
@@ -231,20 +278,28 @@ export function useProfileVM(): ProfileViewModelReturn {
 
   const handleEdit = () => {
     if (!profile) return;
-    reset(profile.user);
+    reset(profile);
     setServerMessage(null);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    if (profile) reset(profile.user);
+    if (profile) reset(profile);
     setIsEditing(false);
     setServerMessage(null);
   };
 
   const handleRetry = () => {
     void profileQuery.refetch();
+    void activityQuery.refetch();
   };
+
+  const handleRetryActivity = () => {
+    void activityQuery.refetch();
+  };
+
+  const formatAverage = (average: number | null | undefined) =>
+    average == null ? labels.notAvailable : Math.round(average);
 
   const handleCloseMessage = () => setServerMessage(null);
 
@@ -256,36 +311,38 @@ export function useProfileVM(): ProfileViewModelReturn {
     {
       id: "completed-journeys",
       label: labels.completedJourneys,
-      value: profile?.activity.completedJourneys ?? 0,
+      value: activity?.completedJourneys ?? 0,
     },
     {
       id: "in-progress-journeys",
       label: labels.inProgressJourneys,
-      value: profile?.activity.inProgressJourneys ?? 0,
+      value: activity?.inProgressJourneys ?? 0,
     },
     {
       id: "privacy-average",
       label: labels.privacyAverage,
-      value: profile?.activity.averageByDomain.privacy ?? 0,
+      value: formatAverage(activity?.averageByDomain.privacy),
     },
     {
       id: "security-average",
       label: labels.securityAverage,
-      value: profile?.activity.averageByDomain.security ?? 0,
+      value: formatAverage(activity?.averageByDomain.security),
     },
     {
       id: "combined-average",
       label: labels.combinedAverage,
-      value: profile?.activity.averageByDomain.combined ?? 0,
+      value: formatAverage(activity?.averageByDomain.combined),
     },
   ];
 
   return {
     profile,
-    initials: profile ? getInitials(profile.user.name) : "",
+    initials: profile ? getInitials(profile.name) : "",
     form,
     isLoading: profileQuery.isLoading,
     isLoadError: profileQuery.isError,
+    isActivityLoading: activityQuery.isLoading,
+    isActivityError: activityQuery.isError,
     isEditing,
     isSubmitting: form.formState.isSubmitting || updateMutation.isPending,
     serverMessage,
@@ -296,6 +353,7 @@ export function useProfileVM(): ProfileViewModelReturn {
     handleCancel,
     handleSubmit,
     handleRetry,
+    handleRetryActivity,
     handleCloseMessage,
     handleThemeChange,
   };

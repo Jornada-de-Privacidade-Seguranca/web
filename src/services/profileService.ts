@@ -1,85 +1,82 @@
-import type { AuthenticatedUser } from "@features/auth/auth.types";
+import { apiRequest } from "@services/httpClient";
+import { mapKnowledgeDomainId } from "@services/journeyService";
 import type {
+  OwnProfileApi,
+  OwnProfileUpdateApi,
   ProfileActivity,
-  ProfileData,
+  ProfileMetricsApi,
   ProfileUpdatePayload,
+  UserProfile,
 } from "@features/profile/profile.types";
 
-const EMPTY_ACTIVITY: ProfileActivity = {
-  completedJourneys: 0,
-  inProgressJourneys: 0,
-  averageByDomain: {
-    privacy: 0,
-    security: 0,
-    combined: 0,
-  },
-};
+export function mapOwnProfile(data: OwnProfileApi): UserProfile {
+  return {
+    name: data.name ?? "",
+    organization: data.organization ?? "",
+    email: data.email ?? "",
+    employeeCode: data.registration_number ?? "",
+    department: data.department ?? "",
+  };
+}
+
+export function mapProfileActivity(data: ProfileMetricsApi): ProfileActivity {
+  const averageByDomain: ProfileActivity["averageByDomain"] = {
+    privacy: null,
+    security: null,
+    combined: null,
+  };
+
+  for (const metric of data.domains ?? []) {
+    const domain = mapKnowledgeDomainId(metric.domain_id);
+    const average = metric.average_score ?? null;
+    if (domain === "privacy") averageByDomain.privacy = average;
+    if (domain === "security") averageByDomain.security = average;
+    if (domain === "joint") averageByDomain.combined = average;
+  }
+
+  return {
+    completedJourneys: data.summary?.completed_journeys ?? 0,
+    inProgressJourneys: data.summary?.ongoing_journeys ?? 0,
+    averageByDomain,
+  };
+}
+
+/** Dados do próprio usuário, de GET /me. */
+export async function getOwnProfile(): Promise<UserProfile> {
+  const data = await apiRequest<OwnProfileApi>(
+    "/me",
+    {},
+    "Não foi possível carregar o perfil."
+  );
+  return mapOwnProfile(data);
+}
+
+/** Resumo de atividade do usuário, de GET /users/{user}/journeys/metrics. */
+export async function getProfileActivity(userId: number): Promise<ProfileActivity> {
+  const data = await apiRequest<ProfileMetricsApi>(
+    `/users/${userId}/journeys/metrics`,
+    {},
+    "Não foi possível carregar a atividade no sistema."
+  );
+  return mapProfileActivity(data);
+}
 
 /**
- * Mock em memória do perfil do usuário para desenvolvimento e testes
- * enquanto a integração com os endpoints /me da API (#154) não for finalizada.
- * O formato segue o modelo da #152 (organization, department, registration_number).
+ * Salva os campos alterados em PATCH /me e devolve o perfil atualizado. Erros
+ * chegam como ApiRequestError: 422 com `errors` por campo e 409
+ * (EMAIL_ALREADY_IN_USE) quando o e-mail já pertence a outra conta.
  */
-let inMemoryProfile: { userId?: number; profile: ProfileData } | null = null;
+export async function updateOwnProfile(payload: ProfileUpdatePayload): Promise<UserProfile> {
+  const body: OwnProfileUpdateApi = {};
+  if (payload.name !== undefined) body.name = payload.name;
+  if (payload.email !== undefined) body.email = payload.email;
+  if (payload.organization !== undefined) body.organization = payload.organization;
+  if (payload.department !== undefined) body.department = payload.department;
 
-export function resetProfileMock(): void {
-  inMemoryProfile = null;
-}
-
-export function createDefaultProfileMock(user?: AuthenticatedUser): ProfileData {
-  return {
-    user: {
-      name: user?.name || "Administrador do Sistema",
-      organization: "Tribunal Regional Eleitoral",
-      email: user?.email || "admin@tre.gov.br",
-      employeeCode: "TRE-2026-0842",
-      department: "Tecnologia da Informação",
-    },
-    activity: EMPTY_ACTIVITY,
-  };
-}
-
-export async function getUserProfile(
-  authenticatedUser: AuthenticatedUser,
-): Promise<ProfileData> {
-  if (!authenticatedUser) {
-    throw new Error("Usuário autenticado não informado.");
-  }
-
-  // Devolve o mock diretamente sem chamar a API até a implementação da tarefa #154.
-  if (!inMemoryProfile || inMemoryProfile.userId !== authenticatedUser.id) {
-    inMemoryProfile = {
-      userId: authenticatedUser.id,
-      profile: createDefaultProfileMock(authenticatedUser),
-    };
-  }
-
-  return { ...inMemoryProfile.profile };
-}
-
-export async function updateUserProfile(
-  authenticatedUser: AuthenticatedUser,
-  currentProfile: ProfileData,
-  payload: ProfileUpdatePayload,
-): Promise<ProfileData> {
-  if (!authenticatedUser) {
-    throw new Error("Usuário autenticado não informado.");
-  }
-
-  const updated: ProfileData = {
-    ...currentProfile,
-    user: {
-      ...currentProfile.user,
-      name: payload.name,
-      organization: payload.organization,
-      email: payload.email,
-      department: payload.department,
-    },
-  };
-
-  inMemoryProfile = {
-    userId: authenticatedUser.id,
-    profile: updated,
-  };
-  return { ...updated };
+  const data = await apiRequest<OwnProfileApi>(
+    "/me",
+    { method: "patch", data: body, withCsrf: true },
+    "Não foi possível salvar o perfil."
+  );
+  return mapOwnProfile(data);
 }
