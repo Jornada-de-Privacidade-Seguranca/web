@@ -28,6 +28,7 @@ export interface LandingViewModelReturn {
     footer: {
       left: string;
       right: string;
+      privacyLink: string;
     };
   };
   steps: LandingStep[];

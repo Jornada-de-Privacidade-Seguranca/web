@@ -69,7 +69,8 @@
     },
     "footer": {
       "left": "Privacy Compass. All rights reserved.",
-      "right": "Built with privacy in mind."
+      "right": "Built with privacy in mind.",
+      "privacyLink": "Privacy Policy"
     }
   },
   "auth": {
@@ -639,6 +640,65 @@
       "modalCancel": "Cancel",
       "modalConfirm": "Yes, delete user",
       "deleteSuccess": "User deleted successfully."
+    }
+  },
+  "privacyPolicy": {
+    "eyebrow": "LGPD · Data Protection",
+    "title": "Privacy Policy",
+    "subtitle": "Learn how Privacy Compass collects, uses, safeguards, and upholds your rights regarding personal data processed on the platform.",
+    "lastUpdatedLabel": "Last updated",
+    "lastUpdatedDate": "November 2026",
+    "tocTitle": "Table of contents",
+    "backToHome": "Back to home",
+    "backToDashboard": "Back to dashboard",
+    "goToDashboard": "Go to dashboard",
+    "sections": {
+      "controller": {
+        "title": "Controller and Platform Purpose",
+        "p1": "Privacy Compass is a corporate diagnostic and training platform for privacy and information security, designed to map employee competencies and support institutional capability development.",
+        "p2": "Personal data processing within the platform follows data protection principles—specifically purpose limitation, adequacy, necessity, transparency, and security—in compliance with applicable privacy laws, including Brazil's General Data Protection Law (LGPD — Law No. 13.709/2018)."
+      },
+      "dataCollected": {
+        "title": "Personal Data Collected",
+        "p1": "To enable authenticated access, journey personalization, and organizational indicators, we process only strictly necessary data:",
+        "b1": "Registration and workplace data: full name, institutional email address, employee code, department/sector, and organization.",
+        "b2": "Assessment and journey data: selected journey profile, competency questionnaire responses, calculated scores, and completion timestamps.",
+        "b3": "Essential technical session data: strictly necessary cookies for secure authentication (HttpOnly), CSRF protection, and language or accessibility preferences."
+      },
+      "dataUsage": {
+        "title": "How We Use Your Data",
+        "p1": "Collected data is used exclusively for legitimate purposes tied to operating the training and assessment platform:",
+        "b1": "Authenticate your identity, maintain session integrity, and enforce permission-based access control.",
+        "b2": "Deliver journeys tailored to your profile, compute domain and area scores, and generate downloadable PDF reports.",
+        "b3": "Provide consolidated metrics to duly authorized managers and administrators to guide training initiatives.",
+        "b4": "Comply with legal or regulatory obligations and retain audit records to prevent security incidents."
+      },
+      "sharingAndRetention": {
+        "title": "Sharing and Retention",
+        "p1": "Your personal data is never sold, rented, or shared with third parties for advertising or purposes unrelated to the platform's mission.",
+        "p2": "Internal access is restricted to administrative roles with explicit permissions (such as managers and administrators), and records are retained only for the duration required by institutional ties or legal obligations."
+      },
+      "security": {
+        "title": "Information Security",
+        "p1": "We implement technical and organizational safeguards aligned with security best practices to protect personal data against unauthorized access, alteration, or disclosure:",
+        "b1": "Authenticated sessions protected via HttpOnly cookies and CSRF token validation for state-changing requests.",
+        "b2": "Secure credential storage using cryptographic hashing and encrypted transport (HTTPS).",
+        "b3": "Granular role-based access control (RBAC) and automatic session expiration with prior inactivity warning.",
+        "b4": "Account status management and profile update auditing for accountability."
+      },
+      "userRights": {
+        "title": "Your Privacy Rights",
+        "p1": "Under Art. 18 of the LGPD and applicable data protection regulations, you may exercise the following rights at any time:",
+        "b1": "Confirm the existence of processing and access personal data associated with your account.",
+        "b2": "Correct or update incomplete, inaccurate, or outdated information directly on your Profile page or through administration.",
+        "b3": "Request clear information regarding data sharing, retention periods, and processing criteria.",
+        "b4": "Request anonymization, blocking, or deletion of unnecessary or non-compliant data, as well as revocation of consent where applicable."
+      },
+      "updatesAndContact": {
+        "title": "Policy Updates and Contact",
+        "p1": "This Privacy Policy may be updated periodically to reflect platform improvements or regulatory updates, with the latest revision date displayed at the top of this page.",
+        "p2": "For questions, requests, or to exercise your data subject rights, please contact your organization's Data Protection Officer (DPO) or the designated platform administration team."
+      }
     }
   }
 }
