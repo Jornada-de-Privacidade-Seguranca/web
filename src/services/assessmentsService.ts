@@ -19,6 +19,7 @@ export interface GetPendingAssessmentsParams {
   userId: number;
   page?: number;
   perPage?: number;
+  locale?: "pt" | "en";
 }
 
 export interface GetCatalogAssessmentsParams {
@@ -110,10 +111,18 @@ export const MOCK_CATALOG_PROFILES: JourneyProfileApi[] = [
   },
 ];
 
-function mapUserJourneyToJourney(item: UserJourneyListItemApi): Journey {
+function mapUserJourneyToJourney(
+  item: UserJourneyListItemApi,
+  locale: "pt" | "en"
+): Journey {
   const profile = item.journey_profile;
-  const title = profile?.name || profile?.description || "";
-  const description = profile?.name ? (profile?.description ?? "") : "";
+  const isEnglish = locale === "en";
+  // Em inglês, usa o português quando falta a tradução
+  const name = (isEnglish && profile?.name_en) || profile?.name_pt || "";
+  const profileDescription =
+    (isEnglish && profile?.description_en) || profile?.description_pt || "";
+  const title = name || profileDescription;
+  const description = name ? profileDescription : "";
   const domainId = profile?.knowledge_domain?.id;
   const domain = domainId ? DOMAIN_BY_TYPE_MAP[domainId] : undefined;
 
@@ -135,6 +144,7 @@ export async function getPendingAssessments({
   userId,
   page = 1,
   perPage = 6,
+  locale = "pt",
 }: GetPendingAssessmentsParams): Promise<PaginatedResponse<Journey>> {
   if (!userId) {
     return {
@@ -155,7 +165,7 @@ export async function getPendingAssessments({
     "Erro ao carregar jornadas pendentes."
   );
 
-  const items = Array.isArray(data) ? data.map(mapUserJourneyToJourney) : [];
+  const items = Array.isArray(data) ? data.map((item) => mapUserJourneyToJourney(item, locale)) : [];
   const pagination = meta?.pagination;
 
   return {

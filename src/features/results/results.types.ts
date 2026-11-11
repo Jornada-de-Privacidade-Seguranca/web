@@ -38,10 +38,12 @@ export interface ResultJourneyApi {
   id: number;
   journey_profile: {
     id: number | null;
-    name: string | null;
+    name_pt: string | null;
+    name_en: string | null;
     knowledge_domain: {
       id: number | null;
-      name: string | null;
+      name_pt: string | null;
+      name_en: string | null;
     } | null;
   } | null;
   finished_at: string | null;

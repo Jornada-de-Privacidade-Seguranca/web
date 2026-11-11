@@ -76,9 +76,14 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Pending Journey (at most 1)
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", userId],
+    queryKey: ["assessments", "pending", userId, locale],
     queryFn: () =>
-      getPendingAssessments({ userId: userId as number, page: 1, perPage: 1 }),
+      getPendingAssessments({
+        userId: userId as number,
+        page: 1,
+        perPage: 1,
+        locale,
+      }),
     enabled: Boolean(userId),
     retry: false,
     placeholderData: keepPreviousData,

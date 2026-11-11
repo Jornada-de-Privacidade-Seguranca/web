@@ -40,11 +40,14 @@ export type UserJourneyApiStatus = "ongoing" | "completed";
 
 export interface UserJourneyProfileSummaryApi {
   id: number | null;
-  name?: string | null;
-  description: string | null;
+  name_pt: string | null;
+  name_en: string | null;
+  description_pt: string | null;
+  description_en: string | null;
   knowledge_domain: {
     id: number | null;
-    name: string | null;
+    name_pt: string | null;
+    name_en: string | null;
   };
 }
 

@@ -75,9 +75,11 @@ function journey(id: number, overrides: Record<string, unknown> = {}) {
     user_id: 42,
     journey_profile: {
       id: 7,
-      name: "Encarregado pelo Tratamento de Dados Pessoais",
-      description: "Descrição",
-      knowledge_domain: { id: 1, name: "Privacidade" },
+      name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+      name_en: "Data Protection Officer (DPO)",
+      description_pt: "Descrição",
+      description_en: "Description",
+      knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
     },
     started_at: "2026-11-09 10:00:00",
     finished_at: "2026-11-09 23:30:00",
@@ -215,11 +217,13 @@ describe("resultsService", () => {
           id: "10",
           title: "Encarregado pelo Tratamento de Dados Pessoais",
           namePt: "Encarregado pelo Tratamento de Dados Pessoais",
+          nameEn: "Data Protection Officer (DPO)",
           score: 88,
           completedAt: "2026-11-09T23:30:00Z",
           domain: "privacy",
           domainId: 1,
           domainNamePt: "Privacidade",
+          domainNameEn: "Privacy",
         },
       ]);
     });

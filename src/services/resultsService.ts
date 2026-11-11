@@ -61,14 +61,16 @@ export function mapResultItem(journey: ResultJourneyApi): ResultItem {
 
   return {
     id: String(journey.id),
-    // O backend só manda o nome em português; a ViewModel usa este título nos dois idiomas
-    title: profile?.name ?? "",
-    namePt: profile?.name ?? undefined,
+    // A ViewModel escolhe o nome pelo idioma da tela; o título é a alternativa em português
+    title: profile?.name_pt ?? "",
+    namePt: profile?.name_pt ?? undefined,
+    nameEn: profile?.name_en ?? undefined,
     score: Math.round(journey.score ?? 0),
     completedAt: toIsoUtc(journey.finished_at),
     domain: mapKnowledgeDomainId(domainId) ?? undefined,
     domainId,
-    domainNamePt: profile?.knowledge_domain?.name ?? undefined,
+    domainNamePt: profile?.knowledge_domain?.name_pt ?? undefined,
+    domainNameEn: profile?.knowledge_domain?.name_en ?? undefined,
   };
 }
 
