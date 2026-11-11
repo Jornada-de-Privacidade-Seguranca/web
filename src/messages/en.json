@@ -640,5 +640,67 @@
       "modalConfirm": "Yes, delete user",
       "deleteSuccess": "User deleted successfully."
     }
+  },
+  "adminResults": {
+    "title": "All User Results",
+    "subtitle": "Track completed journeys and domain averages across the organization.",
+    "loadingAriaLabel": "Loading user results",
+    "summary": {
+      "ariaLabel": "Results summary",
+      "totalCompleted": "Completed journeys",
+      "totalUsers": "Evaluated users",
+      "domainScore": "{score}/100",
+      "emptyScore": "—"
+    },
+    "filters": {
+      "ariaLabel": "Advanced filters",
+      "searchPlaceholder": "Search by user, email, or profile...",
+      "user": "User",
+      "allUsers": "All users",
+      "department": "Department",
+      "allDepartments": "All departments",
+      "profile": "Journey profile",
+      "allProfiles": "All journey profiles",
+      "domains": "Domains",
+      "dateFrom": "Completed from",
+      "dateTo": "Completed until",
+      "clear": "Clear filters",
+      "counter": "{filtered} of {total, plural, one {# result} other {# results}}"
+    },
+    "table": {
+      "user": "User",
+      "department": "Department",
+      "profile": "Journey profile",
+      "domain": "Domain",
+      "completedAt": "Completion date",
+      "score": "Score",
+      "actions": "Actions",
+      "view": "View",
+      "emptyDepartment": "—",
+      "scoreValue": "{score}/100",
+      "scoreAriaLabel": "Score {score} out of 100, {band} level"
+    },
+    "bands": {
+      "strong": "Strong",
+      "medium": "Medium",
+      "weak": "Needs development"
+    },
+    "empty": {
+      "title": "No results found",
+      "description": "No results match the applied filters. Try adjusting the criteria or clearing filters.",
+      "noDataTitle": "No completed results yet",
+      "noDataDescription": "Once employees finish their journeys, their results will appear here.",
+      "clearButton": "Clear filters"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {current} of {total}"
+    },
+    "error": {
+      "title": "Error loading results",
+      "message": "Unable to load user results.",
+      "retry": "Try again"
+    }
   }
 }

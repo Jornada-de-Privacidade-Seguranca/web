@@ -10,7 +10,7 @@ export function useUserJourneysSectionVM(
 
   return {
     journeys,
-    allResultsHref: `/resultados?userId=${userId}`,
+    allResultsHref: `/admin/resultados?userId=${userId}`,
     labels,
     hasJourneys: journeys.length > 0,
   };
