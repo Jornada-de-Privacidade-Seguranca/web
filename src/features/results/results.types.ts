@@ -33,6 +33,46 @@ export interface ResultsMetrics {
   domainMetrics: DomainMetric[];
 }
 
+/** Item de `GET /users/{user}/journeys` (JourneyListResource do backend). */
+export interface ResultJourneyApi {
+  id: number;
+  journey_profile: {
+    id: number | null;
+    name: string | null;
+    knowledge_domain: {
+      id: number | null;
+      name: string | null;
+    } | null;
+  } | null;
+  finished_at: string | null;
+  score: number | null;
+}
+
+export interface ResultsListMetaApi {
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+/** Entrada de `domains` em `GET /users/{user}/journeys/metrics`. */
+export interface DomainMetricApi {
+  domain_id: number;
+  domain_name_pt: string | null;
+  domain_name_en: string | null;
+  average_score: number | null;
+}
+
+export interface ResultsMetricsApi {
+  summary: {
+    completed_journeys: number;
+    average_score: number | null;
+  };
+  domains: DomainMetricApi[];
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

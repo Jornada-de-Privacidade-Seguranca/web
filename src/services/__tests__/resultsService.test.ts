@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
 import { getMetrics, getResultsList } from "../resultsService";
 import { axiosInstance } from "../httpClient";
-import { env } from "@shared/config/env";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
   return {
@@ -14,143 +13,249 @@ function mockResponse<T>(data: T): AxiosResponse<T> {
   };
 }
 
-function mockAxiosError(status: number, data: unknown): AxiosError {
+function mockAxiosError(status: number | undefined, data?: unknown): AxiosError {
   return new AxiosError(
     "Request failed",
-    "ERR_BAD_REQUEST",
+    status ? "ERR_BAD_REQUEST" : "ERR_NETWORK",
     undefined,
     undefined,
-    {
-      data,
-      status,
-      statusText: "",
-      headers: {},
-      config: {} as AxiosResponse["config"],
-    } as AxiosResponse
+    status
+      ? ({
+          data,
+          status,
+          statusText: "",
+          headers: {},
+          config: {} as AxiosResponse["config"],
+        } as AxiosResponse)
+      : undefined
   );
 }
 
-describe("ResultsService", () => {
+const METRICS_RESPONSE = {
+  success: true,
+  data: {
+    user_id: 42,
+    summary: {
+      total_journeys: 5,
+      completed_journeys: 4,
+      ongoing_journeys: 1,
+      average_score: 71.5,
+      highest_score: 90,
+      latest_score: 64,
+    },
+    domains: [
+      {
+        domain_id: 1,
+        domain_name_pt: "Privacidade",
+        domain_name_en: "Privacy",
+        completed_journeys: 3,
+        average_score: 78.67,
+      },
+      {
+        domain_id: 2,
+        domain_name_pt: "Segurança da Informação",
+        domain_name_en: "Information Security",
+        completed_journeys: 1,
+        average_score: 50,
+      },
+      {
+        domain_id: 3,
+        domain_name_pt: "Conjunta",
+        domain_name_en: "Joint",
+        completed_journeys: 0,
+        average_score: null,
+      },
+    ],
+  },
+};
+
+function journey(id: number, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    user_id: 42,
+    journey_profile: {
+      id: 7,
+      name: "Encarregado pelo Tratamento de Dados Pessoais",
+      description: "Descrição",
+      knowledge_domain: { id: 1, name: "Privacidade" },
+    },
+    started_at: "2026-11-09 10:00:00",
+    finished_at: "2026-11-09 23:30:00",
+    cancelled_at: null,
+    status: "completed",
+    score: 87.6,
+    ...overrides,
+  };
+}
+
+describe("resultsService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("deve buscar as métricas de KPI desembrulhando a propriedade 'data' e contendo o id do usuário na URL", async () => {
-    const mockData = {
-      totalCompleted: 15,
-      domainMetrics: [
-        { domain: "privacy", label: "Privacidade", averageScore: 84 },
-      ],
-    };
+  describe("getMetrics", () => {
+    it("busca as métricas do usuário e converte o resumo e os domínios", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse(METRICS_RESPONSE));
 
-    const requestSpy = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
+      const result = await getMetrics(42);
 
-    const result = await getMetrics(42);
-
-    expect(requestSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/users/42/journeys/metrics" })
-    );
-    expect(result.totalCompleted).toBe(15);
-    expect(result.domainMetrics).toHaveLength(1);
-    expect(result.domainMetrics[0].averageScore).toBe(84);
-  });
-
-  it("resposta real sem domainMetrics não pode ganhar dados do mock", async () => {
-    // Simula ambiente de produção onde isDev é falso
-    const originalIsDev = env.isDev;
-    try {
-      (env as { isDev: boolean }).isDev = false;
-
-      const mockData = {
-        totalCompleted: 5,
-        // domainMetrics ausente na resposta da API
-      };
-
-      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
-        mockResponse({ success: true, data: mockData })
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/users/42/journeys/metrics" })
       );
-
-      const result = await getMetrics(1);
-
-      expect(result.totalCompleted).toBe(5);
-      expect(result.domainMetrics).toEqual([]);
-    } finally {
-      (env as { isDev: boolean }).isDev = originalIsDev;
-    }
-  });
-
-  it("deve buscar a lista de resultados paginada contendo o id do usuário na URL e aplicando filtros", async () => {
-    const mockData = {
-      items: [
+      expect(result.totalCompleted).toBe(4);
+      expect(result.averageScore).toBe(71.5);
+      expect(result.domainMetrics).toEqual([
+        { domain: "privacy", domainId: 1, namePt: "Privacidade", nameEn: "Privacy", averageScore: 78.67 },
         {
-          id: "r1",
-          title: "Encarregado pelo Tratamento de Dados Pessoais",
-          score: 88,
-          completedAt: "2026-05-15T10:00:00Z",
-          domain: "privacy",
-          domainLabel: "Privacidade",
+          domain: "security",
+          domainId: 2,
+          namePt: "Segurança da Informação",
+          nameEn: "Information Security",
+          averageScore: 50,
         },
-      ],
-      total: 1,
-      page: 1,
-      limit: 6,
-      totalPages: 1,
-    };
-
-    const requestSpy = vi
-      .spyOn(axiosInstance, "request")
-      .mockResolvedValueOnce(mockResponse({ success: true, data: mockData }));
-
-    const result = await getResultsList({
-      userId: 42,
-      page: 1,
-      per_page: 6,
-      search: "Encarregado",
-      domains: ["privacy"],
+        { domain: "joint", domainId: 3, namePt: "Conjunta", nameEn: "Joint", averageScore: null },
+      ]);
     });
 
-    expect(requestSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: "/users/42/journeys",
-        params: {
-          page: 1,
-          per_page: 6,
-          search: "Encarregado",
-          "domains[]": [1],
-        },
-      })
-    );
-    expect(result.items[0].title).toBe("Encarregado pelo Tratamento de Dados Pessoais");
-  });
+    it("mantém um domínio novo, que o front ainda não conhece, usando o id", async () => {
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({
+          success: true,
+          data: {
+            summary: { completed_journeys: 1, average_score: 40 },
+            domains: [
+              { domain_id: 9, domain_name_pt: "Governança", domain_name_en: "Governance", average_score: 40 },
+            ],
+          },
+        })
+      );
 
-  it("deve lançar erro quando a API retornar status 500 mesmo em ambiente de desenvolvimento", async () => {
-    const originalIsDev = env.isDev;
-    try {
-      (env as { isDev: boolean }).isDev = true;
+      const result = await getMetrics(42);
+
+      expect(result.domainMetrics[0]).toMatchObject({ domain: "9", domainId: 9, namePt: "Governança" });
+    });
+
+    it("propaga o erro da API com a mensagem do backend", async () => {
       vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
-        mockAxiosError(500, { message: "Erro interno no servidor" })
+        mockAxiosError(500, { success: false, message: "Erro interno no servidor" })
       );
 
       await expect(getMetrics(1)).rejects.toThrow("Erro interno no servidor");
-    } finally {
-      (env as { isDev: boolean }).isDev = originalIsDev;
-    }
+    });
+
+    it("não usa dados fictícios quando a rede falha", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(mockAxiosError(undefined));
+
+      await expect(getMetrics(1)).rejects.toThrow(
+        "Não foi possível carregar o resumo dos resultados."
+      );
+    });
   });
 
-  it("deve usar o mock em dev somente em falha de rede (status undefined)", async () => {
-    const originalIsDev = env.isDev;
-    try {
-      (env as { isDev: boolean }).isDev = true;
-      // Erro de rede sem status HTTP
-      const networkError = new AxiosError("Network Error", "ERR_NETWORK");
-      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(networkError);
+  describe("getResultsList", () => {
+    it("pede só as jornadas concluídas, com a busca, os domínios e a paginação", async () => {
+      const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({
+          success: true,
+          data: [journey(10)],
+          meta: { pagination: { current_page: 2, per_page: 6, total: 7, last_page: 2 } },
+        })
+      );
 
-      const result = await getMetrics(1);
-      expect(result.totalCompleted).toBeGreaterThan(0);
-    } finally {
-      (env as { isDev: boolean }).isDev = originalIsDev;
-    }
+      const result = await getResultsList({
+        userId: 42,
+        page: 2,
+        per_page: 6,
+        search: "  Encarregado ",
+        domains: ["privacy", "joint"],
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/users/42/journeys",
+          params: {
+            status: "completed",
+            page: 2,
+            per_page: 6,
+            search: "Encarregado",
+            "domains[]": [1, 3],
+          },
+        })
+      );
+      expect(result).toMatchObject({ total: 7, page: 2, limit: 6, totalPages: 2 });
+    });
+
+    it("não envia a busca nem os domínios quando estão vazios", async () => {
+      const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: [], meta: { pagination: { current_page: 1, per_page: 6, total: 0, last_page: 1 } } })
+      );
+
+      await getResultsList({ userId: 42, search: "   ", domains: [] });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { status: "completed", page: 1, per_page: 6 } })
+      );
+    });
+
+    it("converte cada jornada em um resultado da tela", async () => {
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({
+          success: true,
+          data: [journey(10)],
+          meta: { pagination: { current_page: 1, per_page: 6, total: 1, last_page: 1 } },
+        })
+      );
+
+      const result = await getResultsList({ userId: 42 });
+
+      expect(result.items).toEqual([
+        {
+          id: "10",
+          title: "Encarregado pelo Tratamento de Dados Pessoais",
+          namePt: "Encarregado pelo Tratamento de Dados Pessoais",
+          score: 88,
+          completedAt: "2026-11-09T23:30:00Z",
+          domain: "privacy",
+          domainId: 1,
+          domainNamePt: "Privacidade",
+        },
+      ]);
+    });
+
+    it("trata a última página zerada como uma página só", async () => {
+      vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({ success: true, data: [], meta: { pagination: { current_page: 1, per_page: 6, total: 0, last_page: 0 } } })
+      );
+
+      const result = await getResultsList({ userId: 42 });
+
+      expect(result.totalPages).toBe(1);
+      expect(result.items).toEqual([]);
+    });
+
+    it("propaga o 403 sem permissão com a mensagem do backend", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        mockAxiosError(403, {
+          success: false,
+          code: "PERMISSION_DENIED",
+          message: "Voce nao possui permissao para visualizar as jornadas deste usuario.",
+        })
+      );
+
+      await expect(getResultsList({ userId: 42 })).rejects.toMatchObject({
+        status: 403,
+        code: "PERMISSION_DENIED",
+      });
+    });
+
+    it("não usa dados fictícios quando a rede falha", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(mockAxiosError(undefined));
+
+      await expect(getResultsList({ userId: 42 })).rejects.toThrow(
+        "Não foi possível carregar os resultados das jornadas."
+      );
+    });
   });
 });

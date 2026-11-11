@@ -287,6 +287,84 @@ describe("useResultsVM", () => {
     );
   });
 
+  it("deve enviar à API a busca, depois da pausa na digitação, e os domínios escolhidos", async () => {
+    vi.spyOn(resultsService, "getMetrics").mockResolvedValue(mockMetrics);
+    const listSpy = vi
+      .spyOn(resultsService, "getResultsList")
+      .mockResolvedValue(mockResultsList);
+
+    const { result } = renderHook(() => useResultsVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, per_page: 6, search: "", domains: [] })
+      );
+    });
+
+    act(() => {
+      result.current.handleSearchChange("Enc");
+      result.current.handleSearchChange("Encarregado");
+    });
+
+    // A busca só sai depois que a pessoa para de digitar, e só com o termo final
+    expect(listSpy).not.toHaveBeenCalledWith(expect.objectContaining({ search: "Enc" }));
+    await waitFor(
+      () => {
+        expect(listSpy).toHaveBeenCalledWith(
+          expect.objectContaining({ search: "Encarregado", domains: [] })
+        );
+      },
+      { timeout: 1000 }
+    );
+
+    act(() => {
+      result.current.handleToggleDomainFilter("security");
+    });
+
+    await waitFor(() => {
+      expect(listSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, search: "Encarregado", domains: ["security"] })
+      );
+    });
+  });
+
+  it("deve mostrar o erro e buscar de novo a lista e o resumo ao tentar novamente", async () => {
+    const metricsSpy = vi
+      .spyOn(resultsService, "getMetrics")
+      .mockRejectedValueOnce(new Error("Não foi possível carregar o resumo dos resultados."))
+      .mockResolvedValue(mockMetrics);
+    const listSpy = vi
+      .spyOn(resultsService, "getResultsList")
+      .mockRejectedValueOnce(new Error("Não foi possível carregar os resultados das jornadas."))
+      .mockResolvedValue(mockResultsList);
+
+    const { result } = renderHook(() => useResultsVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isMetricsError).toBe(true);
+      expect(result.current.isResultsError).toBe(true);
+    });
+    expect(result.current.resultsErrorMessage).toBe(
+      "Não foi possível carregar os resultados das jornadas."
+    );
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isMetricsError).toBe(false);
+      expect(result.current.isResultsError).toBe(false);
+      expect(result.current.results).toHaveLength(1);
+    });
+    expect(metricsSpy).toHaveBeenCalledTimes(2);
+    expect(listSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("deve sanitizar mensagem técnica crua do backend", async () => {
     vi.spyOn(resultsService, "getMetrics").mockRejectedValue(
       new Error("The route api/users/me/journeys could not be found.")
