@@ -1,6 +1,7 @@
 import { ApiRequestError, apiRequest } from "@services/httpClient";
 import type {
   CadastroFieldErrors,
+  CadastroFieldErrorsSplit,
   CadastroFormData,
   CadastroPayload,
   CadastroRequestErrorType,
@@ -39,6 +40,25 @@ export class CadastroRequestError extends Error {
   }
 }
 
+/**
+ * Separa as mensagens de um 422 entre os campos do formulário de cadastro (a
+ * primeira de cada um) e as dos campos da API que não existem nele. A ativação
+ * por convite usa os mesmos nomes de campo e reaproveita esta conversão.
+ */
+export function splitCadastroFieldErrors(errors: Record<string, string[]> | undefined): CadastroFieldErrorsSplit {
+  const fieldErrors: CadastroFieldErrors = {};
+  const otherErrors: string[] = [];
+  for (const [apiField, messages] of Object.entries(errors ?? {})) {
+    const formField = FORM_FIELD_BY_API_FIELD[apiField];
+    if (formField) {
+      fieldErrors[formField] = messages[0];
+    } else {
+      otherErrors.push(...messages);
+    }
+  }
+  return { fieldErrors, otherErrors };
+}
+
 export function toCadastroPayload(values: CadastroFormData): CadastroPayload {
   return {
     name: values.nomeCompleto,
@@ -63,16 +83,7 @@ function toCadastroRequestError(err: unknown): CadastroRequestError {
   }
 
   if (err.status === 422) {
-    const fieldErrors: CadastroFieldErrors = {};
-    const otherErrors: string[] = [];
-    for (const [apiField, messages] of Object.entries(err.errors ?? {})) {
-      const formField = FORM_FIELD_BY_API_FIELD[apiField];
-      if (formField) {
-        fieldErrors[formField] = messages[0];
-      } else {
-        otherErrors.push(...messages);
-      }
-    }
+    const { fieldErrors, otherErrors } = splitCadastroFieldErrors(err.errors);
     return new CadastroRequestError("validation", message, fieldErrors, otherErrors);
   }
 
