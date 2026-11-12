@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "@/shared/i18n/navigation";
 import {
   DEFAULT_AUTHENTICATED_PATH,
+  isAccountActivatedLogin,
   isSessionExpiredLogin,
   readLoginRedirectPath,
 } from "@/shared/utils/loginRedirect";
@@ -28,19 +29,13 @@ export function useAuthVM(): AuthViewModelReturn {
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const redirectPath = readLoginRedirectPath(search);
-  const [isSessionNoticeDismissed, setIsSessionNoticeDismissed] = useState(false);
+  const [isReasonNoticeDismissed, setIsReasonNoticeDismissed] = useState(false);
   const [requestMessage, setRequestMessage] =
     useState<AuthViewModelReturn["serverMessage"]>(null);
-  // Vindo da expiração da sessão, o login avisa até o usuário fechar ou tentar entrar
-  const sessionNotice: AuthViewModelReturn["serverMessage"] =
-    isSessionExpiredLogin(search) && !isSessionNoticeDismissed
-      ? {
-          title: tSessionExpired("title"),
-          description: tSessionExpired("description"),
-          variant: "warning",
-        }
-      : null;
-  const serverMessage = requestMessage ?? sessionNotice;
+  // Vindo da expiração da sessão ou da ativação da conta, o login avisa até o
+  // usuário fechar ou tentar entrar
+  const reasonNotice = getReasonNotice();
+  const serverMessage = requestMessage ?? (isReasonNoticeDismissed ? null : reasonNotice);
   const validationMessages = {
     emailRequired: t("validation.emailRequired"),
     emailInvalid: t("validation.emailInvalid"),
@@ -71,7 +66,7 @@ export function useAuthVM(): AuthViewModelReturn {
 
   const handleSubmit = form.handleSubmit(async (data) => {
     setRequestMessage(null);
-    setIsSessionNoticeDismissed(true);
+    setIsReasonNoticeDismissed(true);
     try {
       const user = await login(data);
       // Dados em cache podem ser de quem usava a aba antes (sessão expirada ou
@@ -90,9 +85,27 @@ export function useAuthVM(): AuthViewModelReturn {
     }
   });
 
+  function getReasonNotice(): AuthViewModelReturn["serverMessage"] {
+    if (isSessionExpiredLogin(search)) {
+      return {
+        title: tSessionExpired("title"),
+        description: tSessionExpired("description"),
+        variant: "warning",
+      };
+    }
+    if (isAccountActivatedLogin(search)) {
+      return {
+        title: t("accountActivated.title"),
+        description: t("accountActivated.description"),
+        variant: "success",
+      };
+    }
+    return null;
+  }
+
   const onCloseMsg = () => {
     setRequestMessage(null);
-    setIsSessionNoticeDismissed(true);
+    setIsReasonNoticeDismissed(true);
   };
 
   return {

@@ -2,11 +2,14 @@
 
 import { NoAuthHeader } from "@/components/layout/NoAuthHeader";
 import { useRequireGuest } from "@/hooks/useAuthGuard";
+import { GUEST_GUARD_EXEMPT_PATHS } from "@/shared/constants/publicRoutes";
+import { usePathname } from "@/shared/i18n/navigation";
 
 const NoAuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const { isLoading, isAuthenticated } = useRequireGuest();
+  const isGuestOnly = !GUEST_GUARD_EXEMPT_PATHS.includes(usePathname());
+  const { isLoading, isAuthenticated } = useRequireGuest({ enabled: isGuestOnly });
 
-  if (isLoading || isAuthenticated) {
+  if (isGuestOnly && (isLoading || isAuthenticated)) {
     return null;
   }
 
