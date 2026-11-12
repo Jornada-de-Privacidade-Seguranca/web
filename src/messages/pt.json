@@ -643,9 +643,13 @@
     }
   },
   "privacyPolicy": {
+    "brand": "Privacy Compass",
+    "title": "Privacy Compass",
+    "subtitle": "Avalie seu conhecimento em privacidade e segurança",
+    "cardTitle": "Termo de privacidade",
+    "notice": "Este termo de privacidade está em fase de elaboração e validação. O documento final estabelecerá as diretrizes de tratamento, retenção e segurança de dados pessoais em total conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018).",
+    "back": "Voltar",
     "eyebrow": "LGPD · Lei nº 13.709/2018",
-    "title": "Termo de Privacidade",
-    "subtitle": "Conheça como o Privacy Compass coleta, utiliza, protege e garante os seus direitos sobre os dados pessoais tratados na plataforma.",
     "lastUpdatedLabel": "Última atualização",
     "lastUpdatedDate": "Novembro de 2026",
     "tocTitle": "Índice de seções",

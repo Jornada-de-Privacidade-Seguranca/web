@@ -643,9 +643,13 @@
     }
   },
   "privacyPolicy": {
+    "brand": "Privacy Compass",
+    "title": "Privacy Compass",
+    "subtitle": "Assess your knowledge in privacy and security",
+    "cardTitle": "Privacy terms",
+    "notice": "This privacy policy is currently being drafted and validated. The final document will establish the guidelines for processing, retention, and security of personal data in full compliance with the General Data Protection Law (LGPD — Law No. 13,709/2018).",
+    "back": "Back",
     "eyebrow": "LGPD · Data Protection",
-    "title": "Privacy Policy",
-    "subtitle": "Learn how Privacy Compass collects, uses, safeguards, and upholds your rights regarding personal data processed on the platform.",
     "lastUpdatedLabel": "Last updated",
     "lastUpdatedDate": "November 2026",
     "tocTitle": "Table of contents",

@@ -1,18 +1,23 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import ptMessages from "@/messages/pt.json";
 import enMessages from "@/messages/en.json";
 import { usePrivacyPolicyVM } from "../privacyPolicy.viewmodel";
 
-let mockIsAuthenticated = false;
+const mockBack = vi.fn();
+const mockPush = vi.fn();
+let mockSearchParams = new URLSearchParams();
 
-vi.mock("@hooks/useAuth", () => ({
-  useAuth: () => ({
-    user: null,
-    isAuthenticated: mockIsAuthenticated,
-    isLoading: false,
+vi.mock("@shared/i18n/navigation", () => ({
+  useRouter: () => ({
+    back: mockBack,
+    push: mockPush,
   }),
+}));
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => mockSearchParams,
 }));
 
 vi.mock("next-intl", () => ({
@@ -22,45 +27,72 @@ vi.mock("next-intl", () => ({
 
 describe("usePrivacyPolicyVM", () => {
   beforeEach(() => {
-    mockIsAuthenticated = false;
+    vi.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
+    Object.defineProperty(document, "referrer", {
+      value: "",
+      configurable: true,
+      writable: true,
+    });
   });
 
-  it("deve estruturar todas as seções legais do termo de privacidade", () => {
+  it("deve carregar os rótulos do cartão central do termo de privacidade", () => {
     const { result } = renderHook(() => usePrivacyPolicyVM());
 
-    expect(result.current.sections).toHaveLength(7);
-    expect(result.current.sections.map((s) => s.number)).toEqual([
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-    ]);
-    expect(result.current.sections[1].bullets).toHaveLength(3);
-    expect(result.current.sections[2].bullets).toHaveLength(4);
-    expect(result.current.sections[4].bullets).toHaveLength(4);
-    expect(result.current.sections[5].bullets).toHaveLength(4);
+    expect(result.current.labels.title).toBe("privacyPolicy.title");
+    expect(result.current.labels.subtitle).toBe("privacyPolicy.subtitle");
+    expect(result.current.labels.cardTitle).toBe("privacyPolicy.cardTitle");
+    expect(result.current.labels.notice).toBe("privacyPolicy.notice");
+    expect(result.current.labels.backButton).toBe("privacyPolicy.back");
   });
 
-  it("deve apontar links de retorno e CTA para / e /login quando visitante", () => {
-    mockIsAuthenticated = false;
+  it("deve chamar router.back() quando houver página anterior da própria aplicação", () => {
+    Object.defineProperty(document, "referrer", {
+      value: "http://localhost:3000/cadastro",
+      configurable: true,
+      writable: true,
+    });
+
     const { result } = renderHook(() => usePrivacyPolicyVM());
 
-    expect(result.current.backHref).toBe("/");
-    expect(result.current.primaryCtaHref).toBe("/login");
-    expect(result.current.labels.backLinkLabel).toBe("privacyPolicy.backToHome");
+    act(() => {
+      result.current.handleBack();
+    });
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("deve apontar links de retorno e CTA para /painel quando autenticado", () => {
-    mockIsAuthenticated = true;
+  it("deve redirecionar para /login quando a página for aberta diretamente sem histórico anterior", () => {
+    Object.defineProperty(document, "referrer", {
+      value: "",
+      configurable: true,
+      writable: true,
+    });
+
     const { result } = renderHook(() => usePrivacyPolicyVM());
 
-    expect(result.current.backHref).toBe("/painel");
-    expect(result.current.primaryCtaHref).toBe("/painel");
-    expect(result.current.labels.backLinkLabel).toBe("privacyPolicy.backToDashboard");
-    expect(result.current.labels.primaryCtaLabel).toBe("privacyPolicy.goToDashboard");
+    act(() => {
+      result.current.handleBack();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/login");
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it("deve redirecionar para a rota indicada no parâmetro ?from= quando fornecido", () => {
+    mockSearchParams = new URLSearchParams("from=/cadastro");
+
+    const { result } = renderHook(() => usePrivacyPolicyVM());
+
+    expect(result.current.backHref).toBe("/cadastro");
+
+    act(() => {
+      result.current.handleBack();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/cadastro");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("deve possuir traduções completas e simétricas em PT e EN", () => {
@@ -86,4 +118,3 @@ describe("usePrivacyPolicyVM", () => {
     }
   });
 });
-

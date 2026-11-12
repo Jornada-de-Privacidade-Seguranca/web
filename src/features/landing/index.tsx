@@ -148,7 +148,7 @@ export function LandingView() {
           <span>{labels.footer.left}</span>
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              href="/privacidade"
+              href="/privacy-terms"
               className="font-medium text-foreground/80 underline-offset-4 transition-colors hover:text-foreground hover:underline"
             >
               {labels.footer.privacyLink}

@@ -1,32 +1,28 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, cleanup, within } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import React from "react";
 import { NextIntlClientProvider } from "next-intl";
 import ptMessages from "@/messages/pt.json";
 import enMessages from "@/messages/en.json";
 import { PrivacyPolicyView } from "../index";
 
-let mockIsAuthenticated = false;
+const mockBack = vi.fn();
+const mockPush = vi.fn();
 
-vi.mock("@hooks/useAuth", () => ({
-  useAuth: () => ({
-    user: null,
-    isAuthenticated: mockIsAuthenticated,
-    isLoading: false,
+vi.mock("@shared/i18n/navigation", () => ({
+  useRouter: () => ({
+    back: mockBack,
+    push: mockPush,
   }),
 }));
 
-vi.mock("@/shared/i18n/navigation", () => ({
-  Link: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
-    <a href={href} className={className}>
-      {children}
-    </a>
-  ),
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/components/layout/IdiomSwitch", () => ({
-  IdiomSwitch: () => <div data-testid="idiom-switch" />,
+  IdiomSwitch: () => <div data-testid="idiom-switch">PT | EN</div>,
 }));
 
 vi.mock("@/components/layout/SwitchThemeButton", () => ({
@@ -45,52 +41,58 @@ function renderWithLocale(locale: "pt" | "en") {
 describe("PrivacyPolicyView", () => {
   beforeEach(() => {
     cleanup();
-    mockIsAuthenticated = false;
+    vi.clearAllMocks();
   });
 
-  it("deve renderizar o termo de privacidade completo em português com índice e seções LGPD", () => {
+  it("deve renderizar a tela pública do termo em português no padrão visual do login/cadastro", () => {
     renderWithLocale("pt");
 
-    expect(screen.getByRole("heading", { level: 1, name: "Termo de Privacidade" })).toBeDefined();
-    expect(screen.getByText("LGPD · Lei nº 13.709/2018")).toBeDefined();
+    // Header com IdiomSwitch e SwitchThemeButton
+    expect(screen.getByTestId("idiom-switch")).toBeDefined();
+    expect(screen.getByLabelText("theme-switch")).toBeDefined();
 
-    const toc = screen.getByRole("navigation", { name: "Índice de seções" });
-    const tocLinks = within(toc).getAllByRole("link");
-    expect(tocLinks).toHaveLength(7);
-    expect(tocLinks[1].getAttribute("href")).toBe("#dados-coletados");
-
+    // Topo com nome e subtítulo da aplicação
+    expect(screen.getByRole("heading", { level: 1, name: "Privacy Compass" })).toBeDefined();
     expect(
-      screen.getByRole("heading", { level: 2, name: "Dados Pessoais Coletados" })
-    ).toBeDefined();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Segurança da Informação" })
-    ).toBeDefined();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Direitos do Titular (LGPD)" })
+      screen.getByText("Avalie seu conhecimento em privacidade e segurança")
     ).toBeDefined();
 
-    expect(screen.getByRole("link", { name: "Voltar ao início" }).getAttribute("href")).toBe("/");
-    expect(screen.getByRole("link", { name: "Entrar" }).getAttribute("href")).toBe("/login");
+    // Cartão central do termo
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Termo de privacidade" })
+    ).toBeDefined();
+
+    // Aviso do protótipo sobre LGPD
+    expect(
+      screen.getByText(/Este termo de privacidade está em fase de elaboração e validação/i)
+    ).toBeDefined();
+    expect(screen.getByText(/LGPD — Lei nº 13\.709\/2018/i)).toBeDefined();
+
+    // Botão Voltar
+    const backBtn = screen.getByRole("button", { name: "Voltar" });
+    expect(backBtn).toBeDefined();
+
+    fireEvent.click(backBtn);
+    expect(mockPush).toHaveBeenCalledWith("/login");
   });
 
-  it("deve renderizar corretamente em inglês e adaptar links quando autenticado", () => {
-    mockIsAuthenticated = true;
+  it("deve renderizar corretamente os textos em inglês após a troca de idioma", () => {
     renderWithLocale("en");
 
-    expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeDefined();
+    expect(screen.getByTestId("idiom-switch")).toBeDefined();
+    expect(screen.getByRole("heading", { level: 1, name: "Privacy Compass" })).toBeDefined();
     expect(
-      screen.getByRole("heading", { level: 2, name: "Personal Data Collected" })
-    ).toBeDefined();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Your Privacy Rights" })
+      screen.getByText("Assess your knowledge in privacy and security")
     ).toBeDefined();
 
     expect(
-      screen.getByRole("link", { name: "Back to dashboard" }).getAttribute("href")
-    ).toBe("/painel");
+      screen.getByRole("heading", { level: 2, name: "Privacy terms" })
+    ).toBeDefined();
     expect(
-      screen.getByRole("link", { name: "Go to dashboard" }).getAttribute("href")
-    ).toBe("/painel");
+      screen.getByText(/This privacy policy is currently being drafted and validated/i)
+    ).toBeDefined();
+
+    const backBtn = screen.getByRole("button", { name: "Back" });
+    expect(backBtn).toBeDefined();
   });
 });
-
