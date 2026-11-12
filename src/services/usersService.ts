@@ -1,4 +1,5 @@
 import { getInitials } from "@/shared/utils/initials";
+import { ApiRequestError } from "@services/httpClient";
 import type {
   AdminUserListItem,
   AccessProfile,
@@ -12,6 +13,10 @@ import type {
   AdminUserDetails,
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
+import type {
+  InviteUserPayload,
+  InviteUserResponse,
+} from "@features/admin-user-invite/adminUserInvite.types";
 
 export { getInitials };
 export type {
@@ -24,6 +29,14 @@ export type {
   UserCompletedJourney,
   AdminUserDetails,
   UpdateUserPayload,
+  InviteUserPayload,
+  InviteUserResponse,
+};
+
+const ROLE_LABEL_MAP: Record<UserRole, string> = {
+  admin: "Administrador",
+  manager: "Gestor",
+  user: "Usuário",
 };
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
@@ -345,23 +358,77 @@ export async function updateUser(
   id: string,
   payload: UpdateUserPayload
 ): Promise<AdminUserDetails> {
-  const roleLabelMap: Record<UserRole, string> = {
-    admin: "Administrador",
-    manager: "Gestor",
-    user: "Usuário",
-  };
-
   const index = mockUsersData.findIndex((u) => u.id === id);
   if (index !== -1) {
     mockUsersData[index] = {
       ...mockUsersData[index],
       ...payload,
       initials: getInitials(payload.name),
-      roleLabel: roleLabelMap[payload.role] || "Usuário",
+      roleLabel: ROLE_LABEL_MAP[payload.role] || "Usuário",
     };
     return mockUsersData[index];
   }
   throw new Error("Usuário não encontrado");
+}
+
+/**
+ * Simula `POST /admin/user-invitations` enquanto o endpoint do backend
+ * não é integrado neste ambiente. Retorna 409 (`ACCOUNT_ALREADY_EXISTS`)
+ * para e-mails já cadastrados e 201 com o registro pendente criado no mock.
+ */
+export async function inviteUser(
+  payload: InviteUserPayload
+): Promise<InviteUserResponse> {
+  const normalizedEmail = payload.email.trim().toLowerCase();
+  const alreadyExists = mockUsersData.some(
+    (u) => u.email.toLowerCase() === normalizedEmail
+  );
+
+  if (alreadyExists) {
+    throw new ApiRequestError(
+      "Já existe uma conta cadastrada com este e-mail.",
+      409,
+      "ACCOUNT_ALREADY_EXISTS"
+    );
+  }
+
+  const nextNumericId =
+    mockUsersData.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0) + 1;
+  const nextId = String(nextNumericId);
+  const localPart = normalizedEmail.split("@")[0] || "Novo Usuario";
+  const displayName = localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+  const roleLabel = ROLE_LABEL_MAP[payload.role] || "Usuário";
+
+  const createdUser: AdminUserDetails = {
+    id: nextId,
+    name: displayName || normalizedEmail,
+    email: normalizedEmail,
+    initials: getInitials(displayName || normalizedEmail),
+    employeeCode: `EMP-${1000 + mockUsersData.length + 1}`,
+    department: "Tecnologia da Informação",
+    organization: "Secretaria de Governo Digital",
+    role: payload.role,
+    roleLabel,
+    status: "pending",
+    journeysCount: 0,
+    createdAt: new Date().toISOString(),
+    journeys: [],
+  };
+
+  mockUsersData = [createdUser, ...mockUsersData];
+
+  return {
+    id: createdUser.id,
+    email: createdUser.email,
+    role: createdUser.role,
+    roleLabel: createdUser.roleLabel,
+    status: createdUser.status,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  };
 }
 
 export async function toggleUserStatus(

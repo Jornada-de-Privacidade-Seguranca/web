@@ -608,7 +608,10 @@
       "title": "Erro ao carregar usuários",
       "message": "Não foi possível carregar a listagem de usuários do sistema.",
       "retry": "Tentar novamente"
-    }
+    },
+    "inviteButton": "Convidar usuário",
+    "inviteSuccess": "Convite enviado para {email}",
+    "closeMessage": "Fechar aviso"
   },
   "adminUserDetail": {
     "backToList": "Voltar para usuários",
@@ -737,6 +740,38 @@
         "p1": "Este Termo de Privacidade poderá ser atualizado periodicamente para refletir melhorias na plataforma ou adequações normativas, sempre indicando a data da revisão mais recente no topo da página.",
         "p2": "Em caso de dúvidas, solicitações ou exercício de direitos previstos na LGPD, entre em contato com o Encarregado pelo Tratamento de Dados Pessoais (DPO) ou com a equipe responsável pela administração da plataforma em sua instituição."
       }
+    }
+  },
+  "adminUserInvite": {
+    "pageTitle": "Convidar usuário",
+    "pageSubtitle": "Envie um convite por e-mail para cadastrar um novo colaborador.",
+    "backToList": "Voltar para usuários",
+    "summary": {
+      "emptyTitle": "Novo convite",
+      "badge": "Convite"
+    },
+    "form": {
+      "title": "Dados do convite",
+      "subtitle": "Informe o e-mail institucional e o perfil de acesso inicial.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "colaborador@empresa.com",
+      "roleLabel": "Perfil de acesso",
+      "roleLockedHint": "Você não possui permissão para atribuir outro perfil além de Usuário.",
+      "infoNotice": "A pessoa receberá um e-mail com um link para definir a senha e completar os próprios dados. O link vale por 60 minutos e pode ser usado uma vez.",
+      "cancel": "Cancelar",
+      "submit": "Enviar convite",
+      "submitting": "Enviando convite..."
+    },
+    "roles": {
+      "admin": "Administrador",
+      "manager": "Gestor",
+      "user": "Usuário"
+    },
+    "errors": {
+      "emailRequired": "O e-mail é obrigatório.",
+      "emailInvalid": "Insira um endereço de e-mail válido.",
+      "accountAlreadyExists": "Já existe uma conta cadastrada com este e-mail.",
+      "genericSubmit": "Não foi possível enviar o convite. Tente novamente."
     }
   }
 }

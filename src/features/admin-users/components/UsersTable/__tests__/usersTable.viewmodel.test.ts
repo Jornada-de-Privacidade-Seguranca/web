@@ -43,6 +43,8 @@ describe("useUsersTableVM", () => {
     errorTitle: "Erro",
     errorMessage: "Erro",
     retryButton: "Tentar",
+    inviteButton: "Convidar usuário",
+    closeMessage: "Fechar aviso",
   };
 
   it("deve mapear linhas de usuário com classes de cor por situação e rota de gerenciamento", () => {

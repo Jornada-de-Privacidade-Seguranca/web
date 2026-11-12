@@ -608,7 +608,10 @@
       "title": "Error loading users",
       "message": "Unable to load system users list.",
       "retry": "Try again"
-    }
+    },
+    "inviteButton": "Invite user",
+    "inviteSuccess": "Invitation sent to {email}",
+    "closeMessage": "Close notice"
   },
   "adminUserDetail": {
     "backToList": "Back to users",
@@ -737,6 +740,38 @@
         "p1": "This Privacy Policy may be updated periodically to reflect platform improvements or regulatory updates, with the latest revision date displayed at the top of this page.",
         "p2": "For questions, requests, or to exercise your data subject rights, please contact your organization's Data Protection Officer (DPO) or the designated platform administration team."
       }
+    }
+  },
+  "adminUserInvite": {
+    "pageTitle": "Invite user",
+    "pageSubtitle": "Send an email invitation to register a new employee.",
+    "backToList": "Back to users",
+    "summary": {
+      "emptyTitle": "New invitation",
+      "badge": "Invitation"
+    },
+    "form": {
+      "title": "Invitation details",
+      "subtitle": "Enter the institutional email address and initial access profile.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "employee@company.com",
+      "roleLabel": "Access profile",
+      "roleLockedHint": "You do not have permission to assign a profile other than User.",
+      "infoNotice": "The person will receive an email with a link to set their password and complete their own profile details. The link is valid for 60 minutes and can be used once.",
+      "cancel": "Cancel",
+      "submit": "Send invitation",
+      "submitting": "Sending invitation..."
+    },
+    "roles": {
+      "admin": "Administrator",
+      "manager": "Manager",
+      "user": "User"
+    },
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Please enter a valid email address.",
+      "accountAlreadyExists": "An account with this email already exists.",
+      "genericSubmit": "Unable to send the invitation. Please try again."
     }
   }
 }

@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import AdminUsersView from "@/features/admin-users";
 
 export default function AdminUsuariosPage() {
-  return <AdminUsersView />;
+  return (
+    <Suspense>
+      <AdminUsersView />
+    </Suspense>
+  );
 }

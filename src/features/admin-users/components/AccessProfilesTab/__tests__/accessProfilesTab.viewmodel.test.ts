@@ -43,6 +43,8 @@ describe("useAccessProfilesTabVM", () => {
     errorTitle: "Erro",
     errorMessage: "Erro",
     retryButton: "Tentar",
+    inviteButton: "Convidar usuário",
+    closeMessage: "Fechar aviso",
   };
 
   it("deve repassar os perfis de acesso e labels", () => {

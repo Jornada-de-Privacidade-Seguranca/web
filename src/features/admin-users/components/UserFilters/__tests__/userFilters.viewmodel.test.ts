@@ -43,6 +43,8 @@ describe("useUserFiltersVM", () => {
     errorTitle: "Erro",
     errorMessage: "Erro desc",
     retryButton: "Tentar",
+    inviteButton: "Convidar usuário",
+    closeMessage: "Fechar aviso",
   };
 
   it("deve montar o retorno do hook com os valores e contadores corretos", () => {
