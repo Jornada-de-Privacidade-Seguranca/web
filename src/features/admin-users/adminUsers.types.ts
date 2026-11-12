@@ -109,6 +109,12 @@ export interface SelectOption {
   label: string;
 }
 
+export interface AdminUsersStore {
+  invitedEmail: string | null;
+  setInvitedEmail: (email: string | null) => void;
+  clearInvitedEmail: () => void;
+}
+
 export interface AdminUsersViewModelReturn {
   currentTab: AdminUsersTab;
   handleTabChange: (tab: AdminUsersTab) => void;

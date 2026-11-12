@@ -120,4 +120,33 @@ describe("useUserHeaderVM", () => {
     expect(vm.statusLabel).toBe("Conta inativa");
     expect(vm.statusToggleText).toBe("Ativar conta");
   });
+
+  it("deve usar email como fallback de nome e traço para setor quando em branco", () => {
+    const props: UserHeaderProps = {
+      user: {
+        id: "3",
+        name: "",
+        email: "convidado@empresa.com",
+        initials: "",
+        employeeCode: "",
+        department: "",
+        organization: "",
+        role: "user",
+        roleLabel: "Usuário",
+        status: "pending",
+        journeysCount: 0,
+        createdAt: "2026-01-01",
+        journeys: [],
+      },
+      labels: mockLabels,
+      isTogglingStatus: false,
+      onToggleStatus: vi.fn(),
+    };
+
+    const vm = useUserHeaderVM(props);
+    expect(vm.name).toBe("convidado@empresa.com");
+    expect(vm.initials).toBe("CO");
+    expect(vm.department).toBe("—");
+    expect(vm.statusLabel).toBe("Conta pendente");
+  });
 });

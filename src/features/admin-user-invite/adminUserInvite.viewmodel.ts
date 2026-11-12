@@ -8,6 +8,7 @@ import { useRouter } from "@/shared/i18n/navigation";
 import { usePermission } from "@/hooks/usePermission";
 import { ApiRequestError } from "@services/httpClient";
 import { inviteUser } from "@services/usersService";
+import { useAdminUsersStore } from "@features/admin-users/adminUsers.store";
 import type { UserRole } from "@features/admin-users/adminUsers.types";
 import type {
   AdminUserInviteLabels,
@@ -131,10 +132,9 @@ export function useAdminUserInviteVM(): AdminUserInviteViewModelReturn {
         role,
       });
 
+      useAdminUsersStore.getState().setInvitedEmail(response.email);
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      router.push(
-        `/admin/usuarios?invited=${encodeURIComponent(response.email)}`,
-      );
+      router.push("/admin/usuarios");
     } catch (error: unknown) {
       const isAlreadyExistsError =
         error instanceof ApiRequestError &&

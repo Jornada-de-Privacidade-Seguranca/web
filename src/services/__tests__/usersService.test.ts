@@ -93,6 +93,12 @@ describe("usersService", () => {
     expect(invited.status).toBe("pending");
     expect(new Date(invited.expiresAt).getTime()).toBeGreaterThan(Date.now());
 
+    // Usuário convidado possui dados pessoais em branco no mock
+    const createdInList = await getUsersList({ search: "novo.convidado@empresa.com" });
+    expect(createdInList.items[0].name).toBe("");
+    expect(createdInList.items[0].department).toBe("");
+    expect(createdInList.items[0].employeeCode).toBe("");
+
     await expect(
       inviteUser({ email: "FERNANDA.COSTA@empresa.com", role: "user" })
     ).rejects.toMatchObject({

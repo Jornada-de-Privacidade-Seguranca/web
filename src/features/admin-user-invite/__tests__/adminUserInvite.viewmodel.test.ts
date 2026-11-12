@@ -5,6 +5,7 @@ import { createElement, type PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRequestError } from "@services/httpClient";
 import * as usersService from "@services/usersService";
+import { useAdminUsersStore } from "@features/admin-users/adminUsers.store";
 import { useAdminUserInviteVM } from "../adminUserInvite.viewmodel";
 
 const { pushMock, canMock } = vi.hoisted(() => ({
@@ -52,6 +53,7 @@ describe("useAdminUserInviteVM", () => {
     pushMock.mockClear();
     canMock.mockReset();
     canMock.mockReturnValue(true);
+    useAdminUsersStore.getState().clearInvitedEmail();
   });
 
   it("inicia com perfil padrão Usuário e valida formato e obrigatoriedade do e-mail", async () => {
@@ -154,9 +156,8 @@ describe("useAdminUserInviteVM", () => {
       role: "manager",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["admin", "users"] });
-    expect(pushMock).toHaveBeenCalledWith(
-      "/admin/usuarios?invited=maria%40empresa.com"
-    );
+    expect(pushMock).toHaveBeenCalledWith("/admin/usuarios");
+    expect(useAdminUsersStore.getState().invitedEmail).toBe("maria@empresa.com");
   });
 
   it("associa erro 409 / ACCOUNT_ALREADY_EXISTS diretamente ao campo de e-mail", async () => {

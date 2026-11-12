@@ -93,4 +93,34 @@ describe("useUsersTableVM", () => {
     expect(vm.rows[1].statusColorClasses).toContain("muted");
     expect(vm.rows[1].manageHref).toBe("/admin/usuarios/u2");
   });
+
+  it("deve usar fallbacks elegantes (e-mail, traço) quando o usuário é convidado e não tem nome/matrícula/setor", () => {
+    const props: UsersTableProps = {
+      users: [
+        {
+          id: "u3",
+          name: "",
+          email: "convidado@empresa.com",
+          initials: "",
+          employeeCode: "",
+          department: "",
+          role: "user",
+          roleLabel: "Usuário",
+          status: "pending",
+          journeysCount: 0,
+          organization: "",
+          createdAt: "2026-01-01",
+        },
+      ],
+      labels: mockLabels,
+    };
+
+    const vm = useUsersTableVM(props);
+
+    expect(vm.rows[0].name).toBe("convidado@empresa.com");
+    expect(vm.rows[0].initials).toBe("CO");
+    expect(vm.rows[0].employeeCode).toBe("—");
+    expect(vm.rows[0].department).toBe("—");
+    expect(vm.rows[0].statusLabel).toBe("Pendente");
+  });
 });

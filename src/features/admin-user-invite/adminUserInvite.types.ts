@@ -1,18 +1,10 @@
-import type { UserRole, UserStatus } from "@features/admin-users/adminUsers.types";
+import type { UserRole } from "@features/admin-users/adminUsers.types";
+import type {
+  InviteUserPayload,
+  InviteUserResponse,
+} from "@services/usersService";
 
-export interface InviteUserPayload {
-  email: string;
-  role: UserRole;
-}
-
-export interface InviteUserResponse {
-  id: string;
-  email: string;
-  role: UserRole;
-  roleLabel: string;
-  status: UserStatus;
-  expiresAt: string;
-}
+export type { InviteUserPayload, InviteUserResponse };
 
 export interface InviteRoleOption {
   value: UserRole;

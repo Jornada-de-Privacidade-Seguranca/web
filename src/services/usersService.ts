@@ -13,10 +13,34 @@ import type {
   AdminUserDetails,
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
-import type {
-  InviteUserPayload,
-  InviteUserResponse,
-} from "@features/admin-user-invite/adminUserInvite.types";
+
+export interface UserInvitationApiData {
+  id: number;
+  email: string;
+  user_type_id: number;
+  profile_type_id: number;
+  active_status: number;
+  account_status: "pending_initial_password";
+}
+
+export interface UserInvitationApiResponse {
+  message: string;
+  data: UserInvitationApiData;
+}
+
+export interface InviteUserPayload {
+  email: string;
+  role: UserRole;
+}
+
+export interface InviteUserResponse {
+  id: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  status: UserStatus;
+  expiresAt: string;
+}
 
 export { getInitials };
 export type {
@@ -29,8 +53,6 @@ export type {
   UserCompletedJourney,
   AdminUserDetails,
   UpdateUserPayload,
-  InviteUserPayload,
-  InviteUserResponse,
 };
 
 const ROLE_LABEL_MAP: Record<UserRole, string> = {
@@ -371,10 +393,16 @@ export async function updateUser(
   throw new Error("Usuário não encontrado");
 }
 
+const ROLE_TO_PROFILE_ID: Record<UserRole, number> = {
+  admin: 1,
+  manager: 2,
+  user: 3,
+};
+
 /**
- * Simula `POST /admin/user-invitations` enquanto o endpoint do backend
- * não é integrado neste ambiente. Retorna 409 (`ACCOUNT_ALREADY_EXISTS`)
- * para e-mails já cadastrados e 201 com o registro pendente criado no mock.
+ * Simula `POST /admin/user-invitations` seguindo a especificação do PR 78 (#122).
+ * Retorna 409 (`ACCOUNT_ALREADY_EXISTS`) para e-mails já cadastrados
+ * e 201 com os dados do convite gerado e usuário com status pendente.
  */
 export async function inviteUser(
   payload: InviteUserPayload
@@ -395,22 +423,31 @@ export async function inviteUser(
   const nextNumericId =
     mockUsersData.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0) + 1;
   const nextId = String(nextNumericId);
-  const localPart = normalizedEmail.split("@")[0] || "Novo Usuario";
-  const displayName = localPart
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
   const roleLabel = ROLE_LABEL_MAP[payload.role] || "Usuário";
+  const profileTypeId = ROLE_TO_PROFILE_ID[payload.role] ?? 3;
 
+  // Mock seguindo contrato do PR 78 do backend
+  const apiMockResponse: UserInvitationApiResponse = {
+    message: "Convite enviado com sucesso",
+    data: {
+      id: nextNumericId,
+      email: normalizedEmail,
+      user_type_id: 2,
+      profile_type_id: profileTypeId,
+      active_status: 2,
+      account_status: "pending_initial_password",
+    },
+  };
+
+  // Usuário convidado não possui dados cadastrais (nome, matrícula, setor) até aceitar o convite
   const createdUser: AdminUserDetails = {
     id: nextId,
-    name: displayName || normalizedEmail,
+    name: "",
     email: normalizedEmail,
-    initials: getInitials(displayName || normalizedEmail),
-    employeeCode: `EMP-${1000 + mockUsersData.length + 1}`,
-    department: "Tecnologia da Informação",
-    organization: "Secretaria de Governo Digital",
+    initials: "",
+    employeeCode: "",
+    department: "",
+    organization: "",
     role: payload.role,
     roleLabel,
     status: "pending",
@@ -422,11 +459,11 @@ export async function inviteUser(
   mockUsersData = [createdUser, ...mockUsersData];
 
   return {
-    id: createdUser.id,
-    email: createdUser.email,
-    role: createdUser.role,
-    roleLabel: createdUser.roleLabel,
-    status: createdUser.status,
+    id: String(apiMockResponse.data.id),
+    email: apiMockResponse.data.email,
+    role: payload.role,
+    roleLabel,
+    status: "pending",
     expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
 }

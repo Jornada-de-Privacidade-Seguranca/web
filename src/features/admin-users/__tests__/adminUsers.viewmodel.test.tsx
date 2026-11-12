@@ -4,16 +4,9 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import * as usersService from "@services/usersService";
 import { useAuthStore } from "@features/auth/auth.store";
+import { useAdminUsersStore } from "../adminUsers.store";
 import { useAdminUsersVM } from "../adminUsers.viewmodel";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const { mockSearchParams } = vi.hoisted(() => ({
-  mockSearchParams: { value: "" },
-}));
-
-vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(mockSearchParams.value),
-}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
@@ -75,7 +68,7 @@ describe("useAdminUsersVM", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockSearchParams.value = "";
+    useAdminUsersStore.getState().clearInvitedEmail();
     useAuthStore.getState().clearAuth();
   });
 
@@ -148,8 +141,8 @@ describe("useAdminUsersVM", () => {
     expect(result.current.hasActiveFilters).toBe(false);
   });
 
-  it("controla canInviteUsers pela permissão users.register e exibe alerta de convite via query string", () => {
-    mockSearchParams.value = "invited=novo@empresa.com";
+  it("controla canInviteUsers pela permissão users.register e exibe alerta de convite via store em memória", () => {
+    useAdminUsersStore.getState().setInvitedEmail("novo@empresa.com");
     useAuthStore.getState().setAuth({
       id: 1,
       name: "Admin",

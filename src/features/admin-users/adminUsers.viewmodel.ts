@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { usePermission } from "@hooks/usePermission";
 import { getUsersList, getAccessProfiles } from "@services/usersService";
+import { useAdminUsersStore } from "./adminUsers.store";
 import type {
   AdminUsersViewModelReturn,
   AdminUsersTab,
@@ -26,19 +26,24 @@ const DEPARTMENTS_LIST = [
 export function useAdminUsersVM(): AdminUsersViewModelReturn {
   const t = useTranslations("adminUsers");
   const { can } = usePermission();
-  const searchParams = useSearchParams();
 
   const canInviteUsers = can("users.register");
-  const [dismissedInviteNotice, setDismissedInviteNotice] = useState(false);
-  const invitedEmail = searchParams?.get("invited")?.trim() ?? "";
-  const inviteSuccessMessage =
-    invitedEmail && !dismissedInviteNotice
-      ? t("inviteSuccess", { email: invitedEmail })
-      : null;
+  const invitedEmail = useAdminUsersStore((s) => s.invitedEmail);
+  const clearInvitedEmail = useAdminUsersStore((s) => s.clearInvitedEmail);
+
+  const inviteSuccessMessage = invitedEmail
+    ? t("inviteSuccess", { email: invitedEmail })
+    : null;
 
   const handleDismissInviteMessage = useCallback(() => {
-    setDismissedInviteNotice(true);
-  }, []);
+    clearInvitedEmail();
+  }, [clearInvitedEmail]);
+
+  useEffect(() => {
+    return () => {
+      clearInvitedEmail();
+    };
+  }, [clearInvitedEmail]);
 
   const [currentTab, setCurrentTab] = useState<AdminUsersTab>("users");
   const [page, setPage] = useState<number>(1);

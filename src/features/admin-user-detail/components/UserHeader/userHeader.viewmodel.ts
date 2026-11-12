@@ -1,3 +1,4 @@
+import { getInitials } from "@/shared/utils/initials";
 import type {
   UserHeaderProps,
   UserHeaderViewModelReturn,
@@ -9,6 +10,9 @@ export function useUserHeaderVM(
   const { user, labels, isTogglingStatus, onToggleStatus } = props;
 
   const isActive = user.status === "active";
+  const displayName = user.name?.trim() || user.email;
+  const initials = user.initials?.trim() || getInitials(displayName);
+  const department = user.department?.trim() || "—";
 
   const getStatusMeta = () => {
     switch (user.status) {
@@ -37,9 +41,9 @@ export function useUserHeaderVM(
   const statusMeta = getStatusMeta();
 
   return {
-    name: user.name,
-    initials: user.initials,
-    department: user.department,
+    name: displayName,
+    initials,
+    department,
     roleLabel: user.roleLabel,
     statusLabel: statusMeta.label,
     statusColorClasses: statusMeta.classes,
