@@ -92,13 +92,16 @@ export interface GetAdminResultsParams {
   perPage?: number;
 }
 
-export interface AdminResultsResponse {
+export interface AdminResultsPage {
   items: AdminResultItem[];
   total: number;
   filteredTotal: number;
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface AdminResultsResponse extends AdminResultsPage {
   summary: AdminResultsSummary;
   filterOptions: AdminResultsFilterOptions;
 }

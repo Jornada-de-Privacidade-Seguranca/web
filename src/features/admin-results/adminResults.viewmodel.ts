@@ -3,9 +3,13 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "@shared/i18n/navigation";
-import { getAdminResults } from "@services/adminResultsService";
+import {
+  getAdminResults,
+  getAdminResultsFilterOptions,
+  getAdminResultsMetrics,
+} from "@services/adminResultsService";
 import {
   EMPTY_ADMIN_RESULTS_FILTERS,
   formatAdminResultDate,
@@ -206,7 +210,8 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     [debouncedSearch, syncUrl]
   );
 
-  const query = useQuery({
+  // 1. Consulta dos resultados paginados (GET /admin/results)
+  const resultsQuery = useQuery({
     queryKey: [
       "admin",
       "results",
@@ -231,11 +236,47 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
         dateFrom: filters.dateFrom,
         dateTo: filters.dateTo,
       }),
+    placeholderData: keepPreviousData,
+    retry: false,
+  });
+
+  // 2. Consulta das métricas agregadas por domínio (GET /admin/results/metrics)
+  const metricsQuery = useQuery({
+    queryKey: [
+      "admin",
+      "results-metrics",
+      debouncedSearch,
+      filters.userId,
+      filters.department,
+      filters.domains.join(","),
+      filters.journeyProfileId,
+      filters.dateFrom,
+      filters.dateTo,
+    ],
+    queryFn: () =>
+      getAdminResultsMetrics({
+        search: debouncedSearch,
+        userId: filters.userId,
+        department: filters.department,
+        domains: filters.domains,
+        journeyProfileId: filters.journeyProfileId,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+      }),
+    placeholderData: keepPreviousData,
+    retry: false,
+  });
+
+  // 3. Consulta das opções dos filtros (GET /users/with-results, GET /users/departments, GET /journey-profiles)
+  const filterOptionsQuery = useQuery({
+    queryKey: ["admin", "results-filter-options"],
+    queryFn: getAdminResultsFilterOptions,
+    staleTime: Infinity,
     retry: false,
   });
 
   const summary: AdminResultsSummary = useMemo(() => {
-    const raw = query.data?.summary ?? EMPTY_SUMMARY;
+    const raw = metricsQuery.data ?? EMPTY_SUMMARY;
     return {
       totalCompletedJourneys: raw.totalCompletedJourneys,
       totalEvaluatedUsers: raw.totalEvaluatedUsers,
@@ -244,10 +285,10 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
         label: isEnglish ? dm.nameEn || dm.label : dm.namePt || dm.label,
       })),
     };
-  }, [isEnglish, query.data?.summary]);
+  }, [isEnglish, metricsQuery.data]);
 
   const filterOptions: AdminResultsFilterOptions = useMemo(() => {
-    const raw = query.data?.filterOptions ?? EMPTY_FILTER_OPTIONS;
+    const raw = filterOptionsQuery.data ?? EMPTY_FILTER_OPTIONS;
     return {
       users: raw.users,
       departments: raw.departments,
@@ -260,10 +301,10 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
         label: isEnglish ? profile.nameEn || profile.label : profile.namePt || profile.label,
       })),
     };
-  }, [isEnglish, query.data?.filterOptions]);
+  }, [filterOptionsQuery.data, isEnglish]);
 
   const results = useMemo(() => {
-    const items = query.data?.items ?? [];
+    const items = resultsQuery.data?.items ?? [];
     return items.map((item) => ({
       ...item,
       profileTitle: isEnglish
@@ -273,13 +314,19 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
         ? item.domainNameEn || item.domainLabel
         : item.domainNamePt || item.domainLabel,
     }));
-  }, [isEnglish, query.data?.items]);
+  }, [isEnglish, resultsQuery.data?.items]);
 
   const handleRetry = useCallback(() => {
-    void query.refetch();
-  }, [query]);
+    void resultsQuery.refetch();
+    void metricsQuery.refetch();
+    void filterOptionsQuery.refetch();
+  }, [resultsQuery, metricsQuery, filterOptionsQuery]);
 
   const hasActiveFilters = hasActiveAdminResultsFilters(filters);
+  const isLoading =
+    resultsQuery.isLoading || metricsQuery.isLoading || filterOptionsQuery.isLoading;
+  const isError =
+    resultsQuery.isError || metricsQuery.isError || filterOptionsQuery.isError;
 
   const labels: AdminResultsLabels = {
     title: t("title"),
@@ -335,13 +382,13 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
   return {
     summary,
     results,
-    totalResults: query.data?.total ?? 0,
-    filteredTotal: query.data?.filteredTotal ?? 0,
-    page: query.data?.page ?? page,
-    totalPages: query.data?.totalPages ?? 1,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    errorMessage: query.isError ? t("error.message") : null,
+    totalResults: resultsQuery.data?.total ?? 0,
+    filteredTotal: resultsQuery.data?.filteredTotal ?? 0,
+    page: resultsQuery.data?.page ?? page,
+    totalPages: resultsQuery.data?.totalPages ?? 1,
+    isLoading,
+    isError,
+    errorMessage: isError ? t("error.message") : null,
     hasActiveFilters,
     filters,
     filterOptions,
@@ -358,4 +405,3 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     labels,
   };
 }
-
