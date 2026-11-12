@@ -23,7 +23,7 @@ vi.mock("@/shared/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
-  usePathname: () => "/results",
+  usePathname: () => "/resultados",
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
