@@ -592,7 +592,10 @@
       "subtitle": "View system pre-configured permission levels.",
       "defaultBadge": "Default",
       "permissionsTitle": "Read-only permissions:",
-      "historyNotice": "Profile changes and registration updates are permanently recorded in the audit history."
+      "historyNotice": "Profile changes and registration updates are permanently recorded in the audit history.",
+      "descriptions": {
+        "manager": "Sees everything the administrator sees and can assign journeys, but cannot change users or profiles."
+      }
     },
     "empty": {
       "title": "No users found",
@@ -677,6 +680,39 @@
       "modalCancel": "Cancel",
       "modalConfirm": "Yes, delete user",
       "deleteSuccess": "User deleted successfully."
+    },
+    "activeJourney": {
+      "title": "Journey in progress",
+      "subtitle": "Track this employee's currently active track.",
+      "emptyTitle": "No journey in progress",
+      "emptyDescription": "This user does not have an active journey at the moment.",
+      "startedAt": "Started on {date}",
+      "originSelf": "Started by the user",
+      "originAssigned": "Assigned by {name}",
+      "assignButton": "Assign journey",
+      "alreadyActiveHint": "This user already has a journey in progress",
+      "cancelButton": "Cancel assignment",
+      "cancelSuccess": "Journey assignment cancelled successfully.",
+      "cancelModalTitle": "Cancel journey assignment?",
+      "cancelModalDescription": "Are you sure you want to cancel the assignment of \"{title}\"?",
+      "cancelModalKeep": "Keep journey",
+      "cancelModalConfirm": "Cancel assignment",
+      "cancellingButton": "Cancelling...",
+      "closeMessage": "Close notice"
+    },
+    "assignJourney": {
+      "modalTitle": "Assign journey",
+      "modalDescription": "Select a journey profile to assign to this user.",
+      "firstJourneyNotice": "The first journey must be from the profile chosen by the user",
+      "cancel": "Cancel",
+      "confirm": "Assign",
+      "submitting": "Assigning...",
+      "success": "Journey assigned successfully.",
+      "domains": {
+        "privacy": "Privacy",
+        "security": "Information Security",
+        "joint": "Joint"
+      }
     }
   },
   "privacyPolicy": {

@@ -1,19 +1,29 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/shared/i18n/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
 import {
   getUserById,
   updateUser,
   toggleUserStatus,
   deleteUser,
+  getAssignableJourneyProfiles,
+  assignJourneyToUser,
+  cancelAssignedJourney,
 } from "@services/usersService";
 import type {
+  ActiveJourneySectionLabels,
   AdminUserDetailViewModelReturn,
   AdminUserDetailLabels,
+  AssignableJourneyOption,
+  AssignJourneyModalLabels,
+  CancelAssignmentModalLabels,
+  JourneyDomain,
   UserFormValues,
   UserFormErrors,
 } from "./adminUserDetail.types";
@@ -35,12 +45,21 @@ export function useAdminUserDetailVM({
   userId,
 }: UseAdminUserDetailVMProps): AdminUserDetailViewModelReturn {
   const t = useTranslations("adminUserDetail");
+  const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
+  const { can } = usePermission();
 
   const userQuery = useQuery({
     queryKey: ["admin", "user", userId],
     queryFn: () => getUserById(userId),
+    retry: false,
+  });
+
+  const assignableProfilesQuery = useQuery({
+    queryKey: ["admin", "assignable-journey-profiles"],
+    queryFn: getAssignableJourneyProfiles,
     retry: false,
   });
 
@@ -66,6 +85,20 @@ export function useAdminUserDetailVM({
   // Delete Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // Journey Assignment Modals & Feedback
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(
+    null
+  );
+  const [isAssigningJourney, setIsAssigningJourney] = useState<boolean>(false);
+  const [isCancelAssignModalOpen, setIsCancelAssignModalOpen] =
+    useState<boolean>(false);
+  const [isCancellingAssignment, setIsCancellingAssignment] =
+    useState<boolean>(false);
+  const [journeySuccessMessage, setJourneySuccessMessage] = useState<
+    string | null
+  >(null);
 
   // Synchronize form when user data loads
   useEffect(() => {
@@ -230,6 +263,108 @@ export function useAdminUserDetailVM({
     void userQuery.refetch();
   }, [userQuery]);
 
+  const activeJourney = user?.activeJourney ?? null;
+  const isFirstJourney = (user?.journeys.length ?? 0) === 0;
+  const isEnglish = params?.locale === "en";
+
+  const domainLabels: Record<JourneyDomain, string> = useMemo(
+    () => ({
+      privacy: t("assignJourney.domains.privacy"),
+      security: t("assignJourney.domains.security"),
+      joint: t("assignJourney.domains.joint"),
+    }),
+    [t]
+  );
+
+  const assignableOptions: AssignableJourneyOption[] = useMemo(() => {
+    const mapped: AssignableJourneyOption[] = (
+      assignableProfilesQuery.data ?? []
+    ).map((profile) => ({
+      id: profile.id,
+      name: isEnglish ? profile.nameEn : profile.namePt,
+      domain: profile.domain,
+      domainLabel: domainLabels[profile.domain],
+    }));
+
+    if (!isFirstJourney || mapped.length === 0) {
+      return mapped;
+    }
+
+    const chosenId = user?.initialJourneyProfileId ?? mapped[0].id;
+    const chosenOption = mapped.find((opt) => opt.id === chosenId) ?? mapped[0];
+    return [chosenOption];
+  }, [
+    assignableProfilesQuery.data,
+    domainLabels,
+    isEnglish,
+    isFirstJourney,
+    user?.initialJourneyProfileId,
+  ]);
+
+  const handleOpenAssignModal = useCallback(() => {
+    if (activeJourney) return;
+    setJourneySuccessMessage(null);
+    setSelectedProfileId(assignableOptions[0]?.id ?? null);
+    setIsAssignModalOpen(true);
+  }, [activeJourney, assignableOptions]);
+
+  const handleCloseAssignModal = useCallback(() => {
+    if (!isAssigningJourney) {
+      setIsAssignModalOpen(false);
+    }
+  }, [isAssigningJourney]);
+
+  const handleSelectProfile = useCallback((profileId: number) => {
+    setSelectedProfileId(profileId);
+  }, []);
+
+  const handleConfirmAssignJourney = async (): Promise<void> => {
+    if (!user || selectedProfileId === null || activeJourney) return;
+    setIsAssigningJourney(true);
+    try {
+      const assignedBy = {
+        id: authUser?.id ?? 1,
+        name: authUser?.name ?? "",
+      };
+      const updated = await assignJourneyToUser(user.id, {
+        profileId: selectedProfileId,
+        assignedBy,
+      });
+      queryClient.setQueryData(["admin", "user", userId], updated);
+      setIsAssignModalOpen(false);
+      setJourneySuccessMessage(t("assignJourney.success"));
+    } finally {
+      setIsAssigningJourney(false);
+    }
+  };
+
+  const handleOpenCancelAssignModal = useCallback(() => {
+    setIsCancelAssignModalOpen(true);
+  }, []);
+
+  const handleCloseCancelAssignModal = useCallback(() => {
+    if (!isCancellingAssignment) {
+      setIsCancelAssignModalOpen(false);
+    }
+  }, [isCancellingAssignment]);
+
+  const handleConfirmCancelAssignment = async (): Promise<void> => {
+    if (!user) return;
+    setIsCancellingAssignment(true);
+    try {
+      const updated = await cancelAssignedJourney(user.id);
+      queryClient.setQueryData(["admin", "user", userId], updated);
+      setIsCancelAssignModalOpen(false);
+      setJourneySuccessMessage(t("activeJourney.cancelSuccess"));
+    } finally {
+      setIsCancellingAssignment(false);
+    }
+  };
+
+  const handleDismissJourneyMessage = useCallback(() => {
+    setJourneySuccessMessage(null);
+  }, []);
+
   const labels: AdminUserDetailLabels = {
     backToList: t("backToList"),
     statusActive: t("status.active"),
@@ -286,10 +421,51 @@ export function useAdminUserDetailVM({
     deleteSuccess: t("dangerZone.deleteSuccess"),
   };
 
-  const { can } = usePermission();
+  const activeJourneyLabels: ActiveJourneySectionLabels = {
+    title: t("activeJourney.title"),
+    subtitle: t("activeJourney.subtitle"),
+    emptyTitle: t("activeJourney.emptyTitle"),
+    emptyDescription: t("activeJourney.emptyDescription"),
+    startedAt: (date: string) => t("activeJourney.startedAt", { date }),
+    originSelf: t("activeJourney.originSelf"),
+    originAssigned: (name: string) =>
+      t("activeJourney.originAssigned", { name }),
+    assignButton: t("activeJourney.assignButton"),
+    alreadyActiveHint: t("activeJourney.alreadyActiveHint"),
+    cancelButton: t("activeJourney.cancelButton"),
+    closeMessage: t("activeJourney.closeMessage"),
+    domains: domainLabels,
+  };
+
+  const assignJourneyLabels: AssignJourneyModalLabels = {
+    modalTitle: t("assignJourney.modalTitle"),
+    modalDescription: t("assignJourney.modalDescription"),
+    firstJourneyNotice: t("assignJourney.firstJourneyNotice"),
+    cancel: t("assignJourney.cancel"),
+    confirm: t("assignJourney.confirm"),
+    submitting: t("assignJourney.submitting"),
+  };
+
+  const cancelAssignmentLabels: CancelAssignmentModalLabels = {
+    modalTitle: t("activeJourney.cancelModalTitle"),
+    modalDescription: (title: string) =>
+      t("activeJourney.cancelModalDescription", { title }),
+    keepButton: t("activeJourney.cancelModalKeep"),
+    confirmButton: t("activeJourney.cancelModalConfirm"),
+    cancellingButton: t("activeJourney.cancellingButton"),
+  };
+
   const canDeleteUser = can("users.manage");
   const canManageRoles = can("users.change_profile");
   const canManageUser = can("users.manage") || can("users.deactivate");
+  const canAssignJourney = can("journeys.assign");
+  const canCancelAssignment = Boolean(
+    activeJourney &&
+      activeJourney.origin === "assigned" &&
+      activeJourney.assigned_by &&
+      authUser &&
+      String(activeJourney.assigned_by.id) === String(authUser.id)
+  );
 
   return {
     user,
@@ -313,6 +489,29 @@ export function useAdminUserDetailVM({
     handleFieldChange,
     handleResetForm,
     handleSaveForm,
+
+    activeJourney,
+    assignableOptions,
+    isFirstJourney,
+    selectedProfileId,
+    isAssignModalOpen,
+    isAssigningJourney,
+    isCancelAssignModalOpen,
+    isCancellingAssignment,
+    journeySuccessMessage,
+    canAssignJourney,
+    canCancelAssignment,
+    handleOpenAssignModal,
+    handleCloseAssignModal,
+    handleSelectProfile,
+    handleConfirmAssignJourney,
+    handleOpenCancelAssignModal,
+    handleCloseCancelAssignModal,
+    handleConfirmCancelAssignment,
+    handleDismissJourneyMessage,
+    activeJourneyLabels,
+    assignJourneyLabels,
+    cancelAssignmentLabels,
 
     journeys: user?.journeys ?? [],
 

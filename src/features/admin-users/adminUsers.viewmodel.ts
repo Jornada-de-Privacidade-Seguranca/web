@@ -222,6 +222,16 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
     closeMessage: t("closeMessage"),
   };
 
+  const accessProfiles = useMemo(
+    () =>
+      (profilesQuery.data ?? []).map((profile) =>
+        profile.id === "manager"
+          ? { ...profile, description: t("rolesTab.descriptions.manager") }
+          : profile
+      ),
+    [profilesQuery.data, t]
+  );
+
   return {
     currentTab,
     handleTabChange,
@@ -254,7 +264,7 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
     handleClearFilters,
     hasActiveFilters,
 
-    accessProfiles: profilesQuery.data ?? [],
+    accessProfiles,
     isProfilesLoading: profilesQuery.isLoading,
 
     canInviteUsers,

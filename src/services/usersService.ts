@@ -1,5 +1,6 @@
 import { getInitials } from "@/shared/utils/initials";
 import { ApiRequestError } from "@services/httpClient";
+import { MOCK_CATALOG_PROFILES } from "@services/assessmentsService";
 import type {
   AdminUserListItem,
   AccessProfile,
@@ -10,7 +11,13 @@ import type {
   UserCompletedJourney,
 } from "@features/admin-users/adminUsers.types";
 import type {
+  ActiveJourney,
   AdminUserDetails,
+  AssignableJourneyProfile,
+  AssignJourneyPayload,
+  JourneyAssignedBy,
+  JourneyDomain,
+  JourneyOrigin,
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
 
@@ -44,6 +51,7 @@ export interface InviteUserResponse {
 
 export { getInitials };
 export type {
+  ActiveJourney,
   AdminUserListItem,
   AccessProfile,
   UserRole,
@@ -52,6 +60,10 @@ export type {
   PaginatedUsersResponse,
   UserCompletedJourney,
   AdminUserDetails,
+  AssignableJourneyProfile,
+  AssignJourneyPayload,
+  JourneyAssignedBy,
+  JourneyOrigin,
   UpdateUserPayload,
 };
 
@@ -59,6 +71,12 @@ const ROLE_LABEL_MAP: Record<UserRole, string> = {
   admin: "Administrador",
   manager: "Gestor",
   user: "Usuário",
+};
+
+const DOMAIN_BY_TYPE: Record<number, { domain: JourneyDomain; label: string }> = {
+  1: { domain: "privacy", label: "Privacidade" },
+  2: { domain: "security", label: "Segurança da Informação" },
+  3: { domain: "joint", label: "Conjunta" },
 };
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
@@ -82,7 +100,8 @@ export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
   {
     id: "manager",
     name: "Gestor",
-    description: "Acompanhamento de equipes e atribuição de jornadas de capacitação.",
+    description:
+      "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis.",
     permissions: [
       "users.view",
       "results.view_all",
@@ -117,6 +136,17 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 4,
     createdAt: "2026-01-10T10:00:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-1",
+      profileId: 3,
+      title: "Controlador",
+      domain: "privacy",
+      domainLabel: "Privacidade",
+      startedAt: "2026-06-03T09:15:00Z",
+      origin: "self_started",
+      assigned_by: null,
+    },
     journeys: [
       {
         id: "j-1",
@@ -165,6 +195,17 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 2,
     createdAt: "2026-02-15T11:20:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-2",
+      profileId: 2,
+      title: "Gestor de Segurança da Informação",
+      domain: "security",
+      domainLabel: "Segurança da Informação",
+      startedAt: "2026-06-01T10:00:00Z",
+      origin: "assigned",
+      assigned_by: { id: 1, name: "Usuário Teste" },
+    },
     journeys: [
       {
         id: "j-1",
@@ -197,6 +238,17 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 1,
     createdAt: "2026-03-01T08:00:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-3",
+      profileId: 4,
+      title: "Operador",
+      domain: "privacy",
+      domainLabel: "Privacidade",
+      startedAt: "2026-06-02T14:30:00Z",
+      origin: "assigned",
+      assigned_by: { id: 99, name: "Roberto Almeida" },
+    },
     journeys: [
       {
         id: "j-1",
@@ -221,6 +273,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "inactive",
     journeysCount: 0,
     createdAt: "2026-03-15T13:40:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: null,
     journeys: [],
   },
   {
@@ -236,6 +290,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "pending",
     journeysCount: 0,
     createdAt: "2026-04-01T15:00:00Z",
+    initialJourneyProfileId: 2,
+    activeJourney: null,
     journeys: [],
   },
   {
@@ -291,6 +347,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 1,
     createdAt: "2026-04-15T14:20:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: null,
     journeys: [
       {
         id: "j-1",
@@ -490,4 +548,68 @@ export async function deleteUser(id: string): Promise<{ success: boolean }> {
 
 export async function getAccessProfiles(): Promise<AccessProfile[]> {
   return MOCK_ACCESS_PROFILES;
+}
+
+export async function getAssignableJourneyProfiles(): Promise<
+  AssignableJourneyProfile[]
+> {
+  return MOCK_CATALOG_PROFILES.map((profile) => {
+    const mapped = DOMAIN_BY_TYPE[profile.type ?? 1] ?? DOMAIN_BY_TYPE[1];
+    return {
+      id: profile.id,
+      namePt: profile.name_pt,
+      nameEn: profile.name_en,
+      domain: mapped.domain,
+    };
+  });
+}
+
+export async function assignJourneyToUser(
+  userId: string,
+  payload: AssignJourneyPayload
+): Promise<AdminUserDetails> {
+  const index = mockUsersData.findIndex((u) => u.id === userId);
+  if (index === -1) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  const profile = MOCK_CATALOG_PROFILES.find((p) => p.id === payload.profileId);
+  if (!profile) {
+    throw new Error("Perfil de jornada não encontrado");
+  }
+
+  const mappedDomain = DOMAIN_BY_TYPE[profile.type ?? 1] ?? DOMAIN_BY_TYPE[1];
+  const activeJourney: ActiveJourney = {
+    id: `aj-${userId}-${Date.now()}`,
+    profileId: profile.id,
+    title: profile.name_pt,
+    domain: mappedDomain.domain,
+    domainLabel: mappedDomain.label,
+    startedAt: new Date().toISOString(),
+    origin: "assigned",
+    assigned_by: payload.assignedBy,
+  };
+
+  mockUsersData[index] = {
+    ...mockUsersData[index],
+    activeJourney,
+  };
+
+  return { ...mockUsersData[index] };
+}
+
+export async function cancelAssignedJourney(
+  userId: string
+): Promise<AdminUserDetails> {
+  const index = mockUsersData.findIndex((u) => u.id === userId);
+  if (index === -1) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  mockUsersData[index] = {
+    ...mockUsersData[index],
+    activeJourney: null,
+  };
+
+  return { ...mockUsersData[index] };
 }
