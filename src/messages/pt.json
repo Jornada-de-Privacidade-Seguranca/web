@@ -698,16 +698,19 @@
       "cancelModalKeep": "Manter jornada",
       "cancelModalConfirm": "Cancelar atribuição",
       "cancellingButton": "Cancelando...",
+      "cancelError": "Não foi possível cancelar a atribuição da jornada. Tente novamente.",
       "closeMessage": "Fechar aviso"
     },
     "assignJourney": {
       "modalTitle": "Atribuir jornada",
       "modalDescription": "Selecione um perfil de jornada para atribuir a este usuário.",
       "firstJourneyNotice": "A primeira jornada deve ser do perfil escolhido pelo usuário",
+      "emptyOptions": "Nenhum perfil de jornada disponível.",
       "cancel": "Cancelar",
       "confirm": "Atribuir",
       "submitting": "Atribuindo...",
       "success": "Jornada atribuída com sucesso.",
+      "error": "Não foi possível atribuir a jornada. Tente novamente.",
       "domains": {
         "privacy": "Privacidade",
         "security": "Segurança da Informação",

@@ -50,8 +50,10 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     selectedProfileId,
     isAssignModalOpen,
     isAssigningJourney,
+    assignErrorMessage,
     isCancelAssignModalOpen,
     isCancellingAssignment,
+    cancelErrorMessage,
     journeySuccessMessage,
     canAssignJourney,
     canCancelAssignment,
@@ -224,6 +226,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
             isFirstJourney={isFirstJourney}
             selectedProfileId={selectedProfileId}
             isSubmitting={isAssigningJourney}
+            errorMessage={assignErrorMessage}
             labels={assignJourneyLabels}
             onSelectProfile={handleSelectProfile}
             onCancel={handleCloseAssignModal}
@@ -237,6 +240,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
             isOpen={isCancelAssignModalOpen}
             journeyTitle={activeJourney.title}
             isCancelling={isCancellingAssignment}
+            errorMessage={cancelErrorMessage}
             labels={cancelAssignmentLabels}
             onKeep={handleCloseCancelAssignModal}
             onConfirm={handleConfirmCancelAssignment}

@@ -22,7 +22,8 @@ export interface ActiveJourney {
   domainLabel: string;
   startedAt: string;
   origin: JourneyOrigin;
-  assigned_by: JourneyAssignedBy | null;
+  assignedBy: JourneyAssignedBy | null;
+  assigned_by?: JourneyAssignedBy | null;
 }
 
 export interface AssignableJourneyProfile {
@@ -41,7 +42,7 @@ export interface AssignableJourneyOption {
 
 export interface AssignJourneyPayload {
   profileId: number;
-  assignedBy: JourneyAssignedBy;
+  assignedBy?: JourneyAssignedBy;
 }
 
 export interface AdminUserDetails extends AdminUserListItem {
@@ -152,6 +153,7 @@ export interface AssignJourneyModalLabels {
   cancel: string;
   confirm: string;
   submitting: string;
+  emptyOptions: string;
 }
 
 export interface CancelAssignmentModalLabels {
@@ -195,8 +197,10 @@ export interface AdminUserDetailViewModelReturn {
   selectedProfileId: number | null;
   isAssignModalOpen: boolean;
   isAssigningJourney: boolean;
+  assignErrorMessage: string | null;
   isCancelAssignModalOpen: boolean;
   isCancellingAssignment: boolean;
+  cancelErrorMessage: string | null;
   journeySuccessMessage: string | null;
   canAssignJourney: boolean;
   canCancelAssignment: boolean;

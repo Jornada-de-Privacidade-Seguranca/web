@@ -698,16 +698,19 @@
       "cancelModalKeep": "Keep journey",
       "cancelModalConfirm": "Cancel assignment",
       "cancellingButton": "Cancelling...",
+      "cancelError": "Could not cancel journey assignment. Please try again.",
       "closeMessage": "Close notice"
     },
     "assignJourney": {
       "modalTitle": "Assign journey",
       "modalDescription": "Select a journey profile to assign to this user.",
       "firstJourneyNotice": "The first journey must be from the profile chosen by the user",
+      "emptyOptions": "No journey profiles available.",
       "cancel": "Cancel",
       "confirm": "Assign",
       "submitting": "Assigning...",
       "success": "Journey assigned successfully.",
+      "error": "Could not assign journey. Please try again.",
       "domains": {
         "privacy": "Privacy",
         "security": "Information Security",

@@ -27,7 +27,9 @@ export function useActiveJourneySectionVM(
     ? ""
     : activeJourney.origin === "self_started"
       ? labels.originSelf
-      : labels.originAssigned(activeJourney.assigned_by?.name ?? "");
+      : labels.originAssigned(
+          (activeJourney.assignedBy ?? activeJourney.assigned_by)?.name ?? ""
+        );
 
   return {
     activeJourney,

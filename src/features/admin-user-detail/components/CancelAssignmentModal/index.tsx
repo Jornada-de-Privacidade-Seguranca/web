@@ -14,6 +14,7 @@ export function CancelAssignmentModal(props: CancelAssignmentModalProps) {
     confirmText,
     cancellingText,
     isCancelling,
+    errorMessage,
     onKeep,
     onConfirm,
   } = useCancelAssignmentModalVM(props);
@@ -69,6 +70,15 @@ export function CancelAssignmentModal(props: CancelAssignmentModalProps) {
         >
           {description}
         </p>
+
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive"
+          >
+            {errorMessage}
+          </div>
+        )}
 
         <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
           <Button

@@ -4,6 +4,7 @@ export interface CancelAssignmentModalProps {
   isOpen: boolean;
   journeyTitle: string;
   isCancelling: boolean;
+  errorMessage?: string | null;
   labels: CancelAssignmentModalLabels;
   onKeep: () => void;
   onConfirm: () => void;
@@ -17,6 +18,7 @@ export interface CancelAssignmentModalViewModelReturn {
   confirmText: string;
   cancellingText: string;
   isCancelling: boolean;
+  errorMessage: string | null;
   onKeep: () => void;
   onConfirm: () => void;
 }

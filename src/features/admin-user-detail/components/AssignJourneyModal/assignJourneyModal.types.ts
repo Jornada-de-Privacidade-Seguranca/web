@@ -9,6 +9,7 @@ export interface AssignJourneyModalProps {
   isFirstJourney: boolean;
   selectedProfileId: number | null;
   isSubmitting: boolean;
+  errorMessage?: string | null;
   labels: AssignJourneyModalLabels;
   onSelectProfile: (profileId: number) => void;
   onCancel: () => void;
@@ -21,6 +22,7 @@ export interface AssignJourneyModalViewModelReturn {
   isFirstJourney: boolean;
   selectedProfileId: number | null;
   isSubmitting: boolean;
+  errorMessage: string | null;
   canConfirm: boolean;
   labels: AssignJourneyModalLabels;
   onSelectProfile: (profileId: number) => void;

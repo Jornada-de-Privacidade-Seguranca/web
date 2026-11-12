@@ -16,6 +16,7 @@ vi.mock("@/shared/i18n/navigation", () => ({
 }));
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "pt",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (key === "dangerZone.modalDescription")
       return `Excluir ${params?.name}`;
@@ -289,6 +290,7 @@ describe("useAdminUserDetailVM", () => {
         domainLabel: "Segurança da Informação",
         startedAt: "2026-06-01T10:00:00Z",
         origin: "assigned",
+        assignedBy: { id: 1, name: "Admin Logado" },
         assigned_by: { id: 1, name: "Admin Logado" },
       },
     };
@@ -352,6 +354,7 @@ describe("useAdminUserDetailVM", () => {
         domainLabel: "Segurança da Informação",
         startedAt: "2026-06-05T10:00:00Z",
         origin: "assigned",
+        assignedBy: { id: 1, name: "Admin Logado" },
         assigned_by: { id: 1, name: "Admin Logado" },
       },
     };
@@ -408,6 +411,7 @@ describe("useAdminUserDetailVM", () => {
         domainLabel: "Privacidade",
         startedAt: "2026-06-01T10:00:00Z",
         origin: "assigned",
+        assignedBy: { id: 1, name: "Admin Logado" },
         assigned_by: { id: 1, name: "Admin Logado" },
       },
     };
@@ -464,6 +468,7 @@ describe("useAdminUserDetailVM", () => {
         domainLabel: "Privacidade",
         startedAt: "2026-06-01T10:00:00Z",
         origin: "assigned",
+        assignedBy: { id: 99, name: "Outro Gestor" },
         assigned_by: { id: 99, name: "Outro Gestor" },
       },
     });
@@ -484,6 +489,7 @@ describe("useAdminUserDetailVM", () => {
         domainLabel: "Privacidade",
         startedAt: "2026-06-01T10:00:00Z",
         origin: "self_started",
+        assignedBy: null,
         assigned_by: null,
       },
     });
@@ -494,5 +500,112 @@ describe("useAdminUserDetailVM", () => {
     );
     await waitFor(() => expect(selfResult.current.isLoading).toBe(false));
     expect(selfResult.current.canCancelAssignment).toBe(false);
+  });
+
+  it("retorna lista vazia e não atribui quando usuário é de primeira jornada mas initialJourneyProfileId é nulo", async () => {
+    const noInitialUser: usersService.AdminUserDetails = {
+      ...mockUser,
+      status: "active",
+      journeys: [],
+      journeysCount: 0,
+      activeJourney: null,
+      initialJourneyProfileId: undefined,
+    };
+
+    vi.spyOn(usersService, "getUserById").mockResolvedValue(noInitialUser);
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue([
+      { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
+    ]);
+
+    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "1" }), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.isFirstJourney).toBe(true);
+    expect(result.current.assignableOptions).toEqual([]);
+
+    act(() => {
+      result.current.handleOpenAssignModal();
+    });
+
+    expect(result.current.selectedProfileId).toBeNull();
+  });
+
+  it("trata erro na atribuição e no cancelamento exibindo mensagens de erro no modal", async () => {
+    const firstJourneyUser: usersService.AdminUserDetails = {
+      ...mockUser,
+      status: "active",
+      journeys: [],
+      journeysCount: 0,
+      activeJourney: null,
+      initialJourneyProfileId: 1,
+    };
+
+    vi.spyOn(usersService, "getUserById").mockResolvedValue(firstJourneyUser);
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue([
+      { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
+    ]);
+    vi.spyOn(usersService, "assignJourneyToUser").mockRejectedValue(
+      new Error("Erro ao atribuir")
+    );
+
+    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "1" }), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleOpenAssignModal();
+    });
+
+    await act(async () => {
+      await result.current.handleConfirmAssignJourney();
+    });
+
+    expect(result.current.isAssignModalOpen).toBe(true);
+    expect(result.current.assignErrorMessage).toBe("assignJourney.error");
+
+    // Testar erro de cancelamento
+    const userWithAssignment: usersService.AdminUserDetails = {
+      ...mockUser,
+      activeJourney: {
+        id: "aj-test",
+        profileId: 1,
+        title: "DPO",
+        domain: "privacy",
+        domainLabel: "Privacidade",
+        startedAt: "2026-06-01T10:00:00Z",
+        origin: "assigned",
+        assignedBy: { id: 1, name: "Admin Logado" },
+      },
+    };
+
+    vi.spyOn(usersService, "getUserById").mockResolvedValue(userWithAssignment);
+    vi.spyOn(usersService, "cancelAssignedJourney").mockRejectedValue(
+      new Error("Erro ao cancelar")
+    );
+
+    const { result: cancelResult } = renderHook(
+      () => useAdminUserDetailVM({ userId: "1" }),
+      { wrapper: createWrapper() }
+    );
+
+    await waitFor(() => expect(cancelResult.current.isLoading).toBe(false));
+
+    act(() => {
+      cancelResult.current.handleOpenCancelAssignModal();
+    });
+
+    await act(async () => {
+      await cancelResult.current.handleConfirmCancelAssignment();
+    });
+
+    expect(cancelResult.current.isCancelAssignModalOpen).toBe(true);
+    expect(cancelResult.current.cancelErrorMessage).toBe(
+      "activeJourney.cancelError"
+    );
   });
 });

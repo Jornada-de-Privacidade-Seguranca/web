@@ -6,8 +6,15 @@ import type {
 export function useCancelAssignmentModalVM(
   props: CancelAssignmentModalProps
 ): CancelAssignmentModalViewModelReturn {
-  const { isOpen, journeyTitle, isCancelling, labels, onKeep, onConfirm } =
-    props;
+  const {
+    isOpen,
+    journeyTitle,
+    isCancelling,
+    errorMessage,
+    labels,
+    onKeep,
+    onConfirm,
+  } = props;
 
   return {
     isOpen,
@@ -17,6 +24,7 @@ export function useCancelAssignmentModalVM(
     confirmText: labels.confirmButton,
     cancellingText: labels.cancellingButton,
     isCancelling,
+    errorMessage: errorMessage ?? null,
     onKeep,
     onConfirm,
   };

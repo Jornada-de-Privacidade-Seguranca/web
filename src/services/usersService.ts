@@ -1,6 +1,5 @@
 import { getInitials } from "@/shared/utils/initials";
 import { ApiRequestError } from "@services/httpClient";
-import { MOCK_CATALOG_PROFILES } from "@services/assessmentsService";
 import type {
   AdminUserListItem,
   AccessProfile,
@@ -73,11 +72,45 @@ const ROLE_LABEL_MAP: Record<UserRole, string> = {
   user: "Usuário",
 };
 
-const DOMAIN_BY_TYPE: Record<number, { domain: JourneyDomain; label: string }> = {
-  1: { domain: "privacy", label: "Privacidade" },
-  2: { domain: "security", label: "Segurança da Informação" },
-  3: { domain: "joint", label: "Conjunta" },
-};
+export interface JourneyProfileApiItem {
+  id: number;
+  name_pt: string;
+  name_en: string;
+  knowledge_domain: JourneyDomain;
+}
+
+export const MOCK_ASSIGNABLE_PROFILES: JourneyProfileApiItem[] = [
+  {
+    id: 1,
+    name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+    name_en: "Data Protection Officer (DPO)",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 2,
+    name_pt: "Gestor de Segurança da Informação",
+    name_en: "Information Security Manager",
+    knowledge_domain: "security",
+  },
+  {
+    id: 3,
+    name_pt: "Controlador",
+    name_en: "Data Controller",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 4,
+    name_pt: "Operador",
+    name_en: "Data Operator",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 5,
+    name_pt: "Auditor de Segurança e Privacidade",
+    name_en: "Security and Privacy Auditor",
+    knowledge_domain: "joint",
+  },
+];
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
   {
@@ -145,6 +178,7 @@ let mockUsersData: AdminUserDetails[] = [
       domainLabel: "Privacidade",
       startedAt: "2026-06-03T09:15:00Z",
       origin: "self_started",
+      assignedBy: null,
       assigned_by: null,
     },
     journeys: [
@@ -204,6 +238,7 @@ let mockUsersData: AdminUserDetails[] = [
       domainLabel: "Segurança da Informação",
       startedAt: "2026-06-01T10:00:00Z",
       origin: "assigned",
+      assignedBy: { id: 1, name: "Usuário Teste" },
       assigned_by: { id: 1, name: "Usuário Teste" },
     },
     journeys: [
@@ -247,6 +282,7 @@ let mockUsersData: AdminUserDetails[] = [
       domainLabel: "Privacidade",
       startedAt: "2026-06-02T14:30:00Z",
       origin: "assigned",
+      assignedBy: { id: 99, name: "Roberto Almeida" },
       assigned_by: { id: 99, name: "Roberto Almeida" },
     },
     journeys: [
@@ -550,18 +586,21 @@ export async function getAccessProfiles(): Promise<AccessProfile[]> {
   return MOCK_ACCESS_PROFILES;
 }
 
+const DOMAIN_LABELS: Record<JourneyDomain, string> = {
+  privacy: "Privacidade",
+  security: "Segurança da Informação",
+  joint: "Conjunta",
+};
+
 export async function getAssignableJourneyProfiles(): Promise<
   AssignableJourneyProfile[]
 > {
-  return MOCK_CATALOG_PROFILES.map((profile) => {
-    const mapped = DOMAIN_BY_TYPE[profile.type ?? 1] ?? DOMAIN_BY_TYPE[1];
-    return {
-      id: profile.id,
-      namePt: profile.name_pt,
-      nameEn: profile.name_en,
-      domain: mapped.domain,
-    };
-  });
+  return MOCK_ASSIGNABLE_PROFILES.map((profile) => ({
+    id: profile.id,
+    namePt: profile.name_pt,
+    nameEn: profile.name_en,
+    domain: profile.knowledge_domain,
+  }));
 }
 
 export async function assignJourneyToUser(
@@ -573,21 +612,26 @@ export async function assignJourneyToUser(
     throw new Error("Usuário não encontrado");
   }
 
-  const profile = MOCK_CATALOG_PROFILES.find((p) => p.id === payload.profileId);
+  const profile = MOCK_ASSIGNABLE_PROFILES.find((p) => p.id === payload.profileId);
   if (!profile) {
     throw new Error("Perfil de jornada não encontrado");
   }
 
-  const mappedDomain = DOMAIN_BY_TYPE[profile.type ?? 1] ?? DOMAIN_BY_TYPE[1];
+  const assignedBy: JourneyAssignedBy = payload.assignedBy ?? {
+    id: 1,
+    name: "Administrador",
+  };
+
   const activeJourney: ActiveJourney = {
     id: `aj-${userId}-${Date.now()}`,
     profileId: profile.id,
     title: profile.name_pt,
-    domain: mappedDomain.domain,
-    domainLabel: mappedDomain.label,
+    domain: profile.knowledge_domain,
+    domainLabel: DOMAIN_LABELS[profile.knowledge_domain],
     startedAt: new Date().toISOString(),
     origin: "assigned",
-    assigned_by: payload.assignedBy,
+    assignedBy,
+    assigned_by: assignedBy,
   };
 
   mockUsersData[index] = {

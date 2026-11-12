@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/shared/i18n/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,7 +44,7 @@ export function useAdminUserDetailVM({
   userId,
 }: UseAdminUserDetailVMProps): AdminUserDetailViewModelReturn {
   const t = useTranslations("adminUserDetail");
-  const params = useParams();
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuth();
@@ -92,10 +91,16 @@ export function useAdminUserDetailVM({
     null
   );
   const [isAssigningJourney, setIsAssigningJourney] = useState<boolean>(false);
+  const [assignErrorMessage, setAssignErrorMessage] = useState<string | null>(
+    null
+  );
   const [isCancelAssignModalOpen, setIsCancelAssignModalOpen] =
     useState<boolean>(false);
   const [isCancellingAssignment, setIsCancellingAssignment] =
     useState<boolean>(false);
+  const [cancelErrorMessage, setCancelErrorMessage] = useState<string | null>(
+    null
+  );
   const [journeySuccessMessage, setJourneySuccessMessage] = useState<
     string | null
   >(null);
@@ -265,7 +270,8 @@ export function useAdminUserDetailVM({
 
   const activeJourney = user?.activeJourney ?? null;
   const isFirstJourney = (user?.journeys.length ?? 0) === 0;
-  const isEnglish = params?.locale === "en";
+  const initialJourneyProfileId = user?.initialJourneyProfileId;
+  const isEnglish = locale === "en";
 
   const domainLabels: Record<JourneyDomain, string> = useMemo(
     () => ({
@@ -290,20 +296,26 @@ export function useAdminUserDetailVM({
       return mapped;
     }
 
-    const chosenId = user?.initialJourneyProfileId ?? mapped[0].id;
-    const chosenOption = mapped.find((opt) => opt.id === chosenId) ?? mapped[0];
-    return [chosenOption];
+    if (!initialJourneyProfileId) {
+      return [];
+    }
+
+    const chosenOption = mapped.find(
+      (opt) => opt.id === initialJourneyProfileId
+    );
+    return chosenOption ? [chosenOption] : [];
   }, [
     assignableProfilesQuery.data,
     domainLabels,
     isEnglish,
     isFirstJourney,
-    user?.initialJourneyProfileId,
+    initialJourneyProfileId,
   ]);
 
   const handleOpenAssignModal = useCallback(() => {
     if (activeJourney) return;
     setJourneySuccessMessage(null);
+    setAssignErrorMessage(null);
     setSelectedProfileId(assignableOptions[0]?.id ?? null);
     setIsAssignModalOpen(true);
   }, [activeJourney, assignableOptions]);
@@ -311,21 +323,26 @@ export function useAdminUserDetailVM({
   const handleCloseAssignModal = useCallback(() => {
     if (!isAssigningJourney) {
       setIsAssignModalOpen(false);
+      setAssignErrorMessage(null);
     }
   }, [isAssigningJourney]);
 
   const handleSelectProfile = useCallback((profileId: number) => {
     setSelectedProfileId(profileId);
+    setAssignErrorMessage(null);
   }, []);
 
   const handleConfirmAssignJourney = async (): Promise<void> => {
     if (!user || selectedProfileId === null || activeJourney) return;
     setIsAssigningJourney(true);
+    setAssignErrorMessage(null);
     try {
-      const assignedBy = {
-        id: authUser?.id ?? 1,
-        name: authUser?.name ?? "",
-      };
+      const assignedBy = authUser
+        ? {
+            id: Number(authUser.id) || 1,
+            name: authUser.name,
+          }
+        : undefined;
       const updated = await assignJourneyToUser(user.id, {
         profileId: selectedProfileId,
         assignedBy,
@@ -333,29 +350,36 @@ export function useAdminUserDetailVM({
       queryClient.setQueryData(["admin", "user", userId], updated);
       setIsAssignModalOpen(false);
       setJourneySuccessMessage(t("assignJourney.success"));
+    } catch {
+      setAssignErrorMessage(t("assignJourney.error"));
     } finally {
       setIsAssigningJourney(false);
     }
   };
 
   const handleOpenCancelAssignModal = useCallback(() => {
+    setCancelErrorMessage(null);
     setIsCancelAssignModalOpen(true);
   }, []);
 
   const handleCloseCancelAssignModal = useCallback(() => {
     if (!isCancellingAssignment) {
       setIsCancelAssignModalOpen(false);
+      setCancelErrorMessage(null);
     }
   }, [isCancellingAssignment]);
 
   const handleConfirmCancelAssignment = async (): Promise<void> => {
     if (!user) return;
     setIsCancellingAssignment(true);
+    setCancelErrorMessage(null);
     try {
       const updated = await cancelAssignedJourney(user.id);
       queryClient.setQueryData(["admin", "user", userId], updated);
       setIsCancelAssignModalOpen(false);
       setJourneySuccessMessage(t("activeJourney.cancelSuccess"));
+    } catch {
+      setCancelErrorMessage(t("activeJourney.cancelError"));
     } finally {
       setIsCancellingAssignment(false);
     }
@@ -444,6 +468,7 @@ export function useAdminUserDetailVM({
     cancel: t("assignJourney.cancel"),
     confirm: t("assignJourney.confirm"),
     submitting: t("assignJourney.submitting"),
+    emptyOptions: t("assignJourney.emptyOptions"),
   };
 
   const cancelAssignmentLabels: CancelAssignmentModalLabels = {
@@ -459,12 +484,14 @@ export function useAdminUserDetailVM({
   const canManageRoles = can("users.change_profile");
   const canManageUser = can("users.manage") || can("users.deactivate");
   const canAssignJourney = can("journeys.assign");
+  const activeJourneyAssignedBy =
+    activeJourney?.assignedBy ?? activeJourney?.assigned_by ?? null;
   const canCancelAssignment = Boolean(
     activeJourney &&
       activeJourney.origin === "assigned" &&
-      activeJourney.assigned_by &&
+      activeJourneyAssignedBy &&
       authUser &&
-      String(activeJourney.assigned_by.id) === String(authUser.id)
+      String(activeJourneyAssignedBy.id) === String(authUser.id)
   );
 
   return {
@@ -496,8 +523,10 @@ export function useAdminUserDetailVM({
     selectedProfileId,
     isAssignModalOpen,
     isAssigningJourney,
+    assignErrorMessage,
     isCancelAssignModalOpen,
     isCancellingAssignment,
+    cancelErrorMessage,
     journeySuccessMessage,
     canAssignJourney,
     canCancelAssignment,

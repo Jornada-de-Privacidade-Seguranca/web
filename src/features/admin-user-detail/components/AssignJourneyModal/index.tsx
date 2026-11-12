@@ -14,6 +14,7 @@ export function AssignJourneyModal(props: AssignJourneyModalProps) {
     isFirstJourney,
     selectedProfileId,
     isSubmitting,
+    errorMessage,
     canConfirm,
     labels,
     onSelectProfile,
@@ -86,39 +87,54 @@ export function AssignJourneyModal(props: AssignJourneyModalProps) {
           </div>
         )}
 
+        {errorMessage && (
+          <div
+            role="alert"
+            className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         <div
           role="radiogroup"
           aria-labelledby="assign-journey-modal-title"
           className="max-h-72 space-y-2.5 overflow-y-auto pr-1"
         >
-          {options.map((option) => {
-            const isSelected = selectedProfileId === option.id;
-            return (
-              <label
-                key={option.id}
-                className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border p-3.5 transition-colors ${
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : "border-border/80 bg-background/60 hover:border-primary/40"
-                }`}
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <input
-                    type="radio"
-                    name="assign-journey-profile"
-                    value={option.id}
-                    checked={isSelected}
-                    disabled={isSubmitting}
-                    onChange={() => onSelectProfile(option.id)}
-                  />
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {option.name}
+          {options.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              {labels.emptyOptions}
+            </p>
+          ) : (
+            options.map((option) => {
+              const isSelected = selectedProfileId === option.id;
+              return (
+                <label
+                  key={option.id}
+                  className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border p-3.5 transition-colors ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border/80 bg-background/60 hover:border-primary/40"
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <input
+                      type="radio"
+                      name="assign-journey-profile"
+                      value={option.id}
+                      checked={isSelected}
+                      disabled={isSubmitting}
+                      onChange={() => onSelectProfile(option.id)}
+                    />
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {option.name}
+                    </span>
                   </span>
-                </span>
-                <DomainBadge label={option.domainLabel} />
-              </label>
-            );
-          })}
+                  <DomainBadge label={option.domainLabel} />
+                </label>
+              );
+            })
+          )}
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-1">

@@ -12,6 +12,7 @@ export function useAssignJourneyModalVM(
     isFirstJourney,
     selectedProfileId,
     isSubmitting,
+    errorMessage,
     labels,
     onSelectProfile,
     onCancel,
@@ -24,7 +25,9 @@ export function useAssignJourneyModalVM(
     isFirstJourney,
     selectedProfileId,
     isSubmitting,
-    canConfirm: selectedProfileId !== null && !isSubmitting,
+    errorMessage: errorMessage ?? null,
+    canConfirm:
+      selectedProfileId !== null && options.length > 0 && !isSubmitting,
     labels,
     onSelectProfile,
     onCancel,

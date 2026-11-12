@@ -175,8 +175,10 @@ describe("AdminUserDetailView", () => {
       selectedProfileId: 1,
       isAssignModalOpen: false,
       isAssigningJourney: false,
+      assignErrorMessage: null,
       isCancelAssignModalOpen: false,
       isCancellingAssignment: false,
+      cancelErrorMessage: null,
       journeySuccessMessage: null,
       canAssignJourney: true,
       canCancelAssignment: false,
@@ -214,6 +216,7 @@ describe("AdminUserDetailView", () => {
         cancel: "Cancelar",
         confirm: "Atribuir",
         submitting: "Atribuindo...",
+        emptyOptions: "Nenhum perfil de jornada disponível.",
       },
       cancelAssignmentLabels: {
         modalTitle: "Cancelar atribuição de jornada?",
@@ -389,6 +392,7 @@ describe("AdminUserDetailView", () => {
           domainLabel: "Segurança da Informação",
           startedAt: "2026-06-01T10:00:00Z",
           origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
           assigned_by: { id: 1, name: "Usuário Teste" },
         },
         canCancelAssignment: true,
@@ -427,6 +431,7 @@ describe("AdminUserDetailView", () => {
           domainLabel: "Privacidade",
           startedAt: "2026-06-02T10:00:00Z",
           origin: "assigned",
+          assignedBy: { id: 99, name: "Roberto Almeida" },
           assigned_by: { id: 99, name: "Roberto Almeida" },
         },
         canCancelAssignment: false,
@@ -453,6 +458,7 @@ describe("AdminUserDetailView", () => {
           domainLabel: "Privacidade",
           startedAt: "2026-06-03T10:00:00Z",
           origin: "self_started",
+          assignedBy: null,
           assigned_by: null,
         },
         canCancelAssignment: false,
@@ -523,6 +529,7 @@ describe("AdminUserDetailView", () => {
           domainLabel: "Segurança da Informação",
           startedAt: "2026-06-01T10:00:00Z",
           origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
           assigned_by: { id: 1, name: "Usuário Teste" },
         },
         canCancelAssignment: true,
@@ -546,5 +553,52 @@ describe("AdminUserDetailView", () => {
     });
     fireEvent.click(modalCancelBtns[modalCancelBtns.length - 1]);
     expect(handleConfirmCancelAssignment).toHaveBeenCalledOnce();
+  });
+
+  it("renderiza mensagens de erro nos modais de atribuição e cancelamento quando presentes", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        isAssignModalOpen: true,
+        assignErrorMessage: "Erro ao tentar atribuir jornada",
+        assignableOptions: [],
+      })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Erro ao tentar atribuir jornada")).toBeDefined();
+    expect(
+      screen.getByText("Nenhum perfil de jornada disponível.")
+    ).toBeDefined();
+
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-1",
+          profileId: 2,
+          title: "Gestor SI",
+          domain: "security",
+          domainLabel: "Segurança da Informação",
+          startedAt: "2026-06-01T10:00:00Z",
+          origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
+        },
+        canCancelAssignment: true,
+        isCancelAssignModalOpen: true,
+        cancelErrorMessage: "Erro ao tentar cancelar atribuição",
+      })
+    );
+
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Erro ao tentar cancelar atribuição")).toBeDefined();
   });
 });

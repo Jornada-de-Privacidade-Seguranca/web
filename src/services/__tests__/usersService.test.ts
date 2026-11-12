@@ -124,14 +124,17 @@ describe("usersService", () => {
   it("deve cobrir os 4 cenários de jornada em andamento no mock (#168) e permitir atribuir e cancelar", async () => {
     const selfStartedUser = await getUserById("1");
     expect(selfStartedUser.activeJourney?.origin).toBe("self_started");
+    expect(selfStartedUser.activeJourney?.assignedBy).toBeNull();
     expect(selfStartedUser.activeJourney?.assigned_by).toBeNull();
 
     const assignedByMeUser = await getUserById("2");
     expect(assignedByMeUser.activeJourney?.origin).toBe("assigned");
+    expect(assignedByMeUser.activeJourney?.assignedBy?.id).toBe(1);
     expect(assignedByMeUser.activeJourney?.assigned_by?.id).toBe(1);
 
     const assignedByOtherUser = await getUserById("3");
     expect(assignedByOtherUser.activeJourney?.origin).toBe("assigned");
+    expect(assignedByOtherUser.activeJourney?.assignedBy?.id).toBe(99);
     expect(assignedByOtherUser.activeJourney?.assigned_by?.id).toBe(99);
 
     const noActiveUser = await getUserById("4");
@@ -145,6 +148,10 @@ describe("usersService", () => {
       assignedBy: { id: 1, name: "Usuário Teste" },
     });
     expect(afterAssign.activeJourney?.origin).toBe("assigned");
+    expect(afterAssign.activeJourney?.assignedBy).toEqual({
+      id: 1,
+      name: "Usuário Teste",
+    });
     expect(afterAssign.activeJourney?.assigned_by).toEqual({
       id: 1,
       name: "Usuário Teste",
