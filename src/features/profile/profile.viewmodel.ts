@@ -10,11 +10,14 @@ import { ApiRequestError } from "@services/httpClient";
 import { getUserProfile, updateUserProfile } from "@services/profileService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useTheme } from "@hooks/useTheme";
+import { useLang } from "@hooks/useLang";
+import { localeNames, type Locale } from "@shared/i18n/routing";
 import type { ThemeMode } from "@shared/theme";
 import type {
   ProfileData,
   ProfileFormValues,
   ProfileLabels,
+  ProfileLanguageOption,
   ProfileServerMessage,
   ProfileUpdatePayload,
   ProfileViewModelReturn,
@@ -25,6 +28,7 @@ const FULL_NAME_PATTERN = /^\S+\s+\S+/u;
 
 export function useProfileVM(): ProfileViewModelReturn {
   const t = useTranslations("profile");
+  const { locale, locales, changeLocale } = useLang();
   const { theme, setThemeMode } = useTheme();
   const user = useAuthStore((state) => state.user);
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -248,9 +252,22 @@ export function useProfileVM(): ProfileViewModelReturn {
 
   const handleCloseMessage = () => setServerMessage(null);
 
+  const handleLocaleChange = (nextLocale: Locale) => {
+    changeLocale(nextLocale);
+  };
+
   const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode);
   };
+
+  const languageOptions: ProfileLanguageOption[] = useMemo(
+    () =>
+      locales.map((item) => ({
+        locale: item,
+        label: localeNames[item],
+      })),
+    [locales],
+  );
 
   const metrics = [
     {
@@ -290,6 +307,8 @@ export function useProfileVM(): ProfileViewModelReturn {
     isSubmitting: form.formState.isSubmitting || updateMutation.isPending,
     serverMessage,
     metrics,
+    locale,
+    languageOptions,
     theme,
     labels,
     handleEdit,
@@ -297,6 +316,7 @@ export function useProfileVM(): ProfileViewModelReturn {
     handleSubmit,
     handleRetry,
     handleCloseMessage,
+    handleLocaleChange,
     handleThemeChange,
   };
 }

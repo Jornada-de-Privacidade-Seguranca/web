@@ -8,8 +8,17 @@ import * as profileService from "@services/profileService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useProfileVM } from "../profile.viewmodel";
 
+const { useLangMock, changeLocaleMock } = vi.hoisted(() => ({
+  changeLocaleMock: vi.fn(),
+  useLangMock: vi.fn(),
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => `profile.${key}`,
+}));
+
+vi.mock("@hooks/useLang", () => ({
+  useLang: useLangMock,
 }));
 
 vi.mock("@hooks/useTheme", () => ({
@@ -65,6 +74,14 @@ function createWrapper() {
 describe("useProfileVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    changeLocaleMock.mockClear();
+    useLangMock.mockReturnValue({
+      locale: "pt",
+      locales: ["pt", "en"] as const,
+      changeLocale: changeLocaleMock,
+      isPt: true,
+      isEn: false,
+    });
     useAuthStore.setState({
       user: authenticatedUser,
       isAuthenticated: true,
@@ -231,5 +248,31 @@ describe("useProfileVM", () => {
     expect(result.current.form.getFieldState("department").error?.message).toBe(
       "profile.validation.departmentRequired",
     );
+  });
+
+  it("exposes static autonym language options from routing and delegates locale changes", () => {
+    useLangMock.mockReturnValue({
+      locale: "en",
+      locales: ["pt", "en"] as const,
+      changeLocale: changeLocaleMock,
+      isPt: false,
+      isEn: true,
+    });
+
+    const { result } = renderHook(() => useProfileVM(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.locale).toBe("en");
+    expect(result.current.languageOptions).toEqual([
+      { locale: "pt", label: "Português" },
+      { locale: "en", label: "English" },
+    ]);
+
+    act(() => {
+      result.current.handleLocaleChange("pt");
+    });
+
+    expect(changeLocaleMock).toHaveBeenCalledWith("pt");
   });
 });
