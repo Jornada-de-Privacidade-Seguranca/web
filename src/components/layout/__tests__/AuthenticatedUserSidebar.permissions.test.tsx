@@ -8,8 +8,10 @@ import { useSidebarStore } from "@/store/sidebar.store";
 import { PERMISSIONS_BY_PROFILE } from "@/services/authService";
 import type { AuthenticatedUser } from "@/features/auth/auth.types";
 
+let mockPathname = "/painel";
+
 vi.mock("@/shared/i18n/navigation", () => ({
-  usePathname: () => "/painel",
+  usePathname: () => mockPathname,
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
@@ -43,6 +45,7 @@ vi.mock("@/hooks/useMobile", () => ({
 describe("AuthenticatedUserSidebar - Permissões", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockPathname = "/painel";
     useSidebarStore.setState({ isExpanded: true, isMobileOpen: false });
   });
 
@@ -145,5 +148,55 @@ describe("AuthenticatedUserSidebar - Permissões", () => {
     expect(screen.queryByText("Usuários")).toBeNull();
     expect(screen.getByText("Pedro Colaborador")).toBeDefined();
     expect(screen.getByText("Usuário")).toBeDefined();
+  });
+
+  it("deve apontar Jornadas para /jornadas e Resultados para /resultados, marcando item ativo só nas rotas válidas", () => {
+    const commonUser: AuthenticatedUser = {
+      id: 3,
+      name: "Pedro Colaborador",
+      email: "pedro@empresa.com",
+      role: "common_user",
+      permissions: PERMISSIONS_BY_PROFILE.user,
+      profile: {
+        id: "user",
+        name: "Usuário",
+        label: "Usuário",
+        role: "common_user",
+        user_type_id: 3,
+        profile_type_id: 3,
+        profile_type_name: "Usuário",
+        permissions: PERMISSIONS_BY_PROFILE.user,
+      },
+      active_status: 1,
+    };
+
+    useAuthStore.getState().setAuth(commonUser);
+
+    mockPathname = "/resultados";
+    const { rerender } = render(<AuthenticatedUserSidebar />);
+
+    const journeysLink = screen.getByText("Jornadas").closest("a");
+    const resultsLink = screen.getByText("Resultados").closest("a");
+    expect(journeysLink?.getAttribute("href")).toBe("/jornadas");
+    expect(resultsLink?.getAttribute("href")).toBe("/resultados");
+    expect(resultsLink?.getAttribute("aria-current")).toBe("page");
+    expect(journeysLink?.getAttribute("aria-current")).toBeNull();
+
+    // Rotas legadas não devem marcar o item como ativo na barra lateral
+    mockPathname = "/results";
+    rerender(<AuthenticatedUserSidebar />);
+    expect(screen.getByText("Resultados").closest("a")?.getAttribute("aria-current")).toBeNull();
+
+    mockPathname = "/assessments";
+    rerender(<AuthenticatedUserSidebar />);
+    expect(screen.getByText("Jornadas").closest("a")?.getAttribute("aria-current")).toBeNull();
+
+    mockPathname = "/avaliacoes";
+    rerender(<AuthenticatedUserSidebar />);
+    expect(screen.getByText("Jornadas").closest("a")?.getAttribute("aria-current")).toBeNull();
+
+    mockPathname = "/jornadas";
+    rerender(<AuthenticatedUserSidebar />);
+    expect(screen.getByText("Jornadas").closest("a")?.getAttribute("aria-current")).toBe("page");
   });
 });

@@ -176,8 +176,6 @@ export function useSidebarVM() {
       href: "/jornadas",
       active:
         pathname.startsWith("/jornadas") ||
-        pathname.startsWith("/assessments") ||
-        pathname.startsWith("/avaliacoes") ||
         pathname.startsWith("/jornada"),
       disabled: false,
     });
@@ -188,9 +186,8 @@ export function useSidebarVM() {
     navItems.push({
       label: t("sidebar.results"),
       icon: CheckListIcon,
-      href: "/results",
-      active:
-        pathname.startsWith("/results") || pathname.startsWith("/resultados"),
+      href: "/resultados",
+      active: pathname.startsWith("/resultados"),
       disabled: false,
     });
   }
@@ -414,6 +411,7 @@ export const AuthenticatedUserSidebar = () => {
                   <a
                     {...(!item.disabled && { href: item.href, onClick: handleNavigate })}
                     aria-disabled={item.disabled}
+                    aria-current={item.active ? "page" : undefined}
                     title={!isExpanded ? item.label : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-all",
