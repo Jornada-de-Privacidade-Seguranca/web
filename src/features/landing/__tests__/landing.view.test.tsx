@@ -104,7 +104,7 @@ describe("LandingView", () => {
     }
 
     expect(screen.getByRole("link", { name: "Termo de Privacidade" }).getAttribute("href")).toBe(
-      "/privacidade"
+      "/privacy-terms"
     );
   });
 
@@ -137,7 +137,7 @@ describe("LandingView", () => {
       )
     ).toBeDefined();
     expect(screen.getByRole("link", { name: "Privacy Policy" }).getAttribute("href")).toBe(
-      "/privacidade"
+      "/privacy-terms"
     );
   });
 });
