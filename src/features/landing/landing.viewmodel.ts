@@ -1,9 +1,13 @@
 "use client";
 
 import {
-  ArrowRight01Icon,
+  Analytics01Icon,
   CheckListIcon,
-  DashboardSquare01Icon,
+  Login01Icon,
+  RefreshIcon,
+  Target02Icon,
+  TradeUpIcon,
+  UserIcon,
 } from "@hugeicons/core-free-icons";
 import { useTranslations } from "next-intl";
 
@@ -42,23 +46,59 @@ export function useLandingVM(): LandingViewModelReturn {
     steps: [
       {
         number: "01",
-        icon: ArrowRight01Icon,
+        icon: Login01Icon,
         title: t("steps.oneTitle"),
         description: t("steps.oneDescription"),
+        showRightArrowOnDesktop: true,
+        showDownArrowOnDesktop: false,
       },
       {
         number: "02",
-        icon: CheckListIcon,
+        icon: UserIcon,
         title: t("steps.twoTitle"),
         description: t("steps.twoDescription"),
+        showRightArrowOnDesktop: true,
+        showDownArrowOnDesktop: false,
       },
       {
         number: "03",
-        icon: DashboardSquare01Icon,
+        icon: CheckListIcon,
         title: t("steps.threeTitle"),
         description: t("steps.threeDescription"),
+        showRightArrowOnDesktop: false,
+        showDownArrowOnDesktop: true,
+      },
+      {
+        number: "04",
+        icon: Analytics01Icon,
+        title: t("steps.fourTitle"),
+        description: t("steps.fourDescription"),
+        showRightArrowOnDesktop: true,
+        showDownArrowOnDesktop: false,
+      },
+      {
+        number: "05",
+        icon: TradeUpIcon,
+        title: t("steps.fiveTitle"),
+        description: t("steps.fiveDescription"),
+        showRightArrowOnDesktop: true,
+        showDownArrowOnDesktop: false,
+      },
+      {
+        number: "06",
+        icon: RefreshIcon,
+        title: t("steps.sixTitle"),
+        description: t("steps.sixDescription"),
+        showRightArrowOnDesktop: false,
+        showDownArrowOnDesktop: true,
       },
     ],
+    extra: {
+      badge: t("extra.badge"),
+      icon: Target02Icon,
+      title: t("extra.title"),
+      description: t("extra.description"),
+    },
     handleScrollToHowItWorks: (e?: React.MouseEvent<HTMLElement>) => {
       if (e) e.preventDefault();
       const element = document.getElementById("como-funciona");
