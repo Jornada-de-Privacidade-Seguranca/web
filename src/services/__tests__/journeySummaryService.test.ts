@@ -8,6 +8,7 @@ import {
   getJourneySummary,
   getLastProfileScore,
   getProfileSummary,
+  hasAnyJourney,
   mapJourneyToSummary,
   JourneySummaryRequestError,
 } from "../journeySummaryService";
@@ -184,6 +185,25 @@ describe("journeySummaryService", () => {
       vi.spyOn(httpClient, "apiRequest").mockImplementationOnce(response);
 
       await expect(getLastProfileScore(2, "5")).resolves.toBeNull();
+    });
+  });
+
+  describe("hasAnyJourney", () => {
+    it("deve buscar uma jornada do usuário, em qualquer situação", async () => {
+      const spy = vi.spyOn(httpClient, "apiRequest").mockResolvedValueOnce([{ id: 40 }]);
+
+      await expect(hasAnyJourney(2)).resolves.toBe(true);
+      expect(spy).toHaveBeenCalledWith(
+        "/users/2/journeys",
+        { params: { page: 1, per_page: 1 } },
+        expect.any(String)
+      );
+    });
+
+    it("deve indicar que não há jornadas com a lista vazia", async () => {
+      vi.spyOn(httpClient, "apiRequest").mockResolvedValueOnce([]);
+
+      await expect(hasAnyJourney(2)).resolves.toBe(false);
     });
   });
 });

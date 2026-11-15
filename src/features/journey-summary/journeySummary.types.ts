@@ -59,6 +59,38 @@ export interface JourneySummaryLabels {
   startingLabel: string;
   startErrorMessage: string;
   resumeCurrentJourneyLabel: string;
+  profileSelectionTitle: string;
+  profileSelectionLockedWarning: string;
+  profileSelectionCancel: string;
+  profileSelectionConfirming: string;
+}
+
+/** Erros do perfil de jornada inicial devolvidos pela API, cada um com a sua mensagem. */
+export type ProfileSelectionErrorType =
+  | "selectionRequired"
+  | "profileMismatch"
+  | "selectionLocked"
+  | "profileNotFound";
+
+/** Diálogo que confirma o perfil de jornada inicial antes da primeira jornada. */
+export interface ProfileSelectionDialogState {
+  isOpen: boolean;
+  isConfirming: boolean;
+  /** Texto com o nome do perfil de jornada no idioma atual */
+  description: string;
+  /** Mensagem de falha ao salvar o perfil ou criar a jornada */
+  error: string | null;
+  /** "Confirmar e iniciar", ou "Tentar novamente" depois de uma falha geral */
+  confirmLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+/** Aviso de que a primeira jornada precisa ser do perfil de jornada já escolhido. */
+export interface InitialProfileNotice {
+  message: string;
+  linkLabel: string;
+  href: string;
 }
 
 export interface JourneySummaryViewModelReturn {
@@ -79,6 +111,10 @@ export interface JourneySummaryViewModelReturn {
   startError: string | null;
   /** Aviso de que o usuário já tem outra jornada em andamento (null quando não houver) */
   journeyInProgressNotice: string | null;
+  /** Confirmação do perfil de jornada inicial, aberta ao iniciar a primeira jornada */
+  profileSelection: ProfileSelectionDialogState;
+  /** Aviso no resumo de outro perfil quando o inicial já foi escolhido (null quando não se aplica) */
+  initialProfileNotice: InitialProfileNotice | null;
   onStartJourney: () => void;
   onResumeCurrentJourney: () => void;
   onDismiss: () => void;

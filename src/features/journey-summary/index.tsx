@@ -16,6 +16,7 @@ import { JourneySummarySkeleton } from "./components/JourneySummarySkeleton";
 import { JourneyStatsGrid } from "./components/JourneyStatsGrid";
 import { JourneyInstructionsSection } from "./components/JourneyInstructionsSection";
 import { JourneySummaryErrorState } from "./components/JourneySummaryErrorState";
+import { JourneyProfileSelectionDialog } from "./components/JourneyProfileSelectionDialog";
 
 export function JourneySummaryView(props: JourneySummaryViewProps) {
   const {
@@ -30,6 +31,8 @@ export function JourneySummaryView(props: JourneySummaryViewProps) {
     isCtaDisabled,
     startError,
     journeyInProgressNotice,
+    profileSelection,
+    initialProfileNotice,
     onStartJourney,
     onResumeCurrentJourney,
     onDismiss,
@@ -147,6 +150,26 @@ export function JourneySummaryView(props: JourneySummaryViewProps) {
             </div>
           )}
 
+          {initialProfileNotice && (
+            <div
+              role="status"
+              className="flex flex-col gap-3 rounded-2xl border border-warning/60 bg-warning/15 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="flex items-start gap-2">
+                <HugeiconsIcon
+                  icon={AlertCircleIcon}
+                  size={18}
+                  aria-hidden="true"
+                  className="mt-px shrink-0 text-warning"
+                />
+                {initialProfileNotice.message}
+              </span>
+              <Button asChild variant="outline" className="shrink-0">
+                <Link href={initialProfileNotice.href}>{initialProfileNotice.linkLabel}</Link>
+              </Button>
+            </div>
+          )}
+
           {startError && (
             <div
               role="alert"
@@ -180,6 +203,20 @@ export function JourneySummaryView(props: JourneySummaryViewProps) {
           )}
         </div>
       )}
+
+      <JourneyProfileSelectionDialog
+        isOpen={profileSelection.isOpen}
+        isConfirming={profileSelection.isConfirming}
+        title={labels.profileSelectionTitle}
+        description={profileSelection.description}
+        warning={labels.profileSelectionLockedWarning}
+        error={profileSelection.error}
+        cancelLabel={labels.profileSelectionCancel}
+        confirmLabel={profileSelection.confirmLabel}
+        confirmingLabel={labels.profileSelectionConfirming}
+        onConfirm={profileSelection.onConfirm}
+        onCancel={profileSelection.onCancel}
+      />
     </PageShell>
   );
 }

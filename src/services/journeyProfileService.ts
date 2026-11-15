@@ -1,5 +1,10 @@
 import axios from "axios";
-import { apiRequestWithMeta, axiosInstance, type ApiResponse } from "@services/httpClient";
+import {
+  apiRequest,
+  apiRequestWithMeta,
+  axiosInstance,
+  type ApiResponse,
+} from "@services/httpClient";
 import type { PaginationMetaApi } from "@features/assessments/assessments.types";
 
 /** Perfil de jornada como vem de GET /journey-profiles e /journey-profiles/{id}. */
@@ -79,4 +84,25 @@ export async function getJourneyProfile(profileId: string): Promise<JourneyProfi
       "Não foi possível carregar o perfil de jornada."
     );
   }
+}
+
+/** Resposta de PUT /me/journey-profile. */
+export interface SelectedJourneyProfileApi {
+  journey_profile_id: number;
+  journey_profile: JourneyProfileApi | null;
+}
+
+/**
+ * Salva o perfil de jornada inicial do usuário, exigido pelo backend antes da
+ * primeira jornada. Falhas seguem como ApiRequestError, com o `code` da API
+ * (por exemplo, JOURNEY_PROFILE_SELECTION_LOCKED).
+ */
+export async function selectInitialJourneyProfile(
+  journeyProfileId: number
+): Promise<SelectedJourneyProfileApi> {
+  return apiRequest<SelectedJourneyProfileApi>(
+    "/me/journey-profile",
+    { method: "put", data: { journey_profile_id: journeyProfileId }, withCsrf: true },
+    "Não foi possível salvar o perfil de jornada."
+  );
 }

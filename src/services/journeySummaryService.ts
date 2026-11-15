@@ -188,3 +188,16 @@ export async function getLastProfileScore(
     return null;
   }
 }
+
+/**
+ * Indica se o usuário já tem alguma jornada, em qualquer situação. Sem nenhuma,
+ * a primeira jornada exige o perfil de jornada inicial salvo.
+ */
+export async function hasAnyJourney(userId: number): Promise<boolean> {
+  const journeys = await apiRequest<unknown[]>(
+    `/users/${userId}/journeys`,
+    { params: { page: 1, per_page: 1 } },
+    "Não foi possível verificar as jornadas do usuário."
+  );
+  return Array.isArray(journeys) && journeys.length > 0;
+}
