@@ -36,6 +36,7 @@ export function useLandingVM(): LandingViewModelReturn {
       footer: {
         left: `© ${new Date().getFullYear()} ${t("footer.left")}`,
         right: t("footer.right"),
+        privacyLink: t("footer.privacyLink"),
       },
     },
     steps: [

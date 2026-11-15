@@ -146,7 +146,15 @@ export function LandingView() {
 
         <footer className="mt-auto flex flex-col gap-2 border-t border-border/60 py-4 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
           <span>{labels.footer.left}</span>
-          <span>{labels.footer.right}</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/privacy-terms"
+              className="font-medium text-foreground/80 underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              {labels.footer.privacyLink}
+            </Link>
+            <span>{labels.footer.right}</span>
+          </div>
         </footer>
       </div>
     </main>

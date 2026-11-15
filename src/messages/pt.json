@@ -69,7 +69,8 @@
     },
     "footer": {
       "left": "Privacy Compass. Todos os direitos reservados.",
-      "right": "Feito com foco em privacidade."
+      "right": "Feito com foco em privacidade.",
+      "privacyLink": "Termo de Privacidade"
     }
   },
   "auth": {
@@ -644,6 +645,69 @@
       "modalCancel": "Cancelar",
       "modalConfirm": "Sim, excluir usuário",
       "deleteSuccess": "Usuário excluído com sucesso."
+    }
+  },
+  "privacyPolicy": {
+    "brand": "Privacy Compass",
+    "title": "Privacy Compass",
+    "subtitle": "Avalie seu conhecimento em privacidade e segurança",
+    "cardTitle": "Termo de privacidade",
+    "notice": "Este termo de privacidade está em fase de elaboração e validação. O documento final estabelecerá as diretrizes de tratamento, retenção e segurança de dados pessoais em total conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018).",
+    "back": "Voltar",
+    "eyebrow": "LGPD · Lei nº 13.709/2018",
+    "lastUpdatedLabel": "Última atualização",
+    "lastUpdatedDate": "Novembro de 2026",
+    "tocTitle": "Índice de seções",
+    "backToHome": "Voltar ao início",
+    "backToDashboard": "Voltar ao painel",
+    "goToDashboard": "Acessar painel",
+    "sections": {
+      "controller": {
+        "title": "Controlador e Finalidade da Plataforma",
+        "p1": "O Privacy Compass é uma plataforma corporativa de diagnóstico e capacitação em privacidade e segurança da informação, destinada a mapear competências de colaboradores e apoiar ações de desenvolvimento institucional.",
+        "p2": "O tratamento de dados pessoais realizado na plataforma observa os princípios da Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018), especialmente finalidade, adequação, necessidade, transparência e segurança."
+      },
+      "dataCollected": {
+        "title": "Dados Pessoais Coletados",
+        "p1": "Para viabilizar o acesso autenticado, a personalização das jornadas e a geração de indicadores organizacionais, tratamos apenas os dados estritamente necessários:",
+        "b1": "Dados cadastrais e funcionais: nome completo, e-mail institucional, código de matrícula/funcionário, departamento/setor e órgão ou empresa vinculada.",
+        "b2": "Dados de desempenho e jornadas: perfil de jornada selecionado, respostas declaradas nos questionários de competências, pontuações obtidas e datas de conclusão.",
+        "b3": "Dados técnicos essenciais de sessão: cookies estritamente necessários para autenticação segura (HttpOnly), proteção contra CSRF e preferência de idioma ou acessibilidade."
+      },
+      "dataUsage": {
+        "title": "Uso e Tratamento dos Dados",
+        "p1": "Os dados coletados são utilizados exclusivamente para finalidades legítimas relacionadas ao funcionamento do ambiente educacional e corporativo:",
+        "b1": "Autenticar sua identidade, manter a integridade da sessão e aplicar controles de acesso baseados em perfis de permissão.",
+        "b2": "Disponibilizar jornadas compatíveis com o seu perfil, calcular resultados por área de conhecimento e gerar relatórios individuais em PDF.",
+        "b3": "Apresentar indicadores consolidados aos gestores e administradores devidamente autorizados, permitindo direcionar trilhas de capacitação.",
+        "b4": "Cumprir obrigações legais, regulatórias e manter registros de auditoria para prevenção a incidentes de segurança."
+      },
+      "sharingAndRetention": {
+        "title": "Compartilhamento e Retenção",
+        "p1": "Seus dados pessoais não são comercializados, cedidos ou compartilhados com terceiros para fins publicitários ou alheios aos objetivos da plataforma.",
+        "p2": "O acesso interno é restrito a perfis administrativos com permissão específica (como gestores e administradores) e os registros são mantidos apenas pelo prazo necessário ao vínculo institucional ou cumprimento de exigência legal."
+      },
+      "security": {
+        "title": "Segurança da Informação",
+        "p1": "Adotamos medidas técnicas e administrativas alinhadas às boas práticas de proteção de dados para prevenir acessos não autorizados, alterações ou divulgações indevidas:",
+        "b1": "Sessões autenticadas por meio de cookies HttpOnly e validação de tokens CSRF em operações sensíveis.",
+        "b2": "Armazenamento protegido de credenciais com hash criptográfico e comunicação em canal seguro (HTTPS).",
+        "b3": "Controle de acesso granular baseado em permissões (RBAC) e bloqueio preventivo por inatividade com aviso prévio.",
+        "b4": "Registro de alterações cadastrais e gerenciamento de status da conta para rastreabilidade e auditoria."
+      },
+      "userRights": {
+        "title": "Direitos do Titular (LGPD)",
+        "p1": "Nos termos do Art. 18 da LGPD, você pode exercer a qualquer momento os seguintes direitos em relação aos seus dados pessoais:",
+        "b1": "Confirmar a existência de tratamento e acessar os dados vinculados à sua conta.",
+        "b2": "Corrigir ou atualizar dados incompletos, inexatos ou desatualizados diretamente na página de Perfil ou via administração.",
+        "b3": "Solicitar esclarecimentos sobre o compartilhamento, a retenção e os critérios utilizados no tratamento.",
+        "b4": "Requerer a anonimização, o bloqueio ou a eliminação de dados desnecessários ou tratados em desconformidade com a lei, bem como a revogação de consentimento quando aplicável."
+      },
+      "updatesAndContact": {
+        "title": "Alterações e Contato com o Encarregado",
+        "p1": "Este Termo de Privacidade poderá ser atualizado periodicamente para refletir melhorias na plataforma ou adequações normativas, sempre indicando a data da revisão mais recente no topo da página.",
+        "p2": "Em caso de dúvidas, solicitações ou exercício de direitos previstos na LGPD, entre em contato com o Encarregado pelo Tratamento de Dados Pessoais (DPO) ou com a equipe responsável pela administração da plataforma em sua instituição."
+      }
     }
   }
 }
