@@ -134,13 +134,20 @@
       "loginLink": "Entrar",
       "validation": {
         "fullNameRequired": "O nome completo é obrigatório.",
+        "fullNameLastName": "Informe nome e sobrenome.",
+        "fullNameMaxLength": "O nome deve ter no máximo 50 caracteres.",
         "employeeCodeRequired": "O código de funcionário/matrícula é obrigatório.",
+        "employeeCodeMaxLength": "O código de funcionário/matrícula deve ter no máximo 50 caracteres.",
         "departmentRequired": "O departamento é obrigatório.",
+        "departmentMaxLength": "O departamento deve ter no máximo 100 caracteres.",
         "companyRequired": "A empresa é obrigatória.",
+        "companyMaxLength": "A empresa deve ter no máximo 100 caracteres.",
         "emailRequired": "O e-mail institucional é obrigatório.",
         "emailInvalid": "Informe um e-mail institucional válido.",
+        "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
         "passwordRequired": "A senha é obrigatória.",
         "passwordMinLength": "A senha deve ter no mínimo 8 caracteres.",
+        "passwordMaxLength": "A senha deve ter no máximo 100 caracteres.",
         "confirmPasswordRequired": "A confirmação de senha é obrigatória.",
         "passwordsDoNotMatch": "As senhas não coincidem.",
         "termsRequired": "Você deve aceitar os termos de uso e política de privacidade."
@@ -148,13 +155,13 @@
       "serverError": {
         "invalidFieldsTitle": "Campo inválido",
         "alreadyRegisteredTitle": "Dados já cadastrados",
-        "alreadyRegisteredDescription": "E-mail ou código de funcionário já cadastrado neste departamento/empresa.",
+        "alreadyRegisteredDescription": "Já existe uma conta cadastrada com este e-mail.",
         "serverErrorTitle": "Erro de servidor",
         "serverErrorDescription": "Ocorreu um erro interno. Por favor, tente novamente mais tarde."
       },
       "serverSuccess": {
         "title": "Conta criada com sucesso!",
-        "description": "Conta criada com sucesso! Você já pode fazer login."
+        "description": "Sua conta foi criada e precisa ser ativada por um administrador antes do primeiro acesso."
       }
     }
   },

@@ -20,12 +20,20 @@ export interface ApiResponse<T> {
 export class ApiRequestError extends Error {
   readonly status?: number;
   readonly code?: string;
+  /** Mensagens por campo do envelope de erro (por exemplo, no 422 de validação). */
+  readonly errors?: Record<string, string[]>;
 
-  constructor(message: string, status?: number, code?: string) {
+  constructor(
+    message: string,
+    status?: number,
+    code?: string,
+    errors?: Record<string, string[]>
+  ) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
     this.code = code;
+    this.errors = errors;
   }
 }
 
@@ -100,11 +108,23 @@ function isMutatingMethod(method: AxiosRequestConfig["method"]): boolean {
 function toApiRequestError(error: unknown, defaultErrorMessage: string): ApiRequestError {
   const message = extractErrorMessage(error, defaultErrorMessage);
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { code?: unknown } | undefined;
+    const data = error.response?.data as { code?: unknown; errors?: unknown } | undefined;
     const code = typeof data?.code === "string" ? data.code : undefined;
-    return new ApiRequestError(message, error.response?.status, code);
+    return new ApiRequestError(message, error.response?.status, code, extractFieldErrors(data?.errors));
   }
   return new ApiRequestError(message);
+}
+
+function extractFieldErrors(errors: unknown): Record<string, string[]> | undefined {
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) return undefined;
+
+  const fieldErrors: Record<string, string[]> = {};
+  for (const [field, messages] of Object.entries(errors)) {
+    const list = Array.isArray(messages) ? messages : [messages];
+    const texts = list.filter((message): message is string => typeof message === "string");
+    if (texts.length > 0) fieldErrors[field] = texts;
+  }
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
 }
 
 function extractErrorMessage(error: unknown, defaultErrorMessage: string): string {

@@ -9,8 +9,7 @@ import { Link } from "@/shared/i18n/navigation";
 import { useCadastroVM } from "./cadastro.viewmodel";
 
 export function CadastroView() {
-  const { form, labels, handleSubmit, serverMessage, onCloseMsg, isGeneralSystem } =
-    useCadastroVM();
+  const { form, labels, handleSubmit, serverMessage, onCloseMsg } = useCadastroVM();
   const { register, formState } = form;
   const errors = formState.errors;
 
@@ -126,30 +125,28 @@ export function CadastroView() {
                 </div>
               </div>
 
-              {/* Empresa (Sistema Geral) */}
-              {isGeneralSystem && (
-                <div className="space-y-1.5">
-                  <label
-                    className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted-foreground"
-                    htmlFor="empresa"
-                  >
-                    {labels.companyLabel}
-                  </label>
-                  <Input
-                    id="empresa"
-                    aria-invalid={Boolean(errors.empresa)}
-                    {...register("empresa")}
-                    placeholder={labels.companyPlaceholder}
-                    className="h-10 border-input bg-input/30 text-foreground placeholder:text-muted-foreground"
-                    autoComplete="organization"
-                  />
-                  {errors.empresa?.message ? (
-                    <p className="text-xs text-destructive">
-                      {errors.empresa.message}
-                    </p>
-                  ) : null}
-                </div>
-              )}
+              {/* Órgão ou empresa */}
+              <div className="space-y-1.5">
+                <label
+                  className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                  htmlFor="empresa"
+                >
+                  {labels.companyLabel}
+                </label>
+                <Input
+                  id="empresa"
+                  aria-invalid={Boolean(errors.empresa)}
+                  {...register("empresa")}
+                  placeholder={labels.companyPlaceholder}
+                  className="h-10 border-input bg-input/30 text-foreground placeholder:text-muted-foreground"
+                  autoComplete="organization"
+                />
+                {errors.empresa?.message ? (
+                  <p className="text-xs text-destructive">
+                    {errors.empresa.message}
+                  </p>
+                ) : null}
+              </div>
 
               {/* E-mail institucional */}
               <div className="space-y-1.5">
