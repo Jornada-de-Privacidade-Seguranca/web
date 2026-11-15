@@ -118,6 +118,10 @@ describe("useAdminResultsVM", () => {
     mockReplace.mockClear();
     mockSearch = "";
     mockLocale = "pt";
+
+    vi.spyOn(adminResultsService, "getAdminResults").mockResolvedValue(mockResponse);
+    vi.spyOn(adminResultsService, "getAdminResultsMetrics").mockResolvedValue(mockResponse.summary);
+    vi.spyOn(adminResultsService, "getAdminResultsFilterOptions").mockResolvedValue(mockResponse.filterOptions);
   });
 
   afterEach(() => {

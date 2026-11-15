@@ -1,4 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import * as httpClient from "@services/httpClient";
+import { ApiRequestError } from "@services/httpClient";
 import {
   getAdminResults,
   getAdminResultsMetrics,
@@ -15,6 +17,194 @@ import {
 } from "../adminResultsService";
 
 describe("adminResultsService", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    // Por padrão, simula indisponibilidade de backend para exercitar os fallbacks de mock de forma isolada
+    vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
+      new ApiRequestError("Network error")
+    );
+    vi.spyOn(httpClient, "apiRequest").mockRejectedValue(
+      new ApiRequestError("Network error")
+    );
+  });
+
+  describe("Integração com API (Backend #158 / PR 83)", () => {
+    it("deve enviar parâmetros mapeados e normalizados no GET /admin/results", async () => {
+      const apiItem: AdminResultItemApi = {
+        id: 99,
+        user: {
+          id: 2,
+          name: "Carlos Eduardo",
+          email: "carlos@empresa.com",
+          department: "TI",
+        },
+        journey_profile: {
+          id: 6,
+          name_pt: "Auditor",
+          name_en: "Auditor",
+        },
+        knowledge_domain: {
+          id: 1,
+          name_pt: "Privacidade",
+          name_en: "Privacy",
+        },
+        finished_at: "2026-05-10 14:00:00",
+        score: 95,
+      };
+
+      const spy = vi.spyOn(httpClient, "apiRequestWithMeta").mockResolvedValue({
+        data: [apiItem],
+        meta: {
+          pagination: {
+            total: 25,
+            count: 1,
+            per_page: 10,
+            current_page: 2,
+            total_pages: 3,
+          },
+        },
+      });
+
+      const response = await getAdminResults({
+        search: "   Carlos   ",
+        userId: "2",
+        department: "TI",
+        domains: ["privacy", "joint"],
+        journeyProfileId: "6",
+        dateFrom: "2026-05-01",
+        dateTo: "2026-05-31",
+        page: 2,
+        perPage: 10,
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "/admin/results",
+        {
+          params: {
+            search: "Carlos",
+            user_id: 2,
+            department: "TI",
+            "domains[]": [1, 3],
+            journey_profile_id: 6,
+            ended_from: "2026-05-01",
+            ended_to: "2026-05-31",
+            page: 2,
+            per_page: 10,
+          },
+        },
+        "Não foi possível carregar os resultados dos usuários."
+      );
+
+      expect(response.total).toBe(25);
+      expect(response.filteredTotal).toBe(25);
+      expect(response.page).toBe(2);
+      expect(response.limit).toBe(10);
+      expect(response.totalPages).toBe(3);
+      expect(response.items).toHaveLength(1);
+      expect(response.items[0].id).toBe("99");
+      expect(response.items[0].user.name).toBe("Carlos Eduardo");
+      expect(response.items[0].domain).toBe("privacy");
+    });
+
+    it("deve enviar parâmetros mapeados no GET /admin/results/metrics", async () => {
+      const metricsDataApi: AdminResultMetricsDataApi = {
+        total_completed_journeys: 12,
+        distinct_users_count: 5,
+        domains: [
+          {
+            domain_id: 1,
+            domain_name_pt: "Privacidade",
+            domain_name_en: "Privacy",
+            completed_journeys: 6,
+            average_score: 88,
+          },
+          {
+            domain_id: 2,
+            domain_name_pt: "Segurança da Informação",
+            domain_name_en: "Information Security",
+            completed_journeys: 6,
+            average_score: 82,
+          },
+        ],
+      };
+
+      const spy = vi.spyOn(httpClient, "apiRequest").mockResolvedValue(metricsDataApi);
+
+      const metrics = await getAdminResultsMetrics({
+        search: "  segurança  ",
+        userId: "3",
+        department: "Compliance",
+        domains: ["security"],
+        journeyProfileId: "4",
+        dateFrom: "2026-01-01",
+        dateTo: "2026-06-30",
+      });
+
+      expect(spy).toHaveBeenCalledWith(
+        "/admin/results/metrics",
+        {
+          params: {
+            search: "segurança",
+            user_id: 3,
+            department: "Compliance",
+            "domains[]": [2],
+            journey_profile_id: 4,
+            ended_from: "2026-01-01",
+            ended_to: "2026-06-30",
+          },
+        },
+        "Não foi possível carregar as métricas dos resultados."
+      );
+
+      expect(metrics.totalCompletedJourneys).toBe(12);
+      expect(metrics.totalEvaluatedUsers).toBe(5);
+      expect(metrics.domainAverages).toHaveLength(2);
+      expect(metrics.domainAverages[0].averageScore).toBe(88);
+    });
+
+    it("deve consumir GET /users/departments via apiRequest", async () => {
+      vi.spyOn(httpClient, "apiRequest").mockResolvedValue(["RH", "Financeiro"]);
+      const departments = await getDepartments();
+      expect(departments).toEqual(["RH", "Financeiro"]);
+    });
+
+    it("deve consumir GET /users/with-results via apiRequest e mapear os usuários", async () => {
+      vi.spyOn(httpClient, "apiRequest").mockResolvedValue([
+        { id: 10, name: "Maria", email: "maria@empresa.com" },
+      ]);
+      const users = await getUsersWithResults();
+      expect(users).toEqual([{ id: "10", name: "Maria", email: "maria@empresa.com" }]);
+    });
+
+    it("deve acionar fallback para mock quando backend responder 404 (rota inexistente)", async () => {
+      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
+        new ApiRequestError("Route not found", 404)
+      );
+
+      const response = await getAdminResults({ page: 1, perPage: 5 });
+      expect(response.items).toHaveLength(5);
+      expect(response.total).toBe(14);
+    });
+
+    it("deve acionar fallback para mock quando backend responder 401 (não autenticado como admin)", async () => {
+      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
+        new ApiRequestError("Unauthorized", 401)
+      );
+
+      const response = await getAdminResults({ page: 1, perPage: 5 });
+      expect(response.items).toHaveLength(5);
+      expect(response.total).toBe(14);
+    });
+
+    it("deve relançar erro quando status for de erro interno (500) e não elegível para fallback", async () => {
+      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
+        new ApiRequestError("Internal Server Error", 500)
+      );
+
+      await expect(getAdminResults()).rejects.toThrow("Internal Server Error");
+    });
+  });
+
   describe("getAdminResults (GET /admin/results)", () => {
     it("deve retornar lista paginada mapeada para a tela", async () => {
       const response = await getAdminResults({ page: 1, perPage: 6 });

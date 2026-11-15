@@ -227,10 +227,21 @@ function isNetworkError(error: unknown): boolean {
 }
 
 function shouldFallbackToMock(error: unknown): boolean {
-  return (
-    (env.isDev || process.env.NODE_ENV === "test") &&
-    isNetworkError(error)
-  );
+  if (!(env.isDev || process.env.NODE_ENV === "test")) {
+    return false;
+  }
+  if (isNetworkError(error)) {
+    return true;
+  }
+  // Se o backend local estiver rodando mas os endpoints do PR 83 ainda não existirem (404)
+  // ou a sessão não for de administrador (401), permite fallback para mock em dev/test.
+  if (
+    error instanceof ApiRequestError &&
+    (error.status === 404 || error.status === 401)
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
