@@ -64,6 +64,12 @@ describe("useAdminUsersVM", () => {
       description: "Acesso total",
       permissions: ["Tudo"],
     },
+    {
+      id: "manager" as const,
+      name: "Gestor",
+      description: "Descrição antiga",
+      permissions: ["Atribuir jornadas"],
+    },
   ];
 
   beforeEach(() => {
@@ -88,6 +94,9 @@ describe("useAdminUsersVM", () => {
     expect(result.current.totalUsers).toBe(10);
     expect(result.current.filteredTotal).toBe(1);
     expect(result.current.currentTab).toBe("users");
+    expect(
+      result.current.accessProfiles.find((p) => p.id === "manager")?.description
+    ).toBe("rolesTab.descriptions.manager");
   });
 
   it("deve alternar entre abas", () => {

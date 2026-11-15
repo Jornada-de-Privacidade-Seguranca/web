@@ -10,7 +10,13 @@ import type {
   UserCompletedJourney,
 } from "@features/admin-users/adminUsers.types";
 import type {
+  ActiveJourney,
   AdminUserDetails,
+  AssignableJourneyProfile,
+  AssignJourneyPayload,
+  JourneyAssignedBy,
+  JourneyDomain,
+  JourneyOrigin,
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
 
@@ -44,6 +50,7 @@ export interface InviteUserResponse {
 
 export { getInitials };
 export type {
+  ActiveJourney,
   AdminUserListItem,
   AccessProfile,
   UserRole,
@@ -52,6 +59,10 @@ export type {
   PaginatedUsersResponse,
   UserCompletedJourney,
   AdminUserDetails,
+  AssignableJourneyProfile,
+  AssignJourneyPayload,
+  JourneyAssignedBy,
+  JourneyOrigin,
   UpdateUserPayload,
 };
 
@@ -60,6 +71,46 @@ const ROLE_LABEL_MAP: Record<UserRole, string> = {
   manager: "Gestor",
   user: "Usuário",
 };
+
+export interface JourneyProfileApiItem {
+  id: number;
+  name_pt: string;
+  name_en: string;
+  knowledge_domain: JourneyDomain;
+}
+
+export const MOCK_ASSIGNABLE_PROFILES: JourneyProfileApiItem[] = [
+  {
+    id: 1,
+    name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+    name_en: "Data Protection Officer (DPO)",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 2,
+    name_pt: "Gestor de Segurança da Informação",
+    name_en: "Information Security Manager",
+    knowledge_domain: "security",
+  },
+  {
+    id: 3,
+    name_pt: "Controlador",
+    name_en: "Data Controller",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 4,
+    name_pt: "Operador",
+    name_en: "Data Operator",
+    knowledge_domain: "privacy",
+  },
+  {
+    id: 5,
+    name_pt: "Auditor de Segurança e Privacidade",
+    name_en: "Security and Privacy Auditor",
+    knowledge_domain: "joint",
+  },
+];
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
   {
@@ -82,7 +133,8 @@ export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
   {
     id: "manager",
     name: "Gestor",
-    description: "Acompanhamento de equipes e atribuição de jornadas de capacitação.",
+    description:
+      "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis.",
     permissions: [
       "users.view",
       "results.view_all",
@@ -117,6 +169,18 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 4,
     createdAt: "2026-01-10T10:00:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-1",
+      profileId: 3,
+      title: "Controlador",
+      domain: "privacy",
+      domainLabel: "Privacidade",
+      startedAt: "2026-06-03T09:15:00Z",
+      origin: "self_started",
+      assignedBy: null,
+      assigned_by: null,
+    },
     journeys: [
       {
         id: "j-1",
@@ -165,6 +229,18 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 2,
     createdAt: "2026-02-15T11:20:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-2",
+      profileId: 2,
+      title: "Gestor de Segurança da Informação",
+      domain: "security",
+      domainLabel: "Segurança da Informação",
+      startedAt: "2026-06-01T10:00:00Z",
+      origin: "assigned",
+      assignedBy: { id: 1, name: "Usuário Teste" },
+      assigned_by: { id: 1, name: "Usuário Teste" },
+    },
     journeys: [
       {
         id: "j-1",
@@ -197,6 +273,18 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 1,
     createdAt: "2026-03-01T08:00:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: {
+      id: "aj-3",
+      profileId: 4,
+      title: "Operador",
+      domain: "privacy",
+      domainLabel: "Privacidade",
+      startedAt: "2026-06-02T14:30:00Z",
+      origin: "assigned",
+      assignedBy: { id: 99, name: "Roberto Almeida" },
+      assigned_by: { id: 99, name: "Roberto Almeida" },
+    },
     journeys: [
       {
         id: "j-1",
@@ -221,6 +309,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "inactive",
     journeysCount: 0,
     createdAt: "2026-03-15T13:40:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: null,
     journeys: [],
   },
   {
@@ -236,6 +326,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "pending",
     journeysCount: 0,
     createdAt: "2026-04-01T15:00:00Z",
+    initialJourneyProfileId: 2,
+    activeJourney: null,
     journeys: [],
   },
   {
@@ -291,6 +383,8 @@ let mockUsersData: AdminUserDetails[] = [
     status: "active",
     journeysCount: 1,
     createdAt: "2026-04-15T14:20:00Z",
+    initialJourneyProfileId: 1,
+    activeJourney: null,
     journeys: [
       {
         id: "j-1",
@@ -490,4 +584,76 @@ export async function deleteUser(id: string): Promise<{ success: boolean }> {
 
 export async function getAccessProfiles(): Promise<AccessProfile[]> {
   return MOCK_ACCESS_PROFILES;
+}
+
+const DOMAIN_LABELS: Record<JourneyDomain, string> = {
+  privacy: "Privacidade",
+  security: "Segurança da Informação",
+  joint: "Conjunta",
+};
+
+export async function getAssignableJourneyProfiles(): Promise<
+  AssignableJourneyProfile[]
+> {
+  return MOCK_ASSIGNABLE_PROFILES.map((profile) => ({
+    id: profile.id,
+    namePt: profile.name_pt,
+    nameEn: profile.name_en,
+    domain: profile.knowledge_domain,
+  }));
+}
+
+export async function assignJourneyToUser(
+  userId: string,
+  payload: AssignJourneyPayload
+): Promise<AdminUserDetails> {
+  const index = mockUsersData.findIndex((u) => u.id === userId);
+  if (index === -1) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  const profile = MOCK_ASSIGNABLE_PROFILES.find((p) => p.id === payload.profileId);
+  if (!profile) {
+    throw new Error("Perfil de jornada não encontrado");
+  }
+
+  const assignedBy: JourneyAssignedBy = payload.assignedBy ?? {
+    id: 1,
+    name: "Administrador",
+  };
+
+  const activeJourney: ActiveJourney = {
+    id: `aj-${userId}-${Date.now()}`,
+    profileId: profile.id,
+    title: profile.name_pt,
+    domain: profile.knowledge_domain,
+    domainLabel: DOMAIN_LABELS[profile.knowledge_domain],
+    startedAt: new Date().toISOString(),
+    origin: "assigned",
+    assignedBy,
+    assigned_by: assignedBy,
+  };
+
+  mockUsersData[index] = {
+    ...mockUsersData[index],
+    activeJourney,
+  };
+
+  return { ...mockUsersData[index] };
+}
+
+export async function cancelAssignedJourney(
+  userId: string
+): Promise<AdminUserDetails> {
+  const index = mockUsersData.findIndex((u) => u.id === userId);
+  if (index === -1) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  mockUsersData[index] = {
+    ...mockUsersData[index],
+    activeJourney: null,
+  };
+
+  return { ...mockUsersData[index] };
 }

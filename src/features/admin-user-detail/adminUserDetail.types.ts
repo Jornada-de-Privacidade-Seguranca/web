@@ -4,9 +4,51 @@ import type {
   UserRole,
   UserStatus,
 } from "@features/admin-users/adminUsers.types";
+import type {
+  JourneyDomain,
+  JourneyOrigin,
+} from "@features/assessments/assessments.types";
+
+export interface JourneyAssignedBy {
+  id: number | string;
+  name: string;
+}
+
+export interface ActiveJourney {
+  id: string;
+  profileId: number;
+  title: string;
+  domain: JourneyDomain;
+  domainLabel: string;
+  startedAt: string;
+  origin: JourneyOrigin;
+  assignedBy: JourneyAssignedBy | null;
+  assigned_by?: JourneyAssignedBy | null;
+}
+
+export interface AssignableJourneyProfile {
+  id: number;
+  namePt: string;
+  nameEn: string;
+  domain: JourneyDomain;
+}
+
+export interface AssignableJourneyOption {
+  id: number;
+  name: string;
+  domain: JourneyDomain;
+  domainLabel: string;
+}
+
+export interface AssignJourneyPayload {
+  profileId: number;
+  assignedBy?: JourneyAssignedBy;
+}
 
 export interface AdminUserDetails extends AdminUserListItem {
   journeys: UserCompletedJourney[];
+  activeJourney?: ActiveJourney | null;
+  initialJourneyProfileId?: number | null;
 }
 
 export interface UpdateUserPayload {
@@ -89,6 +131,39 @@ export interface AdminUserDetailLabels {
   deleteSuccess: string;
 }
 
+export interface ActiveJourneySectionLabels {
+  title: string;
+  subtitle: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  startedAt: (date: string) => string;
+  originSelf: string;
+  originAssigned: (name: string) => string;
+  assignButton: string;
+  alreadyActiveHint: string;
+  cancelButton: string;
+  closeMessage: string;
+  domains: Record<JourneyDomain, string>;
+}
+
+export interface AssignJourneyModalLabels {
+  modalTitle: string;
+  modalDescription: string;
+  firstJourneyNotice: string;
+  cancel: string;
+  confirm: string;
+  submitting: string;
+  emptyOptions: string;
+}
+
+export interface CancelAssignmentModalLabels {
+  modalTitle: string;
+  modalDescription: (title: string) => string;
+  keepButton: string;
+  confirmButton: string;
+  cancellingButton: string;
+}
+
 export interface AdminUserDetailViewModelReturn {
   user: AdminUserDetails | null;
   isLoading: boolean;
@@ -115,6 +190,32 @@ export interface AdminUserDetailViewModelReturn {
   handleResetForm: () => void;
   handleSaveForm: () => Promise<void>;
 
+  // Active Journey & Assignment
+  activeJourney: ActiveJourney | null;
+  assignableOptions: AssignableJourneyOption[];
+  isFirstJourney: boolean;
+  selectedProfileId: number | null;
+  isAssignModalOpen: boolean;
+  isAssigningJourney: boolean;
+  assignErrorMessage: string | null;
+  isCancelAssignModalOpen: boolean;
+  isCancellingAssignment: boolean;
+  cancelErrorMessage: string | null;
+  journeySuccessMessage: string | null;
+  canAssignJourney: boolean;
+  canCancelAssignment: boolean;
+  handleOpenAssignModal: () => void;
+  handleCloseAssignModal: () => void;
+  handleSelectProfile: (profileId: number) => void;
+  handleConfirmAssignJourney: () => Promise<void>;
+  handleOpenCancelAssignModal: () => void;
+  handleCloseCancelAssignModal: () => void;
+  handleConfirmCancelAssignment: () => Promise<void>;
+  handleDismissJourneyMessage: () => void;
+  activeJourneyLabels: ActiveJourneySectionLabels;
+  assignJourneyLabels: AssignJourneyModalLabels;
+  cancelAssignmentLabels: CancelAssignmentModalLabels;
+
   // Journeys Section
   journeys: UserCompletedJourney[];
 
@@ -133,4 +234,10 @@ export interface AdminUserDetailViewModelReturn {
   labels: AdminUserDetailLabels;
 }
 
-export type { UserCompletedJourney, UserRole, UserStatus };
+export type {
+  JourneyDomain,
+  JourneyOrigin,
+  UserCompletedJourney,
+  UserRole,
+  UserStatus,
+};

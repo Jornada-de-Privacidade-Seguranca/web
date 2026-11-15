@@ -592,7 +592,10 @@
       "subtitle": "Consulte os níveis de permissão pré-configurados do sistema.",
       "defaultBadge": "Padrão",
       "permissionsTitle": "Permissões de consulta:",
-      "historyNotice": "As mudanças de perfil e alterações cadastrais ficam permanentemente registradas no histórico de auditoria."
+      "historyNotice": "As mudanças de perfil e alterações cadastrais ficam permanentemente registradas no histórico de auditoria.",
+      "descriptions": {
+        "manager": "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis."
+      }
     },
     "empty": {
       "title": "Nenhum usuário encontrado",
@@ -677,6 +680,42 @@
       "modalCancel": "Cancelar",
       "modalConfirm": "Sim, excluir usuário",
       "deleteSuccess": "Usuário excluído com sucesso."
+    },
+    "activeJourney": {
+      "title": "Jornada em andamento",
+      "subtitle": "Acompanhe a trilha ativa deste colaborador no momento.",
+      "emptyTitle": "Nenhuma jornada em andamento",
+      "emptyDescription": "Este usuário não possui nenhuma jornada ativa no momento.",
+      "startedAt": "Iniciada em {date}",
+      "originSelf": "Iniciada pelo usuário",
+      "originAssigned": "Atribuída por {name}",
+      "assignButton": "Atribuir jornada",
+      "alreadyActiveHint": "Este usuário já tem uma jornada em andamento",
+      "cancelButton": "Cancelar atribuição",
+      "cancelSuccess": "Atribuição de jornada cancelada com sucesso.",
+      "cancelModalTitle": "Cancelar atribuição de jornada?",
+      "cancelModalDescription": "Tem certeza de que deseja cancelar a atribuição da jornada \"{title}\"?",
+      "cancelModalKeep": "Manter jornada",
+      "cancelModalConfirm": "Cancelar atribuição",
+      "cancellingButton": "Cancelando...",
+      "cancelError": "Não foi possível cancelar a atribuição da jornada. Tente novamente.",
+      "closeMessage": "Fechar aviso"
+    },
+    "assignJourney": {
+      "modalTitle": "Atribuir jornada",
+      "modalDescription": "Selecione um perfil de jornada para atribuir a este usuário.",
+      "firstJourneyNotice": "A primeira jornada deve ser do perfil escolhido pelo usuário",
+      "emptyOptions": "Nenhum perfil de jornada disponível.",
+      "cancel": "Cancelar",
+      "confirm": "Atribuir",
+      "submitting": "Atribuindo...",
+      "success": "Jornada atribuída com sucesso.",
+      "error": "Não foi possível atribuir a jornada. Tente novamente.",
+      "domains": {
+        "privacy": "Privacidade",
+        "security": "Segurança da Informação",
+        "joint": "Conjunta"
+      }
     }
   },
   "privacyPolicy": {

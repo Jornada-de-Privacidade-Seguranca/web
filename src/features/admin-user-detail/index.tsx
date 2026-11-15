@@ -9,6 +9,9 @@ import {
   UserHeader,
   InactiveUserBanner,
   UserEditForm,
+  ActiveJourneySection,
+  AssignJourneyModal,
+  CancelAssignmentModal,
   UserJourneysSection,
   DeleteUserModal,
 } from "./components";
@@ -40,6 +43,31 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     handleFieldChange,
     handleResetForm,
     handleSaveForm,
+
+    activeJourney,
+    assignableOptions,
+    isFirstJourney,
+    selectedProfileId,
+    isAssignModalOpen,
+    isAssigningJourney,
+    assignErrorMessage,
+    isCancelAssignModalOpen,
+    isCancellingAssignment,
+    cancelErrorMessage,
+    journeySuccessMessage,
+    canAssignJourney,
+    canCancelAssignment,
+    handleOpenAssignModal,
+    handleCloseAssignModal,
+    handleSelectProfile,
+    handleConfirmAssignJourney,
+    handleOpenCancelAssignModal,
+    handleCloseCancelAssignModal,
+    handleConfirmCancelAssignment,
+    handleDismissJourneyMessage,
+    activeJourneyLabels,
+    assignJourneyLabels,
+    cancelAssignmentLabels,
 
     journeys,
 
@@ -124,6 +152,18 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
           onSaveForm={handleSaveForm}
         />
 
+        {/* Seção: Jornada em andamento (acima de Jornadas realizadas) */}
+        <ActiveJourneySection
+          activeJourney={activeJourney}
+          canAssignJourney={canAssignJourney}
+          canCancelAssignment={canCancelAssignment}
+          journeySuccessMessage={journeySuccessMessage}
+          labels={activeJourneyLabels}
+          onAssignClick={handleOpenAssignModal}
+          onCancelAssignClick={handleOpenCancelAssignModal}
+          onDismissSuccessMessage={handleDismissJourneyMessage}
+        />
+
         {/* Seção de Trilhas e Jornadas Realizadas */}
         <UserJourneysSection
           userId={user.id}
@@ -175,6 +215,35 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
             labels={labels}
             onCancel={handleCloseDeleteModal}
             onConfirm={handleConfirmDelete}
+          />
+        )}
+
+        {/* Modal de Atribuição de Jornada */}
+        {canAssignJourney && (
+          <AssignJourneyModal
+            isOpen={isAssignModalOpen}
+            options={assignableOptions}
+            isFirstJourney={isFirstJourney}
+            selectedProfileId={selectedProfileId}
+            isSubmitting={isAssigningJourney}
+            errorMessage={assignErrorMessage}
+            labels={assignJourneyLabels}
+            onSelectProfile={handleSelectProfile}
+            onCancel={handleCloseAssignModal}
+            onConfirm={handleConfirmAssignJourney}
+          />
+        )}
+
+        {/* Modal de Confirmação de Cancelamento de Atribuição */}
+        {canCancelAssignment && activeJourney && (
+          <CancelAssignmentModal
+            isOpen={isCancelAssignModalOpen}
+            journeyTitle={activeJourney.title}
+            isCancelling={isCancellingAssignment}
+            errorMessage={cancelErrorMessage}
+            labels={cancelAssignmentLabels}
+            onKeep={handleCloseCancelAssignModal}
+            onConfirm={handleConfirmCancelAssignment}
           />
         )}
       </div>

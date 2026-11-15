@@ -156,6 +156,76 @@ describe("AdminUserDetailView", () => {
       handleResetForm: vi.fn(),
       handleSaveForm: vi.fn().mockResolvedValue(undefined),
 
+      activeJourney: null,
+      assignableOptions: [
+        {
+          id: 1,
+          name: "Encarregado pelo Tratamento de Dados Pessoais",
+          domain: "privacy",
+          domainLabel: "Privacidade",
+        },
+        {
+          id: 2,
+          name: "Gestor de Segurança da Informação",
+          domain: "security",
+          domainLabel: "Segurança da Informação",
+        },
+      ],
+      isFirstJourney: false,
+      selectedProfileId: 1,
+      isAssignModalOpen: false,
+      isAssigningJourney: false,
+      assignErrorMessage: null,
+      isCancelAssignModalOpen: false,
+      isCancellingAssignment: false,
+      cancelErrorMessage: null,
+      journeySuccessMessage: null,
+      canAssignJourney: true,
+      canCancelAssignment: false,
+      handleOpenAssignModal: vi.fn(),
+      handleCloseAssignModal: vi.fn(),
+      handleSelectProfile: vi.fn(),
+      handleConfirmAssignJourney: vi.fn().mockResolvedValue(undefined),
+      handleOpenCancelAssignModal: vi.fn(),
+      handleCloseCancelAssignModal: vi.fn(),
+      handleConfirmCancelAssignment: vi.fn().mockResolvedValue(undefined),
+      handleDismissJourneyMessage: vi.fn(),
+      activeJourneyLabels: {
+        title: "Jornada em andamento",
+        subtitle: "Acompanhe a trilha ativa.",
+        emptyTitle: "Nenhuma jornada em andamento",
+        emptyDescription: "Este usuário não possui nenhuma jornada ativa.",
+        startedAt: (date) => `Iniciada em ${date}`,
+        originSelf: "Iniciada pelo usuário",
+        originAssigned: (name) => `Atribuída por ${name}`,
+        assignButton: "Atribuir jornada",
+        alreadyActiveHint: "Este usuário já tem uma jornada em andamento",
+        cancelButton: "Cancelar atribuição",
+        closeMessage: "Fechar aviso",
+        domains: {
+          privacy: "Privacidade",
+          security: "Segurança da Informação",
+          joint: "Conjunta",
+        },
+      },
+      assignJourneyLabels: {
+        modalTitle: "Atribuir jornada",
+        modalDescription: "Selecione um perfil de jornada.",
+        firstJourneyNotice:
+          "A primeira jornada deve ser do perfil escolhido pelo usuário",
+        cancel: "Cancelar",
+        confirm: "Atribuir",
+        submitting: "Atribuindo...",
+        emptyOptions: "Nenhum perfil de jornada disponível.",
+      },
+      cancelAssignmentLabels: {
+        modalTitle: "Cancelar atribuição de jornada?",
+        modalDescription: (title) => `Cancelar ${title}?`,
+        keepButton: "Manter jornada",
+        confirmButton: "Cancelar atribuição",
+        cancellingButton: "Cancelando...",
+      },
+
       journeys: [
         {
           id: "j1",
@@ -264,5 +334,271 @@ describe("AdminUserDetailView", () => {
     );
 
     expect(screen.getByTestId("user-detail-skeleton")).toBeDefined();
+  });
+
+  it("posiciona Jornada em andamento acima de Jornadas Realizadas e exibe estado vazio com botão Atribuir jornada condicionado à permissão", () => {
+    const handleOpenAssignModal = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({ handleOpenAssignModal })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+
+    const activeHeading = screen.getByRole("heading", {
+      level: 2,
+      name: "Jornada em andamento",
+    });
+    const completedHeading = screen.getByRole("heading", {
+      level: 2,
+      name: "Jornadas Realizadas",
+    });
+    expect(
+      Boolean(
+        activeHeading.compareDocumentPosition(completedHeading) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
+
+    expect(screen.getByText("Nenhuma jornada em andamento")).toBeDefined();
+    const assignBtn = screen.getByRole("button", { name: "Atribuir jornada" });
+    expect(assignBtn).toHaveProperty("disabled", false);
+    fireEvent.click(assignBtn);
+    expect(handleOpenAssignModal).toHaveBeenCalledOnce();
+
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({ canAssignJourney: false })
+    );
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+    expect(screen.queryByRole("button", { name: "Atribuir jornada" })).toBeNull();
+  });
+
+  it("cobre os cenários de jornada em andamento: atribuída por mim, atribuída por outro e iniciada pelo usuário", () => {
+    const handleOpenCancelAssignModal = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-1",
+          profileId: 2,
+          title: "Gestor de Segurança da Informação",
+          domain: "security",
+          domainLabel: "Segurança da Informação",
+          startedAt: "2026-06-01T10:00:00Z",
+          origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
+          assigned_by: { id: 1, name: "Usuário Teste" },
+        },
+        canCancelAssignment: true,
+        handleOpenCancelAssignModal,
+      })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUserDetailView userId="2" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Atribuída por Usuário Teste")).toBeDefined();
+    expect(
+      screen.getByText("Este usuário já tem uma jornada em andamento")
+    ).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Atribuir jornada" })
+    ).toHaveProperty("disabled", true);
+
+    const cancelAssignBtn = screen.getByRole("button", {
+      name: "Cancelar atribuição",
+    });
+    fireEvent.click(cancelAssignBtn);
+    expect(handleOpenCancelAssignModal).toHaveBeenCalledOnce();
+
+    // Atribuída por outro admin -> sem botão Cancelar atribuição
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-2",
+          profileId: 4,
+          title: "Operador",
+          domain: "privacy",
+          domainLabel: "Privacidade",
+          startedAt: "2026-06-02T10:00:00Z",
+          origin: "assigned",
+          assignedBy: { id: 99, name: "Roberto Almeida" },
+          assigned_by: { id: 99, name: "Roberto Almeida" },
+        },
+        canCancelAssignment: false,
+      })
+    );
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="3" />
+      </AppProviders>
+    );
+    expect(screen.getByText("Atribuída por Roberto Almeida")).toBeDefined();
+    expect(
+      screen.queryByRole("button", { name: "Cancelar atribuição" })
+    ).toBeNull();
+
+    // Iniciada pelo usuário -> origem "Iniciada pelo usuário" e sem botão Cancelar atribuição
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-3",
+          profileId: 3,
+          title: "Controlador",
+          domain: "privacy",
+          domainLabel: "Privacidade",
+          startedAt: "2026-06-03T10:00:00Z",
+          origin: "self_started",
+          assignedBy: null,
+          assigned_by: null,
+        },
+        canCancelAssignment: false,
+      })
+    );
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+    expect(screen.getByText("Iniciada pelo usuário")).toBeDefined();
+    expect(
+      screen.queryByRole("button", { name: "Cancelar atribuição" })
+    ).toBeNull();
+  });
+
+  it("renderiza modal de atribuição com aviso de primeira jornada e modal de confirmação de cancelamento", () => {
+    const handleConfirmAssignJourney = vi.fn().mockResolvedValue(undefined);
+    const handleCloseAssignModal = vi.fn();
+    const handleCloseCancelAssignModal = vi.fn();
+    const handleConfirmCancelAssignment = vi.fn().mockResolvedValue(undefined);
+
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        isFirstJourney: true,
+        isAssignModalOpen: true,
+        assignableOptions: [
+          {
+            id: 1,
+            name: "Encarregado pelo Tratamento de Dados Pessoais",
+            domain: "privacy",
+            domainLabel: "Privacidade",
+          },
+        ],
+        selectedProfileId: 1,
+        handleConfirmAssignJourney,
+        handleCloseAssignModal,
+      })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUserDetailView userId="4" />
+      </AppProviders>
+    );
+
+    expect(
+      screen.getByText(
+        "A primeira jornada deve ser do perfil escolhido pelo usuário"
+      )
+    ).toBeDefined();
+    expect(
+      screen.getByRole("radio", {
+        name: /Encarregado pelo Tratamento de Dados Pessoais/,
+      })
+    ).toHaveProperty("checked", true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Atribuir" }));
+    expect(handleConfirmAssignJourney).toHaveBeenCalledOnce();
+
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-1",
+          profileId: 2,
+          title: "Gestor de Segurança da Informação",
+          domain: "security",
+          domainLabel: "Segurança da Informação",
+          startedAt: "2026-06-01T10:00:00Z",
+          origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
+          assigned_by: { id: 1, name: "Usuário Teste" },
+        },
+        canCancelAssignment: true,
+        isCancelAssignModalOpen: true,
+        handleCloseCancelAssignModal,
+        handleConfirmCancelAssignment,
+      })
+    );
+
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="2" />
+      </AppProviders>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Manter jornada" }));
+    expect(handleCloseCancelAssignModal).toHaveBeenCalledOnce();
+
+    const modalCancelBtns = screen.getAllByRole("button", {
+      name: "Cancelar atribuição",
+    });
+    fireEvent.click(modalCancelBtns[modalCancelBtns.length - 1]);
+    expect(handleConfirmCancelAssignment).toHaveBeenCalledOnce();
+  });
+
+  it("renderiza mensagens de erro nos modais de atribuição e cancelamento quando presentes", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        isAssignModalOpen: true,
+        assignErrorMessage: "Erro ao tentar atribuir jornada",
+        assignableOptions: [],
+      })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Erro ao tentar atribuir jornada")).toBeDefined();
+    expect(
+      screen.getByText("Nenhum perfil de jornada disponível.")
+    ).toBeDefined();
+
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        activeJourney: {
+          id: "aj-1",
+          profileId: 2,
+          title: "Gestor SI",
+          domain: "security",
+          domainLabel: "Segurança da Informação",
+          startedAt: "2026-06-01T10:00:00Z",
+          origin: "assigned",
+          assignedBy: { id: 1, name: "Usuário Teste" },
+        },
+        canCancelAssignment: true,
+        isCancelAssignModalOpen: true,
+        cancelErrorMessage: "Erro ao tentar cancelar atribuição",
+      })
+    );
+
+    rerender(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Erro ao tentar cancelar atribuição")).toBeDefined();
   });
 });

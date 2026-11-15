@@ -6,6 +6,9 @@ import {
   toggleUserStatus,
   deleteUser,
   getAccessProfiles,
+  getAssignableJourneyProfiles,
+  assignJourneyToUser,
+  cancelAssignedJourney,
   getInitials,
   inviteUser,
 } from "../usersService";
@@ -76,6 +79,11 @@ describe("usersService", () => {
     expect(admin?.permissions).toContain("catalog.manage");
     expect(admin?.permissions).toContain("results.view_all");
 
+    const manager = profiles.find((p) => p.id === "manager");
+    expect(manager?.description).toBe(
+      "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis."
+    );
+
     const user = profiles.find((p) => p.id === "user");
     expect(user?.isDefault).toBe(true);
     expect(user?.permissions).toEqual(["journeys.take", "results.view_own"]);
@@ -111,5 +119,45 @@ describe("usersService", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiRequestError);
     }
+  });
+
+  it("deve cobrir os 4 cenários de jornada em andamento no mock (#168) e permitir atribuir e cancelar", async () => {
+    const selfStartedUser = await getUserById("1");
+    expect(selfStartedUser.activeJourney?.origin).toBe("self_started");
+    expect(selfStartedUser.activeJourney?.assignedBy).toBeNull();
+    expect(selfStartedUser.activeJourney?.assigned_by).toBeNull();
+
+    const assignedByMeUser = await getUserById("2");
+    expect(assignedByMeUser.activeJourney?.origin).toBe("assigned");
+    expect(assignedByMeUser.activeJourney?.assignedBy?.id).toBe(1);
+    expect(assignedByMeUser.activeJourney?.assigned_by?.id).toBe(1);
+
+    const assignedByOtherUser = await getUserById("3");
+    expect(assignedByOtherUser.activeJourney?.origin).toBe("assigned");
+    expect(assignedByOtherUser.activeJourney?.assignedBy?.id).toBe(99);
+    expect(assignedByOtherUser.activeJourney?.assigned_by?.id).toBe(99);
+
+    const noActiveUser = await getUserById("4");
+    expect(noActiveUser.activeJourney).toBeNull();
+
+    const catalog = await getAssignableJourneyProfiles();
+    expect(catalog.length).toBeGreaterThan(1);
+
+    const afterAssign = await assignJourneyToUser("4", {
+      profileId: catalog[0].id,
+      assignedBy: { id: 1, name: "Usuário Teste" },
+    });
+    expect(afterAssign.activeJourney?.origin).toBe("assigned");
+    expect(afterAssign.activeJourney?.assignedBy).toEqual({
+      id: 1,
+      name: "Usuário Teste",
+    });
+    expect(afterAssign.activeJourney?.assigned_by).toEqual({
+      id: 1,
+      name: "Usuário Teste",
+    });
+
+    const afterCancel = await cancelAssignedJourney("4");
+    expect(afterCancel.activeJourney).toBeNull();
   });
 });
