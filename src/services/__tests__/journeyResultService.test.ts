@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as httpClient from "../httpClient";
-import { getJourneyResult, JourneyResultRequestError } from "../journeyResultService";
+import { AxiosError, AxiosHeaders, type AxiosResponse } from "axios";
+import {
+  downloadJourneyResultPdf,
+  getJourneyResult,
+  JourneyResultRequestError,
+} from "../journeyResultService";
 
 describe("journeyResultService", () => {
   beforeEach(() => {
@@ -40,5 +45,60 @@ describe("journeyResultService", () => {
     vi.spyOn(httpClient, "apiRequest").mockRejectedValue(new httpClient.ApiRequestError("Network"));
 
     await expect(getJourneyResult("10")).rejects.toMatchObject({ type: "server_error" });
+  });
+});
+
+describe("downloadJourneyResultPdf", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function pdfResponse(headers: Record<string, string>): AxiosResponse<Blob> {
+    return {
+      data: new Blob(["%PDF"], { type: "application/pdf" }),
+      status: 200,
+      statusText: "OK",
+      headers: new AxiosHeaders(headers),
+      config: { headers: new AxiosHeaders() },
+    } as AxiosResponse<Blob>;
+  }
+
+  it("deve pedir o PDF no idioma informado e usar o nome do Content-Disposition", async () => {
+    const get = vi
+      .spyOn(httpClient.axiosInstance, "get")
+      .mockResolvedValue(pdfResponse({ "content-disposition": 'attachment; filename="resultado-jornada-10-2026-11-09.pdf"' }));
+
+    const file = await downloadJourneyResultPdf("10", "en");
+
+    expect(get).toHaveBeenCalledWith(
+      "/journeys/10/pdf",
+      expect.objectContaining({ params: { locale: "en" }, responseType: "blob" })
+    );
+    expect(file.filename).toBe("resultado-jornada-10-2026-11-09.pdf");
+    expect(file.blob.type).toBe("application/pdf");
+  });
+
+  it("deve usar resultado-jornada-{id}.pdf quando o cabeçalho não vier", async () => {
+    vi.spyOn(httpClient.axiosInstance, "get").mockResolvedValue(pdfResponse({}));
+
+    const file = await downloadJourneyResultPdf("10", "pt");
+
+    expect(file.filename).toBe("resultado-jornada-10.pdf");
+  });
+
+  it.each([401, 403, 404, 409, 500])("deve lançar ApiRequestError com o status %s", async (status) => {
+    const error = new AxiosError("Erro", "ERR_BAD_RESPONSE", undefined, undefined, {
+      status,
+      data: new Blob(["{}"]),
+      statusText: "",
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    } as AxiosResponse);
+    vi.spyOn(httpClient.axiosInstance, "get").mockRejectedValue(error);
+
+    const thrown = await downloadJourneyResultPdf("10", "pt").catch((err: unknown) => err);
+
+    expect(thrown).toBeInstanceOf(httpClient.ApiRequestError);
+    expect((thrown as httpClient.ApiRequestError).status).toBe(status);
   });
 });

@@ -158,7 +158,18 @@ export interface JourneyResultLabels {
     difficultyPrefix: string;
     domainPrefix: string;
   };
+  pdf: {
+    downloadButton: string;
+    generatingLabel: string;
+  };
   errors: JourneyResultErrorLabels | null;
+}
+
+/** PDF do resultado devolvido por GET /journeys/{journey}/pdf. */
+export interface JourneyResultPdfFile {
+  blob: Blob;
+  /** Nome do arquivo do Content-Disposition, ou resultado-jornada-{id}.pdf */
+  filename: string;
 }
 
 export interface JourneyResultErrorLabels {
@@ -190,6 +201,12 @@ export interface JourneyResultViewModelReturn {
   error: JourneyResultErrorType | null;
   labels: JourneyResultLabels;
   handleRetry: () => void;
+  /** O PDF só pode ser baixado de uma jornada concluída */
+  canDownloadPdf: boolean;
+  isDownloadingPdf: boolean;
+  /** Mensagem da falha no download; null sem erro ou quando a sessão expirou (401) */
+  pdfError: string | null;
+  handleDownloadPdf: () => void;
 }
 
 export interface JourneyResultViewProps {

@@ -3,6 +3,8 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
+  Download04Icon,
+  Loading03Icon,
   RefreshIcon,
   SecurityCheckIcon,
 } from "@hugeicons/core-free-icons";
@@ -23,6 +25,12 @@ export function ScoreSummaryCard(props: ScoreSummaryCardProps) {
     retakeLabel,
     backHref,
     backLabel,
+    canDownloadPdf,
+    isDownloadingPdf,
+    pdfError,
+    downloadPdfLabel,
+    generatingPdfLabel,
+    onDownloadPdf,
   } = useScoreSummaryCardVM(props);
 
   return (
@@ -61,6 +69,24 @@ export function ScoreSummaryCard(props: ScoreSummaryCardProps) {
             {retakeLabel}
           </Link>
         </Button>
+        {canDownloadPdf && (
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={onDownloadPdf}
+            disabled={isDownloadingPdf}
+            aria-busy={isDownloadingPdf}
+          >
+            <HugeiconsIcon
+              icon={isDownloadingPdf ? Loading03Icon : Download04Icon}
+              size={16}
+              aria-hidden="true"
+              className={isDownloadingPdf ? "animate-spin motion-reduce:animate-none" : undefined}
+            />
+            {isDownloadingPdf ? generatingPdfLabel : downloadPdfLabel}
+          </Button>
+        )}
         <Button asChild variant="ghost" className="gap-2">
           <Link href={backHref}>
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
@@ -68,6 +94,10 @@ export function ScoreSummaryCard(props: ScoreSummaryCardProps) {
           </Link>
         </Button>
       </div>
+      {/* Sempre presente, para o leitor de tela anunciar a mensagem quando ela aparecer */}
+      <p role="alert" data-testid="pdf-error" className="mt-3 text-sm text-destructive empty:hidden">
+        {pdfError}
+      </p>
     </section>
   );
 }

@@ -2,8 +2,14 @@
 
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
-import { getJourneyResult, JourneyResultRequestError } from "@services/journeyResultService";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ApiRequestError } from "@services/httpClient";
+import {
+  downloadJourneyResultPdf,
+  getJourneyResult,
+  JourneyResultRequestError,
+} from "@services/journeyResultService";
+import { saveBlobAsFile } from "@shared/utils/fileDownload";
 import { getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
 import { buildJourneyResultModel, buildScoreValue } from "./journeyResult.utils";
 import type {
@@ -117,11 +123,30 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
       difficultyPrefix: t("competencies.difficultyPrefix"),
       domainPrefix: t("competencies.domainPrefix"),
     },
+    pdf: {
+      downloadButton: t("pdf.downloadButton"),
+      generatingLabel: t("pdf.generatingLabel"),
+    },
     errors: error ? buildErrorLabels(error, retakeUrl, t) : null,
   };
 
   const handleRetry = () => {
     void query.refetch();
+  };
+
+  const pdfMutation = useMutation({
+    mutationFn: () => downloadJourneyResultPdf(journeyId, isEnglish ? "en" : "pt"),
+    onSuccess: ({ blob, filename }) => saveBlobAsFile(blob, filename),
+  });
+
+  // O 401 já leva ao login pelo tratamento de sessão expirada; não há o que mostrar aqui
+  const isSessionExpired =
+    pdfMutation.error instanceof ApiRequestError && pdfMutation.error.status === 401;
+  const pdfError = pdfMutation.isError && !isSessionExpired ? t("pdf.error") : null;
+
+  const handleDownloadPdf = () => {
+    if (pdfMutation.isPending) return;
+    pdfMutation.mutate();
   };
 
   return {
@@ -133,6 +158,10 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
     error,
     labels,
     handleRetry,
+    canDownloadPdf: Boolean(journey) && isCompleted,
+    isDownloadingPdf: pdfMutation.isPending,
+    pdfError,
+    handleDownloadPdf,
   };
 }
 

@@ -24,6 +24,10 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
     error,
     labels,
     handleRetry,
+    canDownloadPdf,
+    isDownloadingPdf,
+    pdfError,
+    handleDownloadPdf,
   } = useJourneyResultVM(journeyId);
 
   return (
@@ -58,6 +62,12 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
                 retakeLabel={labels.retakeButton}
                 backHref={resultsUrl}
                 backLabel={labels.backButton}
+                canDownloadPdf={canDownloadPdf}
+                isDownloadingPdf={isDownloadingPdf}
+                pdfError={pdfError}
+                downloadPdfLabel={labels.pdf.downloadButton}
+                generatingPdfLabel={labels.pdf.generatingLabel}
+                onDownloadPdf={handleDownloadPdf}
               />
 
               <AreaScoreSection
