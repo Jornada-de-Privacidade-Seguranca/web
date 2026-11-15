@@ -292,7 +292,9 @@ export function ProfileView() {
               <div className="grid gap-8 sm:grid-cols-2">
                 <fieldset className="space-y-3">
                   <legend className="text-sm font-medium">{labels.language}</legend>
-                  <IdiomSwitch />
+                  <div className="flex items-center">
+                    <IdiomSwitch />
+                  </div>
                 </fieldset>
                 <fieldset className="space-y-3">
                   <legend className="text-sm font-medium">{labels.theme}</legend>

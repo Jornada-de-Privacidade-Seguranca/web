@@ -159,12 +159,14 @@ describe("ProfileView", () => {
     expect(screen.getByText("Jornadas concluídas")).toBeTruthy();
     expect(screen.getByText("Jornadas em andamento")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Preferências" })).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "PT" }).getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(
-      screen.getByRole("button", { name: "EN" }).getAttribute("aria-pressed"),
-    ).toBe("false");
+    const ptButton = screen.getByRole("button", { name: "PT" });
+    const enButton = screen.getByRole("button", { name: "EN" });
+    expect(ptButton.getAttribute("aria-pressed")).toBe("true");
+    expect(enButton.getAttribute("aria-pressed")).toBe("false");
+    const idiomSwitchContainer = ptButton.parentElement;
+    expect(idiomSwitchContainer?.className).toContain("inline-flex");
+    expect(idiomSwitchContainer?.className).toContain("w-fit");
+    expect(idiomSwitchContainer?.className).not.toContain("ml-auto");
   });
 
   it("shows required edit fields and keeps employee code disabled", () => {

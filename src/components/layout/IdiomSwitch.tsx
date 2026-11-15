@@ -2,15 +2,25 @@
 
 import { useLang } from "@/hooks/useLang";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 
-export const IdiomSwitch = () => {
+export interface IdiomSwitchProps {
+  className?: string;
+}
+
+export const IdiomSwitch = ({ className }: IdiomSwitchProps) => {
   const { locale, changeLocale, locales } = useLang();
 
   return (
-    <div className="flex gap-1 border bg-secondary rounded-full p-0.5 ml-auto">
-      {locales.map((myLocale, index) => (
+    <div
+      className={cn(
+        "inline-flex w-fit items-center gap-1 rounded-full border bg-secondary p-0.5",
+        className,
+      )}
+    >
+      {locales.map((myLocale) => (
         <Button
-          key={index}
+          key={myLocale}
           variant={myLocale === locale ? "default" : "ghost"}
           aria-pressed={myLocale === locale}
           onClick={() => changeLocale(myLocale)}
