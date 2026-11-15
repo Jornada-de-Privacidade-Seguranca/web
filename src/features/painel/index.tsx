@@ -21,12 +21,16 @@ export function PainelView() {
     greetingTitle,
     greetingSubtitle,
     currentJourney,
+    currentJourneyQuestionsText,
+    currentJourneyTimeText,
     lastCompletedAssessment,
     history,
     metricsItems,
+    hasMetrics,
     quickActions,
     isLoading,
     error,
+    canRetry,
     accessDeniedMessage,
     handleDismissAccessDenied,
     handleRetry,
@@ -73,15 +77,17 @@ export function PainelView() {
                 <p className="text-xs opacity-90">{error}</p>
               </div>
             </div>
-            <Button
-              onClick={handleRetry}
-              variant="outline"
-              size="sm"
-              className="border-destructive/30 text-destructive hover:bg-destructive/20 shrink-0"
-            >
-              <HugeiconsIcon icon={RefreshIcon} size={16} className="mr-2" />
-              {labels.retryButton}
-            </Button>
+            {canRetry && (
+              <Button
+                onClick={handleRetry}
+                variant="outline"
+                size="sm"
+                className="border-destructive/30 text-destructive hover:bg-destructive/20 shrink-0"
+              >
+                <HugeiconsIcon icon={RefreshIcon} size={16} className="mr-2" />
+                {labels.retryButton}
+              </Button>
+            )}
           </section>
         )}
 
@@ -139,9 +145,10 @@ export function PainelView() {
                   sectionTitle={labels.currentJourneySectionTitle}
                   emptyMessage={labels.currentJourneyEmpty}
                   exploreCtaText={labels.startFirstJourneyCta}
-                  continueCtaText={labels.continueJourneyCta}
-                  progressLabel={labels.progressLabel}
-                  progressPercentLabel={labels.progressPercentLabel}
+                  startCtaText={labels.startAssessment}
+                  continueCtaText={labels.continueAssessment}
+                  questionsText={currentJourneyQuestionsText}
+                  timeText={currentJourneyTimeText}
                   badgeLabel={
                     currentJourney?.status === "in_progress"
                       ? labels.badgeInProgress
@@ -170,18 +177,20 @@ export function PainelView() {
             </div>
 
             {/* Métricas e Indicadores Rápidos */}
-            <section
-              aria-label={labels.metricsSectionAriaLabel}
-              className="space-y-4"
-            >
-              <h2 className="text-lg font-bold tracking-tight text-foreground">
-                {labels.metricsSectionTitle}
-              </h2>
-              <MetricsGrid
-                items={metricsItems}
-                className="grid-cols-1 sm:grid-cols-3"
-              />
-            </section>
+            {hasMetrics && (
+              <section
+                aria-label={labels.metricsSectionAriaLabel}
+                className="space-y-4"
+              >
+                <h2 className="text-lg font-bold tracking-tight text-foreground">
+                  {labels.metricsSectionTitle}
+                </h2>
+                <MetricsGrid
+                  items={metricsItems}
+                  className="grid-cols-1 sm:grid-cols-3 md:grid-cols-3"
+                />
+              </section>
+            )}
 
             {/* Histórico Recente */}
             <section aria-label={labels.historySectionAriaLabel}>

@@ -23,7 +23,7 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
 
   if (!assessment) {
     return (
-      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+      <article className="flex min-h-[280px] flex-1 flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
         <div>
           <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
             {sectionTitle}
@@ -47,38 +47,42 @@ export function LastCompletedCard(props: LastCompletedCardProps) {
   }
 
   return (
-    <article className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-200 hover:border-primary/30">
+    <article className="relative flex flex-1 flex-col justify-between rounded-[2rem] border border-border bg-card/90 p-6 shadow-xl backdrop-blur-xl transition-all duration-200 hover:border-primary/30">
       <div>
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
             <span>{lastCompletionLabel}</span>
           </span>
-          <time
-            dateTime={assessment.completedAt}
-            className="text-xs font-medium text-muted-foreground"
-          >
-            {formattedDate}
-          </time>
+          {assessment.completedAt && (
+            <time
+              dateTime={assessment.completedAt}
+              className="text-xs font-medium text-muted-foreground"
+            >
+              {formattedDate}
+            </time>
+          )}
         </div>
 
         <h3 className="mt-4 font-heading text-xl font-bold tracking-tight text-card-foreground">
           {assessment.title}
         </h3>
 
-        <div className="mt-6 flex items-baseline gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
-          <div className="flex flex-col">
-            <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              {scoreLabel}
-            </span>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold tracking-tight text-foreground">
-                {assessment.score}
+        {assessment.score !== null && (
+          <div className="mt-6 flex items-baseline gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
+            <div className="flex flex-col">
+              <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {scoreLabel}
               </span>
-              <span className="text-sm font-medium text-muted-foreground">/ 100</span>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold tracking-tight text-foreground">
+                  {assessment.score}
+                </span>
+                <span className="text-sm font-medium text-muted-foreground">/ 100</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 border-t border-border/50 pt-4">

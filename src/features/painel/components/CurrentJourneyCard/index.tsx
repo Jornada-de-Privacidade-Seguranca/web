@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Compass01Icon,
   ArrowRight01Icon,
+  CheckListIcon,
   Clock01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -17,18 +17,17 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
     sectionTitle,
     emptyMessage,
     exploreCtaText,
-    continueCtaText,
-    progressPercent,
-    progressPercentText,
-    progressAriaLabel,
+    actionText,
     actionHref,
+    questionsText,
+    timeText,
     badgeLabel,
     badgeVariant,
   } = useCurrentJourneyCardVM(props);
 
   if (!journey) {
     return (
-      <article className="flex min-h-[280px] flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
+      <article className="flex min-h-[280px] flex-1 flex-col justify-between rounded-[2rem] border-2 border-dashed border-border/80 bg-card/50 p-6 shadow-sm backdrop-blur-sm">
         <div>
           <h3 className="font-heading text-lg font-bold tracking-tight text-foreground mb-4">
             {sectionTitle}
@@ -53,7 +52,7 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
   }
 
   return (
-    <article className="relative flex flex-col justify-between rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-primary/40">
+    <article className="relative flex flex-1 flex-col justify-between rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-primary/40">
       <div>
         <div className="flex items-center justify-between gap-3">
           <span
@@ -65,11 +64,6 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
           >
             {badgeLabel}
           </span>
-
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <HugeiconsIcon icon={Clock01Icon} size={14} className="text-primary" />
-            <span>{journey.estimatedMinutes} min</span>
-          </div>
         </div>
 
         <h3 className="mt-4 font-heading text-xl font-bold tracking-tight text-card-foreground">
@@ -80,30 +74,30 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
           {journey.description}
         </p>
 
-        {/* Barra de Progresso Acessível */}
-        <div className="mt-6 space-y-2">
-          <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <HugeiconsIcon icon={Compass01Icon} size={14} className="text-primary" />
-              <span>Progresso</span>
-            </span>
-            <span className="text-foreground">{progressPercentText}</span>
+        {(questionsText || timeText) && (
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground">
+            {questionsText && (
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={CheckListIcon}
+                  size={16}
+                  className="text-primary"
+                />
+                <span>{questionsText}</span>
+              </div>
+            )}
+            {timeText && (
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={Clock01Icon}
+                  size={16}
+                  className="text-primary"
+                />
+                <span>{timeText}</span>
+              </div>
+            )}
           </div>
-
-          <div
-            role="progressbar"
-            aria-valuenow={progressPercent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={progressAriaLabel}
-            className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-8 border-t border-border/50 pt-4">
@@ -112,7 +106,7 @@ export function CurrentJourneyCard(props: CurrentJourneyCardProps) {
           className="h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-[0.99]"
         >
           <Link href={actionHref}>
-            <span>{continueCtaText}</span>
+            <span>{actionText}</span>
             <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="ml-2" />
           </Link>
         </Button>

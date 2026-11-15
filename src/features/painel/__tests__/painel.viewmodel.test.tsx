@@ -4,6 +4,7 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as dashboardService from "@services/dashboardService";
+import { ApiRequestError } from "@services/httpClient";
 import { useAuthStore } from "@features/auth/auth.store";
 import { usePainelVM } from "../painel.viewmodel";
 
@@ -20,6 +21,8 @@ vi.mock("@hooks/useAuth", () => ({
     };
   },
 }));
+
+const mockLocale = vi.hoisted(() => ({ current: "pt" }));
 
 vi.mock("next-intl", () => {
   const messages: Record<string, string> = {
@@ -77,6 +80,8 @@ vi.mock("next-intl", () => {
     pendingSectionAriaLabel: "Jornada pendente ou em andamento",
     completedSectionAriaLabel: "Última jornada concluída",
     historySectionAriaLabel: "Histórico recente de jornadas",
+    questionsCount: "{count} perguntas",
+    estimatedMinutesText: "{minutes} min",
   };
 
   const t = (key: string, params?: Record<string, unknown>) => {
@@ -87,7 +92,7 @@ vi.mock("next-intl", () => {
     return text;
   };
 
-  return { useTranslations: () => t, useLocale: () => "pt" };
+  return { useTranslations: () => t, useLocale: () => mockLocale.current };
 });
 
 function createWrapper() {
@@ -105,9 +110,15 @@ function createWrapper() {
   };
 }
 
+const EMPTY_DASHBOARD = { pending: null, lastCompleted: null, history: [] };
+
+const METRICS = { completedJourneys: 4, pendingJourneys: 1, averageScore: 92 };
+
 describe("Painel ViewModel (usePainelVM)", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockLocale.current = "pt";
+    vi.spyOn(dashboardService, "getDashboardMetrics").mockResolvedValue(METRICS);
     useAuthStore.setState({
       user: {
         id: 1,
@@ -137,9 +148,7 @@ describe("Painel ViewModel (usePainelVM)", () => {
         description: "Avaliação em andamento",
         status: "in_progress" as const,
         totalQuestions: 15,
-        estimatedMinutes: 20,
-        progressPercent: 70,
-        knowledgeDomain: "privacy" as const,
+        estimatedMinutes: 5,
       },
       lastCompleted: {
         id: "c1",
@@ -155,16 +164,11 @@ describe("Painel ViewModel (usePainelVM)", () => {
           score: 95,
         },
       ],
-      metrics: {
-        completedJourneys: 4,
-        pendingJourneys: 1,
-        averageScore: 92,
-      },
     };
 
-    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce(
-      mockDashboardData
-    );
+    const dataSpy = vi
+      .spyOn(dashboardService, "getDashboardData")
+      .mockResolvedValueOnce(mockDashboardData);
 
     const { result } = renderHook(() => usePainelVM(), {
       wrapper: createWrapper(),
@@ -181,10 +185,14 @@ describe("Painel ViewModel (usePainelVM)", () => {
     expect(result.current.currentJourney?.title).toBe(
       "Encarregado pelo Tratamento de Dados Pessoais"
     );
-    expect(result.current.metrics.completedJourneys).toBe(4);
-    expect(result.current.metrics.averageScore).toBe(92);
+    expect(dataSpy).toHaveBeenCalledWith(1, "pt");
+    expect(result.current.currentJourneyQuestionsText).toBe("15 perguntas");
+    expect(result.current.currentJourneyTimeText).toBe("5 min");
     expect(result.current.history).toHaveLength(1);
-    expect(result.current.metricsItems).toHaveLength(3);
+    await waitFor(() => {
+      expect(result.current.hasMetrics).toBe(true);
+    });
+    expect(result.current.metricsItems.map((item) => item.value)).toEqual([4, 1, 92]);
 
     // Quick actions com jornada em andamento deve apontar para competências
     expect(result.current.quickActions[0].id).toBe("continue-journey");
@@ -201,15 +209,10 @@ describe("Painel ViewModel (usePainelVM)", () => {
         description: "Jornada atribuída",
         status: "pending",
         totalQuestions: 10,
-        estimatedMinutes: 15,
+        estimatedMinutes: 4,
       },
       lastCompleted: null,
       history: [],
-      metrics: {
-        completedJourneys: 0,
-        pendingJourneys: 1,
-        averageScore: 0,
-      },
     });
 
     const { result } = renderHook(() => usePainelVM(), {
@@ -225,16 +228,7 @@ describe("Painel ViewModel (usePainelVM)", () => {
   });
 
   it("deve apresentar atalho de 'Iniciar jornada' quando não houver nenhuma jornada cadastrada", async () => {
-    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce({
-      pending: null,
-      lastCompleted: null,
-      history: [],
-      metrics: {
-        completedJourneys: 0,
-        pendingJourneys: 0,
-        averageScore: 0,
-      },
-    });
+    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce(EMPTY_DASHBOARD);
 
     const { result } = renderHook(() => usePainelVM(), {
       wrapper: createWrapper(),
@@ -269,12 +263,7 @@ describe("Painel ViewModel (usePainelVM)", () => {
       isLoading: false,
     });
 
-    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce({
-      pending: null,
-      lastCompleted: null,
-      history: [],
-      metrics: { completedJourneys: 0, pendingJourneys: 0, averageScore: 0 },
-    });
+    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce(EMPTY_DASHBOARD);
 
     const { result } = renderHook(() => usePainelVM(), {
       wrapper: createWrapper(),
@@ -302,22 +291,139 @@ describe("Painel ViewModel (usePainelVM)", () => {
     });
 
     expect(result.current.error).toBe("Não foi possível carregar os dados do painel.");
+    expect(result.current.canRetry).toBe(true);
+  });
+
+  it("deve mostrar a mensagem da API, sem nova tentativa, quando a conta não estiver ativada", async () => {
+    vi.spyOn(dashboardService, "getDashboardData").mockRejectedValue(
+      new ApiRequestError("Sua conta ainda não foi ativada.", 403, "ACCOUNT_NOT_ACTIVATED")
+    );
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Sua conta ainda não foi ativada.");
+    });
+    expect(result.current.canRetry).toBe(false);
+  });
+
+  it("deve mostrar a mensagem genérica para outros 403", async () => {
+    vi.spyOn(dashboardService, "getDashboardData").mockRejectedValue(
+      new ApiRequestError("Acesso negado.", 403, "FORBIDDEN")
+    );
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Não foi possível carregar os dados do painel.");
+    });
+    expect(result.current.canRetry).toBe(true);
+  });
+
+  it("deve ocultar só as métricas quando o endpoint de métricas falhar", async () => {
+    vi.spyOn(dashboardService, "getDashboardMetrics").mockRejectedValue(
+      new ApiRequestError("Not found", 404)
+    );
+    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce(EMPTY_DASHBOARD);
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.hasMetrics).toBe(false);
+    expect(result.current.metricsItems).toEqual([]);
+  });
+
+  it("deve ocultar perguntas e tempo quando o perfil não informar as competências", async () => {
+    vi.spyOn(dashboardService, "getDashboardData").mockResolvedValueOnce({
+      ...EMPTY_DASHBOARD,
+      pending: {
+        id: "84",
+        title: "Controlador",
+        description: "",
+        status: "pending",
+        totalQuestions: null,
+        estimatedMinutes: null,
+      },
+    });
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.currentJourneyQuestionsText).toBeNull();
+    expect(result.current.currentJourneyTimeText).toBeNull();
+  });
+
+  it("deve buscar os dados no idioma atual", async () => {
+    mockLocale.current = "en";
+    const spy = vi
+      .spyOn(dashboardService, "getDashboardData")
+      .mockResolvedValueOnce(EMPTY_DASHBOARD);
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(spy).toHaveBeenCalledWith(1, "en");
+  });
+
+  it("deve mostrar o carregamento durante a nova tentativa", async () => {
+    let resolveRetry: (value: typeof EMPTY_DASHBOARD) => void = () => {};
+    vi.spyOn(dashboardService, "getDashboardData")
+      .mockRejectedValueOnce(new Error("Erro de rede"))
+      .mockImplementationOnce(
+        () => new Promise((resolve) => (resolveRetry = resolve))
+      );
+
+    const { result } = renderHook(() => usePainelVM(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.handleRetry();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(true);
+    });
+    expect(result.current.error).toBeNull();
+
+    await act(async () => {
+      resolveRetry(EMPTY_DASHBOARD);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   it("deve permitir retentativa chamando handleRetry", async () => {
     const spy = vi
       .spyOn(dashboardService, "getDashboardData")
       .mockRejectedValueOnce(new Error("Erro de rede"))
-      .mockResolvedValueOnce({
-        pending: null,
-        lastCompleted: null,
-        history: [],
-        metrics: {
-          completedJourneys: 1,
-          pendingJourneys: 0,
-          averageScore: 80,
-        },
-      });
+      .mockResolvedValueOnce(EMPTY_DASHBOARD);
 
     const { result } = renderHook(() => usePainelVM(), {
       wrapper: createWrapper(),

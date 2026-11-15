@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import React from "react";
 import { PainelView } from "../index";
 import * as viewModelModule from "../painel.viewmodel";
@@ -64,10 +64,10 @@ const mockBaseReturn: PainelViewModelReturn = {
     description: "Avaliação de competências em conformidade com a LGPD.",
     status: "in_progress",
     totalQuestions: 20,
-    estimatedMinutes: 25,
-    progressPercent: 60,
-    knowledgeDomain: "privacy",
+    estimatedMinutes: 7,
   },
+  currentJourneyQuestionsText: "20 perguntas",
+  currentJourneyTimeText: "7 min",
   lastCompletedAssessment: {
     id: "c1",
     title: "Gestor de Segurança da Informação",
@@ -82,11 +82,6 @@ const mockBaseReturn: PainelViewModelReturn = {
       score: 85,
     },
   ],
-  metrics: {
-    completedJourneys: 2,
-    pendingJourneys: 1,
-    averageScore: 85,
-  },
   metricsItems: [
     {
       id: "completed-journeys",
@@ -108,6 +103,7 @@ const mockBaseReturn: PainelViewModelReturn = {
       subtitle: "Pontuação média geral",
     },
   ],
+  hasMetrics: true,
   quickActions: [
     {
       id: "continue-journey",
@@ -133,6 +129,7 @@ const mockBaseReturn: PainelViewModelReturn = {
   ],
   isLoading: false,
   error: null,
+  canRetry: true,
   handleRetry: vi.fn(),
   labels: {
     pageTitle: "Painel",
@@ -157,8 +154,6 @@ const mockBaseReturn: PainelViewModelReturn = {
     startFirstJourneyCta: "Inicie sua primeira jornada",
     startNewJourneyCta: "Explorar jornadas",
     continueJourneyCta: "Continuar de onde parou",
-    progressLabel: "Progresso da jornada",
-    progressPercentLabel: "{percent}% concluído",
     metricsSectionTitle: "Indicadores de desempenho",
     metricsSectionAriaLabel: "Métricas e indicadores de desempenho",
     metricsCompletedTitle: "Jornadas concluídas",
@@ -217,10 +212,10 @@ describe("PainelView Component", () => {
 
     render(<PainelView />);
 
-    const continueLink = screen.getByRole("link", {
+    const continueLinks = screen.getAllByRole("link", {
       name: /Continuar jornada/i,
     });
-    expect(continueLink.getAttribute("href")).toBe(
+    expect(continueLinks[0].getAttribute("href")).toBe(
       "/jornada/atual/competencias/0"
     );
 
@@ -236,25 +231,95 @@ describe("PainelView Component", () => {
 
     render(<PainelView />);
 
-    const viewResultLink = screen.getByRole("link", { name: /Ver resultado/i });
+    const lastCompletedCard = screen.getByLabelText("Última jornada concluída");
+    const viewResultLink = within(lastCompletedCard).getByRole("link", { name: /Ver resultado/i });
     expect(viewResultLink.getAttribute("href")).toBe("/jornada/c1/resultado");
 
     const viewAllLink = screen.getByRole("link", { name: /Ver todos os resultados/i });
     expect(viewAllLink.getAttribute("href")).toBe("/resultados");
   });
 
-  it("deve renderizar a barra de progresso com atributos de acessibilidade ARIA", () => {
+  it("deve mostrar perguntas, tempo e 'Continuar jornada' na jornada já iniciada", () => {
     vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue(mockBaseReturn);
 
     render(<PainelView />);
 
-    const progressbars = screen.getAllByRole("progressbar");
-    expect(progressbars.length).toBeGreaterThan(0);
+    const card = screen.getByLabelText("Jornada em andamento");
+    expect(within(card).getByText("20 perguntas")).toBeDefined();
+    expect(within(card).getByText("7 min")).toBeDefined();
+    const action = within(card).getByRole("link", { name: /Continuar jornada/i });
+    expect(action.getAttribute("href")).toBe("/jornada/atual/competencias/0");
+  });
 
-    const mainProgress = progressbars[0];
-    expect(mainProgress.getAttribute("aria-valuenow")).toBe("60");
-    expect(mainProgress.getAttribute("aria-valuemin")).toBe("0");
-    expect(mainProgress.getAttribute("aria-valuemax")).toBe("100");
+  it("deve mostrar 'Iniciar jornada' levando ao resumo na jornada não iniciada", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
+      ...mockBaseReturn,
+      currentJourney: { ...mockBaseReturn.currentJourney!, status: "pending" },
+    });
+
+    render(<PainelView />);
+
+    const card = screen.getByLabelText("Jornada em andamento");
+    const action = within(card).getByRole("link", { name: /Iniciar jornada/i });
+    expect(action.getAttribute("href")).toBe("/jornada/j1");
+    expect(within(card).queryByRole("link", { name: /Continuar jornada/i })).toBeNull();
+  });
+
+  it("deve ocultar perguntas e tempo quando não houver o dado", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
+      ...mockBaseReturn,
+      currentJourneyQuestionsText: null,
+      currentJourneyTimeText: null,
+    });
+
+    render(<PainelView />);
+
+    expect(screen.queryByText("20 perguntas")).toBeNull();
+    expect(screen.queryByText("7 min")).toBeNull();
+  });
+
+  it("deve mostrar nota, barra e 'Ver resultado' em cada item do histórico", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue(mockBaseReturn);
+
+    render(<PainelView />);
+
+    const historySection = screen.getByLabelText("Histórico recente de jornadas");
+    expect(within(historySection).getByText("85 / 100")).toBeDefined();
+    const bar = within(historySection).getByRole("progressbar");
+    expect(bar.getAttribute("aria-valuenow")).toBe("85");
+    expect(bar.getAttribute("aria-valuemin")).toBe("0");
+    expect(bar.getAttribute("aria-valuemax")).toBe("100");
+    const link = within(historySection).getByRole("link", { name: /Ver resultado/i });
+    expect(link.getAttribute("href")).toBe("/jornada/h1/resultado");
+  });
+
+  it("deve ocultar nota e barra quando a jornada não tiver nota", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
+      ...mockBaseReturn,
+      lastCompletedAssessment: { ...mockBaseReturn.lastCompletedAssessment!, score: null },
+      history: [{ ...mockBaseReturn.history[0], score: null }],
+    });
+
+    render(<PainelView />);
+
+    expect(screen.queryByText("PONTUAÇÃO")).toBeNull();
+    expect(screen.queryByText("85 / 100")).toBeNull();
+    expect(screen.queryByRole("progressbar")).toBeNull();
+    const historySection = screen.getByLabelText("Histórico recente de jornadas");
+    expect(within(historySection).getByRole("link", { name: /Ver resultado/i })).toBeDefined();
+  });
+
+  it("deve ocultar a seção de métricas quando elas não estiverem disponíveis", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
+      ...mockBaseReturn,
+      hasMetrics: false,
+      metricsItems: [],
+    });
+
+    render(<PainelView />);
+
+    expect(screen.queryByText("Indicadores de desempenho")).toBeNull();
+    expect(screen.getByLabelText("Última jornada concluída")).toBeDefined();
   });
 
   it("deve renderizar o estado de carregamento com skeleton e aria-busy='true'", () => {
@@ -291,6 +356,21 @@ describe("PainelView Component", () => {
     fireEvent.click(retryBtn);
 
     expect(handleRetryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deve mostrar a mensagem sem botão de nova tentativa quando ela não resolver", () => {
+    vi.spyOn(viewModelModule, "usePainelVM").mockReturnValue({
+      ...mockBaseReturn,
+      error: "Sua conta ainda não foi ativada.",
+      canRetry: false,
+    });
+
+    render(<PainelView />);
+
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Sua conta ainda não foi ativada."
+    );
+    expect(screen.queryByRole("button", { name: /Tentar novamente/i })).toBeNull();
   });
 
   it("deve exibir os 3 estados vazios corretamente (jornada pendente com estilo tracejado e CTA de primeira jornada, última conclusão e histórico)", () => {
