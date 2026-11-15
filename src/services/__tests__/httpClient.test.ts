@@ -8,6 +8,10 @@ import {
   clearCsrfToken,
   setUnauthorizedHandler,
 } from "../httpClient";
+import {
+  getSessionActivitySnapshot,
+  resetSessionActivity,
+} from "@/shared/utils/sessionActivity";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
   return {
@@ -324,5 +328,67 @@ describe("httpClient", () => {
     expect(error.status).toBe(403);
     expect(error.code).toBe("PERMISSION_DENIED");
     expect(error.message).toBe("Você não tem permissão para esta ação.");
+  });
+
+  describe("atividade da sessão", () => {
+    const originalAdapter = axiosInstance.defaults.adapter;
+
+    function respondWith(status: number, data: unknown) {
+      axiosInstance.defaults.adapter = async (config) => {
+        const response = { data, status, statusText: "", headers: {}, config };
+        if (status >= 400) {
+          throw new AxiosError("Request failed", "ERR_BAD_REQUEST", config, undefined, response as AxiosResponse);
+        }
+        return response as AxiosResponse;
+      };
+    }
+
+    beforeEach(() => {
+      resetSessionActivity();
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-11-06T10:00:00Z"));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      axiosInstance.defaults.adapter = originalAdapter;
+    });
+
+    it("deve registrar o horário da resposta e o tempo de vida informado em meta.session", async () => {
+      respondWith(200, {
+        success: true,
+        data: { id: 1 },
+        meta: { session: { lifetime_minutes: 120 } },
+      });
+
+      await apiRequest("/me");
+
+      expect(getSessionActivitySnapshot()).toEqual({
+        lastActivityAt: Date.parse("2026-11-06T10:00:00Z"),
+        lifetimeMinutes: 120,
+      });
+    });
+
+    it("deve manter o tempo de vida conhecido em respostas sem meta.session", async () => {
+      respondWith(200, { success: true, data: {}, meta: { session: { lifetime_minutes: 120 } } });
+      await apiRequest("/me");
+      vi.setSystemTime(new Date("2026-11-06T10:30:00Z"));
+      respondWith(200, { success: true, data: [] });
+
+      await axiosInstance.get("/journeys/2");
+
+      expect(getSessionActivitySnapshot()).toEqual({
+        lastActivityAt: Date.parse("2026-11-06T10:30:00Z"),
+        lifetimeMinutes: 120,
+      });
+    });
+
+    it("não deve registrar atividade em respostas de erro", async () => {
+      respondWith(500, { success: false, message: "Erro interno." });
+
+      await expect(apiRequest("/dashboard")).rejects.toThrow("Erro interno.");
+
+      expect(getSessionActivitySnapshot().lastActivityAt).toBeNull();
+    });
   });
 });

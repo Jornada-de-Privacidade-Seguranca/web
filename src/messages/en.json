@@ -152,6 +152,16 @@
     "description": "Your session has expired. Sign in again to continue.",
     "action": "Go to sign in"
   },
+  "sessionWarning": {
+    "title": "Your session is about to expire",
+    "countdown": "Your session will expire in {time}.",
+    "announcement": "Your session will expire in {minutes, plural, one {# minute} other {# minutes}}.",
+    "hint": "Stay signed in so you don't lose what you are doing.",
+    "renew": "Stay signed in",
+    "renewing": "Renewing...",
+    "logout": "Sign out",
+    "renewError": "We couldn't renew your session. Please try again."
+  },
   "jornada": {
     "title": "Privacy/Security Journey",
     "description": "Fill out this form to assess your digital security practices.",
