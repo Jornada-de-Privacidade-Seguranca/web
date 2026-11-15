@@ -4,7 +4,6 @@ import { Edit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Input, Message, MetricsGrid } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
-import { IdiomSwitch } from "@/components/layout/IdiomSwitch";
 import { useProfileVM } from "./profile.viewmodel";
 
 export function ProfileView() {
@@ -18,6 +17,8 @@ export function ProfileView() {
     isSubmitting,
     serverMessage,
     metrics,
+    locale,
+    languageOptions,
     theme,
     labels,
     handleEdit,
@@ -25,6 +26,7 @@ export function ProfileView() {
     handleSubmit,
     handleRetry,
     handleCloseMessage,
+    handleLocaleChange,
     handleThemeChange,
   } = useProfileVM();
   const errors = form.formState.errors;
@@ -292,8 +294,23 @@ export function ProfileView() {
               <div className="grid gap-8 sm:grid-cols-2">
                 <fieldset className="space-y-3">
                   <legend className="text-sm font-medium">{labels.language}</legend>
-                  <div className="flex items-center">
-                    <IdiomSwitch />
+                  <div className="flex flex-wrap gap-2">
+                    {languageOptions.map((option) => (
+                      <label
+                        key={option.locale}
+                        lang={option.locale}
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name="profile-language"
+                          value={option.locale}
+                          checked={locale === option.locale}
+                          onChange={() => handleLocaleChange(option.locale)}
+                        />
+                        {option.label}
+                      </label>
+                    ))}
                   </div>
                 </fieldset>
                 <fieldset className="space-y-3">

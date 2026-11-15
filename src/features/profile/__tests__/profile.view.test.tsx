@@ -6,8 +6,8 @@ import type { ProfileViewModelReturn } from "../profile.types";
 import * as viewModelModule from "../profile.viewmodel";
 import { ProfileView } from "../index";
 
-const { changeLocaleSpy } = vi.hoisted(() => ({
-  changeLocaleSpy: vi.fn(),
+vi.mock("@hooks/useLang", () => ({
+  useLang: vi.fn(),
 }));
 
 vi.mock("@/components/layout/PageShell", () => ({
@@ -23,14 +23,6 @@ vi.mock("@/components/layout/PageShell", () => ({
       {children}
     </main>
   ),
-}));
-
-vi.mock("@/hooks/useLang", () => ({
-  useLang: () => ({
-    locale: "pt",
-    locales: ["pt", "en"],
-    changeLocale: changeLocaleSpy,
-  }),
 }));
 
 const labels = {
@@ -130,12 +122,18 @@ function makeViewModel(
       { id: "combined", label: labels.combinedAverage, value: 75 },
     ],
     theme: "dark",
+    locale: "pt",
+    languageOptions: [
+      { locale: "pt", label: "Português" },
+      { locale: "en", label: "English" },
+    ],
     labels,
     handleEdit: vi.fn(),
     handleCancel: vi.fn(),
     handleSubmit: vi.fn(async () => {}),
     handleRetry: vi.fn(),
     handleCloseMessage: vi.fn(),
+    handleLocaleChange: vi.fn(),
     handleThemeChange: vi.fn(),
     ...overrides,
   };
@@ -144,7 +142,6 @@ function makeViewModel(
 describe("ProfileView", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    changeLocaleSpy.mockClear();
   });
 
   it("renders the profile, activity summary, preferences, and heading hierarchy", () => {
@@ -159,14 +156,18 @@ describe("ProfileView", () => {
     expect(screen.getByText("Jornadas concluídas")).toBeTruthy();
     expect(screen.getByText("Jornadas em andamento")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Preferências" })).toBeTruthy();
-    const ptButton = screen.getByRole("button", { name: "PT" });
-    const enButton = screen.getByRole("button", { name: "EN" });
-    expect(ptButton.getAttribute("aria-pressed")).toBe("true");
-    expect(enButton.getAttribute("aria-pressed")).toBe("false");
-    const idiomSwitchContainer = ptButton.parentElement;
-    expect(idiomSwitchContainer?.className).toContain("inline-flex");
-    expect(idiomSwitchContainer?.className).toContain("w-fit");
-    expect(idiomSwitchContainer?.className).not.toContain("ml-auto");
+
+    const languageGroup = screen.getByRole("group", { name: "Idioma" });
+    expect(languageGroup.tagName).toBe("FIELDSET");
+
+    const ptRadio = screen.getByRole("radio", { name: "Português" });
+    const enRadio = screen.getByRole("radio", { name: "English" });
+    expect(ptRadio).toHaveProperty("checked", true);
+    expect(enRadio).toHaveProperty("checked", false);
+    expect(ptRadio.getAttribute("name")).toBe("profile-language");
+    expect(enRadio.getAttribute("name")).toBe("profile-language");
+    expect(ptRadio.closest("label")?.getAttribute("lang")).toBe("pt");
+    expect(enRadio.closest("label")?.getAttribute("lang")).toBe("en");
   });
 
   it("shows required edit fields and keeps employee code disabled", () => {
@@ -208,8 +209,9 @@ describe("ProfileView", () => {
 
   it("offers light, dark and high contrast themes and calls handleThemeChange", () => {
     const handleThemeChange = vi.fn();
+    const handleLocaleChange = vi.fn();
     vi.spyOn(viewModelModule, "useProfileVM").mockReturnValue(
-      makeViewModel({ handleThemeChange }),
+      makeViewModel({ handleThemeChange, handleLocaleChange }),
     );
     render(<ProfileView />);
 
@@ -223,7 +225,31 @@ describe("ProfileView", () => {
     expect(handleThemeChange).toHaveBeenCalledWith("high-contrast");
     fireEvent.click(screen.getByRole("radio", { name: "Claro" }));
     expect(handleThemeChange).toHaveBeenCalledWith("light");
-    fireEvent.click(screen.getByRole("button", { name: "EN" }));
-    expect(changeLocaleSpy).toHaveBeenCalledWith("en");
+    fireEvent.click(screen.getByRole("radio", { name: "English" }));
+    expect(handleLocaleChange).toHaveBeenCalledWith("en");
+  });
+
+  it("keeps static language autonym labels when the active UI locale is English", () => {
+    const handleLocaleChange = vi.fn();
+    vi.spyOn(viewModelModule, "useProfileVM").mockReturnValue(
+      makeViewModel({
+        locale: "en",
+        labels: { ...labels, preferencesTitle: "Preferences", language: "Language" },
+        handleLocaleChange,
+      }),
+    );
+    render(<ProfileView />);
+
+    expect(screen.getByRole("group", { name: "Language" }).tagName).toBe("FIELDSET");
+    const ptRadio = screen.getByRole("radio", { name: "Português" });
+    const enRadio = screen.getByRole("radio", { name: "English" });
+
+    expect(ptRadio).toHaveProperty("checked", false);
+    expect(enRadio).toHaveProperty("checked", true);
+    expect(ptRadio.closest("label")?.getAttribute("lang")).toBe("pt");
+    expect(enRadio.closest("label")?.getAttribute("lang")).toBe("en");
+
+    fireEvent.click(ptRadio);
+    expect(handleLocaleChange).toHaveBeenCalledWith("pt");
   });
 });

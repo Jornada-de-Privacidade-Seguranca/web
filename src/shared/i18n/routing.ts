@@ -6,3 +6,8 @@ export const routing = defineRouting({
 })
 
 export type Locale = (typeof routing.locales)[number]
+
+export const localeNames: Record<Locale, string> = {
+  pt: 'Português',
+  en: 'English',
+}

@@ -1,4 +1,5 @@
 import type { UseFormReturn } from "react-hook-form";
+import type { Locale } from "@/shared/i18n/routing";
 import type { ThemeMode } from "@/shared/theme";
 import type { MetricsGridItem } from "@/components/ui/MetricsGrid/metricsGrid.types";
 
@@ -91,6 +92,11 @@ export interface ProfileLabels {
   themeHighContrastUnavailable: string;
 }
 
+export interface ProfileLanguageOption {
+  locale: Locale;
+  label: string;
+}
+
 export interface ProfileViewModelReturn {
   profile: ProfileData | null;
   initials: string;
@@ -101,6 +107,8 @@ export interface ProfileViewModelReturn {
   isSubmitting: boolean;
   serverMessage: ProfileServerMessage | null;
   metrics: MetricsGridItem[];
+  locale: Locale;
+  languageOptions: ProfileLanguageOption[];
   theme: ThemeMode;
   labels: ProfileLabels;
   handleEdit: () => void;
@@ -108,5 +116,6 @@ export interface ProfileViewModelReturn {
   handleSubmit: (event?: React.BaseSyntheticEvent) => Promise<void>;
   handleRetry: () => void;
   handleCloseMessage: () => void;
+  handleLocaleChange: (locale: Locale) => void;
   handleThemeChange: (mode: ThemeMode) => void;
 }
