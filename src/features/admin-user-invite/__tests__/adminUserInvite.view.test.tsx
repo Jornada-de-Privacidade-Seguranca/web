@@ -1,0 +1,172 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { AdminUserInviteView } from "../index";
+import * as viewModelModule from "../adminUserInvite.viewmodel";
+import type {
+  AdminUserInviteLabels,
+  AdminUserInviteViewModelReturn,
+} from "../adminUserInvite.types";
+
+vi.mock("@/shared/i18n/navigation", () => ({
+  Link: ({ children, href }: { children: ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock("@/components/layout/PageShell", () => ({
+  PageShell: ({
+    children,
+    title,
+  }: {
+    children: ReactNode;
+    title: string;
+  }) => (
+    <main>
+      <h1>{title}</h1>
+      {children}
+    </main>
+  ),
+}));
+
+const mockLabels: AdminUserInviteLabels = {
+  pageTitle: "Convidar usuário",
+  pageSubtitle: "Envie um convite por e-mail.",
+  backToList: "Voltar para usuários",
+  summaryEmptyTitle: "Novo convite",
+  summaryBadge: "Convite",
+  formTitle: "Dados do convite",
+  formSubtitle: "Informe o e-mail e o perfil.",
+  emailLabel: "E-mail",
+  emailPlaceholder: "colaborador@empresa.com",
+  roleLabel: "Perfil de acesso",
+  roleLockedHint: "Perfil fixado em Usuário.",
+  infoNotice:
+    "A pessoa receberá um e-mail com um link para definir a senha e completar os próprios dados. O link vale por 60 minutos e pode ser usado uma vez.",
+  cancelButton: "Cancelar",
+  submitButton: "Enviar convite",
+  submittingButton: "Enviando convite...",
+  errors: {
+    emailRequired: "O e-mail é obrigatório.",
+    emailInvalid: "Insira um endereço de e-mail válido.",
+    accountAlreadyExists: "Já existe uma conta cadastrada com este e-mail.",
+    genericSubmit: "Não foi possível enviar o convite. Tente novamente.",
+  },
+};
+
+function makeViewModel(
+  overrides: Partial<AdminUserInviteViewModelReturn> = {}
+): AdminUserInviteViewModelReturn {
+  return {
+    email: "",
+    role: "user",
+    summaryTitle: "Novo convite",
+    summaryRoleLabel: "Usuário",
+    roleOptions: [
+      { value: "user", label: "Usuário" },
+      { value: "manager", label: "Gestor" },
+      { value: "admin", label: "Administrador" },
+    ],
+    canChangeProfile: true,
+    emailError: null,
+    submitError: null,
+    isSubmitting: false,
+    labels: mockLabels,
+    handleEmailChange: vi.fn(),
+    handleRoleChange: vi.fn(),
+    handleCancel: vi.fn(),
+    handleSubmit: vi.fn(async (e) => {
+      e.preventDefault();
+    }),
+    ...overrides,
+  };
+}
+
+describe("AdminUserInviteView", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renderiza resumo dinâmico, nota explicativa e ações principais", () => {
+    vi.spyOn(viewModelModule, "useAdminUserInviteVM").mockReturnValue(
+      makeViewModel()
+    );
+
+    render(<AdminUserInviteView />);
+
+    expect(screen.getByText("Novo convite")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "A pessoa receberá um e-mail com um link para definir a senha e completar os próprios dados. O link vale por 60 minutos e pode ser usado uma vez."
+      )
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancelar" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Enviar convite" })
+    ).toBeTruthy();
+    expect(screen.getByText("Voltar para usuários").closest("a")?.getAttribute("href")).toBe(
+      "/admin/usuarios"
+    );
+  });
+
+  it("atualiza card de resumo com e-mail e perfil selecionados e trava select sem permissão", () => {
+    vi.spyOn(viewModelModule, "useAdminUserInviteVM").mockReturnValue(
+      makeViewModel({
+        email: "pessoa@empresa.com",
+        summaryTitle: "pessoa@empresa.com",
+        summaryRoleLabel: "Usuário",
+        canChangeProfile: false,
+      })
+    );
+
+    render(<AdminUserInviteView />);
+
+    expect(screen.getByRole("heading", { level: 2, name: "pessoa@empresa.com" })).toBeTruthy();
+    const roleSelect = screen.getByLabelText(/Perfil de acesso/);
+    expect(roleSelect).toHaveProperty("disabled", true);
+    expect(screen.getByText("Perfil fixado em Usuário.")).toBeTruthy();
+  });
+
+  it("exibe erro no campo de e-mail, alerta genérico e estado de carregamento no envio", () => {
+    const handleCancel = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserInviteVM").mockReturnValue(
+      makeViewModel({
+        emailError: "Já existe uma conta cadastrada com este e-mail.",
+        submitError: "Não foi possível enviar o convite. Tente novamente.",
+        isSubmitting: true,
+        handleCancel,
+      })
+    );
+
+    render(<AdminUserInviteView />);
+
+    expect(
+      screen.getByLabelText(/E-mail/).getAttribute("aria-invalid")
+    ).toBe("true");
+    expect(
+      screen.getByText("Já existe uma conta cadastrada com este e-mail.")
+    ).toBeTruthy();
+    expect(
+      screen.getByText("Não foi possível enviar o convite. Tente novamente.")
+    ).toBeTruthy();
+
+    const submitButton = screen.getByRole("button", {
+      name: "Enviando convite...",
+    });
+    expect(submitButton).toHaveProperty("disabled", true);
+    expect(submitButton.getAttribute("aria-busy")).toBe("true");
+  });
+
+  it("aciona cancelar ao clicar no botão Cancelar", () => {
+    const handleCancel = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserInviteVM").mockReturnValue(
+      makeViewModel({ handleCancel })
+    );
+
+    render(<AdminUserInviteView />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(handleCancel).toHaveBeenCalledOnce();
+  });
+});

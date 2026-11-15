@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import * as usersService from "@services/usersService";
+import { useAuthStore } from "@features/auth/auth.store";
+import { useAdminUsersStore } from "../adminUsers.store";
 import { useAdminUsersVM } from "../adminUsers.viewmodel";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -12,6 +14,8 @@ vi.mock("next-intl", () => ({
       return `Mostrando ${params?.filtered} de ${params?.total} usuários`;
     if (key === "pagination.pageOf")
       return `Página ${params?.current} de ${params?.total}`;
+    if (key === "inviteSuccess")
+      return `Convite enviado para ${params?.email}`;
     return key;
   },
 }));
@@ -64,6 +68,8 @@ describe("useAdminUsersVM", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    useAdminUsersStore.getState().clearInvitedEmail();
+    useAuthStore.getState().clearAuth();
   });
 
   it("deve carregar inicialmente a listagem e os perfis", async () => {
@@ -133,5 +139,65 @@ describe("useAdminUsersVM", () => {
     expect(result.current.filters.role).toBe("");
     expect(result.current.filters.status).toBe("");
     expect(result.current.hasActiveFilters).toBe(false);
+  });
+
+  it("controla canInviteUsers pela permissão users.register e exibe alerta de convite via store em memória", () => {
+    useAdminUsersStore.getState().setInvitedEmail("novo@empresa.com");
+    useAuthStore.getState().setAuth({
+      id: 1,
+      name: "Admin",
+      email: "admin@empresa.com",
+      role: "administrator",
+      permissions: ["users.view", "users.register"],
+      profile: {
+        id: "admin",
+        name: "Administrador",
+        label: "Administrador",
+        role: "administrator",
+        user_type_id: 1,
+        profile_type_id: 1,
+        profile_type_name: "Administrador",
+        permissions: ["users.view", "users.register"],
+      },
+      active_status: 1,
+    });
+
+    const { result, rerender } = renderHook(() => useAdminUsersVM(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.canInviteUsers).toBe(true);
+    expect(result.current.inviteSuccessMessage).toBe(
+      "Convite enviado para novo@empresa.com"
+    );
+
+    act(() => {
+      result.current.handleDismissInviteMessage();
+    });
+    expect(result.current.inviteSuccessMessage).toBeNull();
+
+    act(() => {
+      useAuthStore.getState().setAuth({
+        id: 2,
+        name: "Gestor",
+        email: "gestor@empresa.com",
+        role: "common_user",
+        permissions: ["users.view", "results.view_all"],
+        profile: {
+          id: "manager",
+          name: "Gestor",
+          label: "Gestor",
+          role: "common_user",
+          user_type_id: 2,
+          profile_type_id: 2,
+          profile_type_name: "Gestor",
+          permissions: ["users.view", "results.view_all"],
+        },
+        active_status: 1,
+      });
+    });
+
+    rerender();
+    expect(result.current.canInviteUsers).toBe(false);
   });
 });

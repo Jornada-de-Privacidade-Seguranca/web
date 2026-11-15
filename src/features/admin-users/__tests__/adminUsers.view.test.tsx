@@ -90,6 +90,8 @@ describe("AdminUsersView", () => {
     errorTitle: "Erro",
     errorMessage: "Erro ao carregar",
     retryButton: "Tentar novamente",
+    inviteButton: "Convidar usuário",
+    closeMessage: "Fechar aviso",
   };
 
   function createMockVMReturn(
@@ -151,6 +153,10 @@ describe("AdminUsersView", () => {
         },
       ],
       isProfilesLoading: false,
+
+      canInviteUsers: true,
+      inviteSuccessMessage: null,
+      handleDismissInviteMessage: vi.fn(),
 
       labels: mockLabels,
       ...overrides,
@@ -226,5 +232,41 @@ describe("AdminUsersView", () => {
 
     expect(screen.getByTestId("users-empty-state")).toBeDefined();
     expect(screen.getByText("Nenhum usuário encontrado")).toBeDefined();
+  });
+
+  it("exibe o botão Convidar usuário apenas quando canInviteUsers é true e mostra alerta de convite enviado", () => {
+    const handleDismissInviteMessage = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUsersVM").mockReturnValue(
+      createMockVMReturn({
+        canInviteUsers: true,
+        inviteSuccessMessage: "Convite enviado para novo@empresa.com",
+        handleDismissInviteMessage,
+      })
+    );
+
+    const { rerender } = render(
+      <AppProviders>
+        <AdminUsersView />
+      </AppProviders>
+    );
+
+    const inviteLink = screen.getByText("Convidar usuário").closest("a");
+    expect(inviteLink?.getAttribute("href")).toBe("/admin/usuarios/novo");
+    expect(screen.getByText("Convite enviado para novo@empresa.com")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fechar aviso" }));
+    expect(handleDismissInviteMessage).toHaveBeenCalledOnce();
+
+    vi.spyOn(viewModelModule, "useAdminUsersVM").mockReturnValue(
+      createMockVMReturn({ canInviteUsers: false })
+    );
+
+    rerender(
+      <AppProviders>
+        <AdminUsersView />
+      </AppProviders>
+    );
+
+    expect(screen.queryByText("Convidar usuário")).toBeNull();
   });
 });

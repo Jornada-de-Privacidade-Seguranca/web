@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { usePermission } from "@hooks/usePermission";
 import { getUsersList, getAccessProfiles } from "@services/usersService";
+import { useAdminUsersStore } from "./adminUsers.store";
 import type {
   AdminUsersViewModelReturn,
   AdminUsersTab,
@@ -23,6 +25,25 @@ const DEPARTMENTS_LIST = [
 
 export function useAdminUsersVM(): AdminUsersViewModelReturn {
   const t = useTranslations("adminUsers");
+  const { can } = usePermission();
+
+  const canInviteUsers = can("users.register");
+  const invitedEmail = useAdminUsersStore((s) => s.invitedEmail);
+  const clearInvitedEmail = useAdminUsersStore((s) => s.clearInvitedEmail);
+
+  const inviteSuccessMessage = invitedEmail
+    ? t("inviteSuccess", { email: invitedEmail })
+    : null;
+
+  const handleDismissInviteMessage = useCallback(() => {
+    clearInvitedEmail();
+  }, [clearInvitedEmail]);
+
+  useEffect(() => {
+    return () => {
+      clearInvitedEmail();
+    };
+  }, [clearInvitedEmail]);
 
   const [currentTab, setCurrentTab] = useState<AdminUsersTab>("users");
   const [page, setPage] = useState<number>(1);
@@ -197,6 +218,8 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
     errorTitle: t("error.title"),
     errorMessage: t("error.message"),
     retryButton: t("error.retry"),
+    inviteButton: t("inviteButton"),
+    closeMessage: t("closeMessage"),
   };
 
   return {
@@ -233,6 +256,10 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
 
     accessProfiles: profilesQuery.data ?? [],
     isProfilesLoading: profilesQuery.isLoading,
+
+    canInviteUsers,
+    inviteSuccessMessage,
+    handleDismissInviteMessage,
 
     labels,
   };

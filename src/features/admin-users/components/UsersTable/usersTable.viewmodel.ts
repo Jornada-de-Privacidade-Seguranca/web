@@ -1,3 +1,4 @@
+import { getInitials } from "@/shared/utils/initials";
 import type {
   UsersTableProps,
   UsersTableViewModelReturn,
@@ -36,13 +37,16 @@ export function useUsersTableVM(
 
   const rows: UserRowItem[] = users.map((user) => {
     const statusMeta = getStatusMeta(user.status);
+    const displayName = user.name?.trim() || user.email;
+    const initials = user.initials?.trim() || getInitials(displayName);
+
     return {
       id: user.id,
-      name: user.name,
+      name: displayName,
       email: user.email,
-      initials: user.initials,
-      employeeCode: user.employeeCode,
-      department: user.department,
+      initials,
+      employeeCode: user.employeeCode?.trim() || "—",
+      department: user.department?.trim() || "—",
       roleLabel: user.roleLabel,
       status: user.status,
       statusLabel: statusMeta.label,

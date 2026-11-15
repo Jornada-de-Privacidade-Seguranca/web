@@ -100,11 +100,19 @@ export interface AdminUsersLabels {
   errorTitle: string;
   errorMessage: string;
   retryButton: string;
+  inviteButton: string;
+  closeMessage: string;
 }
 
 export interface SelectOption {
   value: string;
   label: string;
+}
+
+export interface AdminUsersStore {
+  invitedEmail: string | null;
+  setInvitedEmail: (email: string | null) => void;
+  clearInvitedEmail: () => void;
 }
 
 export interface AdminUsersViewModelReturn {
@@ -132,5 +140,8 @@ export interface AdminUsersViewModelReturn {
   hasActiveFilters: boolean;
   accessProfiles: AccessProfile[];
   isProfilesLoading: boolean;
+  canInviteUsers: boolean;
+  inviteSuccessMessage: string | null;
+  handleDismissInviteMessage: () => void;
   labels: AdminUsersLabels;
 }

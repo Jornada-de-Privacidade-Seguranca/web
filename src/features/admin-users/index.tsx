@@ -1,9 +1,11 @@
 "use client";
 
-import { RefreshIcon } from "@hugeicons/core-free-icons";
+import { RefreshIcon, UserAdd01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Link } from "@/shared/i18n/navigation";
 import {
   Button,
+  Message,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -50,32 +52,60 @@ export function AdminUsersView() {
     accessProfiles,
     isProfilesLoading,
 
+    canInviteUsers,
+    inviteSuccessMessage,
+    handleDismissInviteMessage,
+
     labels,
   } = useAdminUsersVM();
 
   return (
     <PageShell title={labels.title} subtitle={labels.subtitle}>
       <div className="space-y-6">
+        {inviteSuccessMessage && (
+          <Message
+            variant="success"
+            title={inviteSuccessMessage}
+            onClose={handleDismissInviteMessage}
+            closeLabel={labels.closeMessage}
+          />
+        )}
+
         <Tabs
           value={currentTab}
           onValueChange={(val) => handleTabChange(val as AdminUsersTab)}
           className="space-y-6"
         >
-          {/* Seletor de Abas */}
-          <TabsList className="bg-muted/60 p-1 rounded-2xl border border-border/60">
-            <TabsTrigger
-              value="users"
-              className="rounded-xl px-5 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
-            >
-              {labels.tabUsers}
-            </TabsTrigger>
-            <TabsTrigger
-              value="roles"
-              className="rounded-xl px-5 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
-            >
-              {labels.tabRoles}
-            </TabsTrigger>
-          </TabsList>
+          {/* Seletor de Abas e Ação de Convite */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList className="bg-muted/60 p-1 rounded-2xl border border-border/60">
+              <TabsTrigger
+                value="users"
+                className="rounded-xl px-5 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              >
+                {labels.tabUsers}
+              </TabsTrigger>
+              <TabsTrigger
+                value="roles"
+                className="rounded-xl px-5 py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              >
+                {labels.tabRoles}
+              </TabsTrigger>
+            </TabsList>
+
+            {canInviteUsers && (
+              <Button
+                asChild
+                size="sm"
+                className="self-start rounded-full px-4 text-xs font-semibold sm:self-auto"
+              >
+                <Link href="/admin/usuarios/novo">
+                  <HugeiconsIcon icon={UserAdd01Icon} size={14} className="mr-1.5" />
+                  <span>{labels.inviteButton}</span>
+                </Link>
+              </Button>
+            )}
+          </div>
 
           {/* Aba 1: Usuários */}
           <TabsContent value="users" className="space-y-6">

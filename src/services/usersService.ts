@@ -1,4 +1,5 @@
 import { getInitials } from "@/shared/utils/initials";
+import { ApiRequestError } from "@services/httpClient";
 import type {
   AdminUserListItem,
   AccessProfile,
@@ -13,6 +14,34 @@ import type {
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
 
+export interface UserInvitationApiData {
+  id: number;
+  email: string;
+  user_type_id: number;
+  profile_type_id: number;
+  active_status: number;
+  account_status: "pending_initial_password";
+}
+
+export interface UserInvitationApiResponse {
+  message: string;
+  data: UserInvitationApiData;
+}
+
+export interface InviteUserPayload {
+  email: string;
+  role: UserRole;
+}
+
+export interface InviteUserResponse {
+  id: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  status: UserStatus;
+  expiresAt: string;
+}
+
 export { getInitials };
 export type {
   AdminUserListItem,
@@ -24,6 +53,12 @@ export type {
   UserCompletedJourney,
   AdminUserDetails,
   UpdateUserPayload,
+};
+
+const ROLE_LABEL_MAP: Record<UserRole, string> = {
+  admin: "Administrador",
+  manager: "Gestor",
+  user: "Usuário",
 };
 
 export const MOCK_ACCESS_PROFILES: AccessProfile[] = [
@@ -345,23 +380,92 @@ export async function updateUser(
   id: string,
   payload: UpdateUserPayload
 ): Promise<AdminUserDetails> {
-  const roleLabelMap: Record<UserRole, string> = {
-    admin: "Administrador",
-    manager: "Gestor",
-    user: "Usuário",
-  };
-
   const index = mockUsersData.findIndex((u) => u.id === id);
   if (index !== -1) {
     mockUsersData[index] = {
       ...mockUsersData[index],
       ...payload,
       initials: getInitials(payload.name),
-      roleLabel: roleLabelMap[payload.role] || "Usuário",
+      roleLabel: ROLE_LABEL_MAP[payload.role] || "Usuário",
     };
     return mockUsersData[index];
   }
   throw new Error("Usuário não encontrado");
+}
+
+const ROLE_TO_PROFILE_ID: Record<UserRole, number> = {
+  admin: 1,
+  manager: 2,
+  user: 3,
+};
+
+/**
+ * Simula `POST /admin/user-invitations` seguindo a especificação do PR 78 (#122).
+ * Retorna 409 (`ACCOUNT_ALREADY_EXISTS`) para e-mails já cadastrados
+ * e 201 com os dados do convite gerado e usuário com status pendente.
+ */
+export async function inviteUser(
+  payload: InviteUserPayload
+): Promise<InviteUserResponse> {
+  const normalizedEmail = payload.email.trim().toLowerCase();
+  const alreadyExists = mockUsersData.some(
+    (u) => u.email.toLowerCase() === normalizedEmail
+  );
+
+  if (alreadyExists) {
+    throw new ApiRequestError(
+      "Já existe uma conta cadastrada com este e-mail.",
+      409,
+      "ACCOUNT_ALREADY_EXISTS"
+    );
+  }
+
+  const nextNumericId =
+    mockUsersData.reduce((max, u) => Math.max(max, Number(u.id) || 0), 0) + 1;
+  const nextId = String(nextNumericId);
+  const roleLabel = ROLE_LABEL_MAP[payload.role] || "Usuário";
+  const profileTypeId = ROLE_TO_PROFILE_ID[payload.role] ?? 3;
+
+  // Mock seguindo contrato do PR 78 do backend
+  const apiMockResponse: UserInvitationApiResponse = {
+    message: "Convite enviado com sucesso",
+    data: {
+      id: nextNumericId,
+      email: normalizedEmail,
+      user_type_id: 2,
+      profile_type_id: profileTypeId,
+      active_status: 2,
+      account_status: "pending_initial_password",
+    },
+  };
+
+  // Usuário convidado não possui dados cadastrais (nome, matrícula, setor) até aceitar o convite
+  const createdUser: AdminUserDetails = {
+    id: nextId,
+    name: "",
+    email: normalizedEmail,
+    initials: "",
+    employeeCode: "",
+    department: "",
+    organization: "",
+    role: payload.role,
+    roleLabel,
+    status: "pending",
+    journeysCount: 0,
+    createdAt: new Date().toISOString(),
+    journeys: [],
+  };
+
+  mockUsersData = [createdUser, ...mockUsersData];
+
+  return {
+    id: String(apiMockResponse.data.id),
+    email: apiMockResponse.data.email,
+    role: payload.role,
+    roleLabel,
+    status: "pending",
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  };
 }
 
 export async function toggleUserStatus(

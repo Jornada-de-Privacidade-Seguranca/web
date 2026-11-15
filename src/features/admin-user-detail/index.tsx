@@ -83,8 +83,11 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     );
   }
 
+  const displayName = user.name?.trim() || user.email;
+  const displayDepartment = user.department?.trim() || "—";
+
   return (
-    <PageShell title={user.name} subtitle={`${user.department} • ${user.roleLabel}`}>
+    <PageShell title={displayName} subtitle={`${displayDepartment} • ${user.roleLabel}`}>
       <div className="space-y-8">
         {/* Cabeçalho do Usuário */}
         <UserHeader
@@ -167,7 +170,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
         {canDeleteUser && (
           <DeleteUserModal
             isOpen={isDeleteModalOpen}
-            userName={user.name}
+            userName={displayName}
             isDeleting={isDeleting}
             labels={labels}
             onCancel={handleCloseDeleteModal}

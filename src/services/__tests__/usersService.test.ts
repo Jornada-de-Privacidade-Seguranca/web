@@ -7,7 +7,9 @@ import {
   deleteUser,
   getAccessProfiles,
   getInitials,
+  inviteUser,
 } from "../usersService";
+import { ApiRequestError } from "../httpClient";
 
 describe("usersService", () => {
   beforeEach(() => {
@@ -77,5 +79,37 @@ describe("usersService", () => {
     const user = profiles.find((p) => p.id === "user");
     expect(user?.isDefault).toBe(true);
     expect(user?.permissions).toEqual(["journeys.take", "results.view_own"]);
+  });
+
+  it("deve criar convite pendente (201) para e-mail novo e retornar 409 ACCOUNT_ALREADY_EXISTS se já existir", async () => {
+    const invited = await inviteUser({
+      email: "  Novo.Convidado@Empresa.com ",
+      role: "manager",
+    });
+
+    expect(invited.email).toBe("novo.convidado@empresa.com");
+    expect(invited.role).toBe("manager");
+    expect(invited.roleLabel).toBe("Gestor");
+    expect(invited.status).toBe("pending");
+    expect(new Date(invited.expiresAt).getTime()).toBeGreaterThan(Date.now());
+
+    // Usuário convidado possui dados pessoais em branco no mock
+    const createdInList = await getUsersList({ search: "novo.convidado@empresa.com" });
+    expect(createdInList.items[0].name).toBe("");
+    expect(createdInList.items[0].department).toBe("");
+    expect(createdInList.items[0].employeeCode).toBe("");
+
+    await expect(
+      inviteUser({ email: "FERNANDA.COSTA@empresa.com", role: "user" })
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "ACCOUNT_ALREADY_EXISTS",
+    });
+
+    try {
+      await inviteUser({ email: "fernanda.costa@empresa.com", role: "user" });
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiRequestError);
+    }
   });
 });
