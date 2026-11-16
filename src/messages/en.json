@@ -377,6 +377,8 @@
     "loadErrorTitle": "Unable to load profile",
     "loadErrorDescription": "There was a problem loading your information. Try again.",
     "retry": "Try again",
+    "activityLoadError": "Unable to load system activity",
+    "notAvailable": "—",
     "successTitle": "Profile updated",
     "successDescription": "Your information was saved successfully.",
     "errorTitle": "Unable to save profile",
@@ -395,7 +397,8 @@
       "emailMaxLength": "Email must have at most 100 characters.",
       "departmentRequired": "Department is required.",
       "departmentMaxLength": "Department must have at most 100 characters.",
-      "employeeCodeImmutable": "The employee code cannot be changed."
+      "employeeCodeImmutable": "The employee code cannot be changed.",
+      "emailInUse": "An account with this email already exists."
     },
     "preferencesTitle": "Preferences",
     "language": "Language",

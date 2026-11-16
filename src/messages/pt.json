@@ -377,6 +377,8 @@
     "loadErrorTitle": "Não foi possível carregar o perfil",
     "loadErrorDescription": "Ocorreu um erro ao carregar seus dados. Tente novamente.",
     "retry": "Tentar novamente",
+    "activityLoadError": "Não foi possível carregar a atividade no sistema",
+    "notAvailable": "—",
     "successTitle": "Perfil atualizado",
     "successDescription": "Seus dados foram salvos com sucesso.",
     "errorTitle": "Não foi possível salvar o perfil",
@@ -395,7 +397,8 @@
       "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
       "departmentRequired": "O setor é obrigatório.",
       "departmentMaxLength": "O setor deve ter no máximo 100 caracteres.",
-      "employeeCodeImmutable": "O código de funcionário não pode ser alterado."
+      "employeeCodeImmutable": "O código de funcionário não pode ser alterado.",
+      "emailInUse": "Já existe uma conta cadastrada com este e-mail."
     },
     "preferencesTitle": "Preferências",
     "language": "Idioma",
