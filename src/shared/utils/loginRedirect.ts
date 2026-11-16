@@ -6,6 +6,9 @@ export const DEFAULT_AUTHENTICATED_PATH = "/painel";
 /** Valor de `reason` que indica que o usuário chegou ao login pela expiração da sessão. */
 export const SESSION_EXPIRED_REASON = "session_expired";
 
+/** Valor de `reason` que indica que o usuário acabou de ativar a conta pelo convite. */
+export const ACCOUNT_ACTIVATED_REASON = "account_activated";
+
 const REASON_PARAM = "reason";
 const REDIRECT_PARAM = "redirect";
 
@@ -64,6 +67,16 @@ export function buildSessionExpiredLoginPath(currentPath: string): string {
     params.set(REDIRECT_PARAM, redirectPath);
   }
   return `${LOGIN_PATH}?${params.toString()}`;
+}
+
+/** Caminho do login depois da ativação da conta pelo convite, para o aviso na tela. */
+export function buildAccountActivatedLoginPath(): string {
+  return `${LOGIN_PATH}?${new URLSearchParams({ [REASON_PARAM]: ACCOUNT_ACTIVATED_REASON }).toString()}`;
+}
+
+/** Indica se o usuário chegou ao login logo depois de ativar a conta pelo convite. */
+export function isAccountActivatedLogin(search: string): boolean {
+  return new URLSearchParams(search).get(REASON_PARAM) === ACCOUNT_ACTIVATED_REASON;
 }
 
 /** Indica se o usuário chegou ao login pela expiração da sessão. */

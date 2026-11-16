@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildAccountActivatedLoginPath,
   buildSessionExpiredLoginPath,
   getSafeRedirectPath,
+  isAccountActivatedLogin,
   isSessionExpiredLogin,
   readLoginRedirectPath,
 } from "../loginRedirect";
@@ -61,6 +63,20 @@ describe("isSessionExpiredLogin", () => {
   it("deve identificar a chegada ao login pela expiração da sessão", () => {
     expect(isSessionExpiredLogin("?reason=session_expired&redirect=%2Fjornadas")).toBe(true);
     expect(isSessionExpiredLogin("?redirect=%2Fjornadas")).toBe(false);
+  });
+});
+
+describe("buildAccountActivatedLoginPath", () => {
+  it("deve informar a ativação da conta sem página de retorno", () => {
+    expect(buildAccountActivatedLoginPath()).toBe("/login?reason=account_activated");
+  });
+});
+
+describe("isAccountActivatedLogin", () => {
+  it("deve reconhecer o motivo da ativação da conta", () => {
+    expect(isAccountActivatedLogin("?reason=account_activated")).toBe(true);
+    expect(isAccountActivatedLogin("?reason=session_expired")).toBe(false);
+    expect(isAccountActivatedLogin("")).toBe(false);
   });
 });
 

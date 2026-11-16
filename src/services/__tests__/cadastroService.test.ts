@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { CadastroRequestError, registerUser } from "../cadastroService";
+import { CadastroRequestError, registerUser, splitCadastroFieldErrors } from "../cadastroService";
 import { axiosInstance } from "../httpClient";
 import type { CadastroFormData } from "@features/cadastro/cadastro.types";
 
@@ -159,5 +159,27 @@ describe("cadastroService", () => {
     const error = await captureError(registerUser(formData));
 
     expect(error.type).toBe("server_error");
+  });
+});
+
+describe("splitCadastroFieldErrors", () => {
+  it("deve levar a primeira mensagem de cada campo da API ao campo do formulário", () => {
+    expect(
+      splitCadastroFieldErrors({
+        name: ["Informe nome e sobrenome.", "Outra mensagem."],
+        registration_number: ["A matrícula é obrigatória."],
+        profile_type_id: ["Perfil inválido."],
+      })
+    ).toEqual({
+      fieldErrors: {
+        nomeCompleto: "Informe nome e sobrenome.",
+        codigoFuncionario: "A matrícula é obrigatória.",
+      },
+      otherErrors: ["Perfil inválido."],
+    });
+  });
+
+  it("deve devolver listas vazias sem mensagens", () => {
+    expect(splitCadastroFieldErrors(undefined)).toEqual({ fieldErrors: {}, otherErrors: [] });
   });
 });

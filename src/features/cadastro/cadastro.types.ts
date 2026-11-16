@@ -46,6 +46,12 @@ export type CadastroRequestErrorType = "validation" | "already_registered" | "se
 /** Mensagens de erro da API, já com os nomes dos campos do formulário. */
 export type CadastroFieldErrors = Partial<Record<keyof CadastroFormData, string>>;
 
+export interface CadastroFieldErrorsSplit {
+  fieldErrors: CadastroFieldErrors;
+  /** Mensagens de campos da API que não existem no formulário */
+  otherErrors: string[];
+}
+
 export interface CadastroValidationMessages {
   fullNameRequired: string;
   fullNameLastName: string;

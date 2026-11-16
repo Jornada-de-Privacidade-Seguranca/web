@@ -97,6 +97,14 @@ describe("useRequireGuest", () => {
     expect(routerReplaceMock).toHaveBeenCalledWith("/painel");
   });
 
+  it("should not redirect an authenticated user when the guard is disabled", () => {
+    mockUseAuth({ isLoading: false, isAuthenticated: true });
+
+    renderHook(() => useRequireGuest({ enabled: false }));
+
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+  });
+
   it("should not redirect when there is no authenticated session", () => {
     mockUseAuth({ isLoading: false, isAuthenticated: false });
 

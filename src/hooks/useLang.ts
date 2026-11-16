@@ -13,7 +13,8 @@ export function useLang() {
   const currentLocale = (params?.locale as Locale) ?? routing.defaultLocale
 
   function changeLocale(locale: Locale) {
-    router.replace(pathname, { locale })
+    // Mantém a query string: sem ela, o link do convite perderia o e-mail e o código
+    router.replace(`${pathname}${window.location.search}`, { locale })
   }
 
   return {

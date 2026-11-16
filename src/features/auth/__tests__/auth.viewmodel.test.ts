@@ -193,6 +193,27 @@ describe("useAuthVM com página de retorno", () => {
     });
   });
 
+  it("deve avisar que a conta foi ativada ao chegar pela ativação do convite", () => {
+    mockSearch = "reason=account_activated";
+
+    const { result } = renderHook(() => useAuthVM());
+
+    expect(result.current.serverMessage).toEqual({
+      title: "accountActivated.title",
+      description: "accountActivated.description",
+      variant: "success",
+    });
+  });
+
+  it("deve ocultar o aviso de conta ativada ao fechá-lo", () => {
+    mockSearch = "reason=account_activated";
+
+    const { result } = renderHook(() => useAuthVM());
+    act(() => result.current.onCloseMsg());
+
+    expect(result.current.serverMessage).toBeNull();
+  });
+
   it("não deve mostrar o aviso em um acesso comum ao login", () => {
     mockSearch = "redirect=%2Fjornadas";
 

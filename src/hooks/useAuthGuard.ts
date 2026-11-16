@@ -43,19 +43,29 @@ export function useRequireAuth() {
   return { user, isAuthenticated, isLoading, sessionExpired, goToLogin };
 }
 
+export interface RequireGuestOptions {
+  /**
+   * Com `false`, não redireciona quem já está autenticado, para as páginas
+   * públicas que também abrem com sessão (por exemplo, a ativação por convite).
+   * @default true
+   */
+  enabled?: boolean;
+}
+
 /**
  * Redireciona quem já está autenticado: para a página de retorno informada no
  * login (só caminhos internos) ou, sem ela, para /painel.
  */
-export function useRequireGuest() {
+export function useRequireGuest(options?: RequireGuestOptions) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const enabled = options?.enabled ?? true;
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (enabled && !isLoading && isAuthenticated) {
       router.replace(readCurrentLoginRedirectPath() ?? DEFAULT_AUTHENTICATED_PATH);
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [enabled, isLoading, isAuthenticated, router]);
 
   return { isAuthenticated, isLoading };
 }

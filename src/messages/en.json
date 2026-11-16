@@ -107,6 +107,10 @@
       "serverError": {
         "title": "Unable to sign in",
         "genericDescription": "Something went wrong while signing in. Please try again later."
+      },
+      "accountActivated": {
+        "title": "Account activated",
+        "description": "Sign in with your email and password."
       }
     },
     "register": {
@@ -163,6 +167,19 @@
         "title": "Account created successfully!",
         "description": "Your account was created and must be activated by an administrator before you can sign in."
       }
+    },
+    "initialPassword": {
+      "title": "Activate your account",
+      "subtitle": "Complete your details and set your password to access the platform.",
+      "validating": "Validating the invitation...",
+      "invalidInvitation": "This invitation is invalid, has expired or has already been used. Ask the administrator for a new invitation.",
+      "backToLogin": "Back to sign in",
+      "validationFailed": "We couldn't validate the invitation. Please try again.",
+      "retry": "Try again",
+      "emailLabel": "EMAIL",
+      "submit": "Activate account",
+      "submitting": "Activating...",
+      "submitError": "We couldn't activate the account. Please try again."
     }
   },
   "sessionExpired": {

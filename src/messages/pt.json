@@ -107,6 +107,10 @@
       "serverError": {
         "title": "Não foi possível entrar",
         "genericDescription": "Ocorreu um erro ao tentar entrar. Por favor, tente novamente mais tarde."
+      },
+      "accountActivated": {
+        "title": "Conta ativada",
+        "description": "Entre com seu e-mail e senha."
       }
     },
     "register": {
@@ -163,6 +167,19 @@
         "title": "Conta criada com sucesso!",
         "description": "Sua conta foi criada e precisa ser ativada por um administrador antes do primeiro acesso."
       }
+    },
+    "initialPassword": {
+      "title": "Ative sua conta",
+      "subtitle": "Complete seus dados e defina sua senha para acessar a plataforma.",
+      "validating": "Validando o convite...",
+      "invalidInvitation": "Este convite é inválido, expirou ou já foi usado. Peça um novo convite ao administrador.",
+      "backToLogin": "Voltar ao login",
+      "validationFailed": "Não foi possível validar o convite. Tente novamente.",
+      "retry": "Tentar novamente",
+      "emailLabel": "E-MAIL",
+      "submit": "Ativar conta",
+      "submitting": "Ativando...",
+      "submitError": "Não foi possível ativar a conta. Tente novamente."
     }
   },
   "sessionExpired": {
