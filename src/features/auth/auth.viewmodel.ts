@@ -122,11 +122,13 @@ export function useAuthVM(): AuthViewModelReturn {
       emailPlaceholder: t("emailPlaceholder"),
       passwordLabel: t("passwordLabel"),
       passwordPlaceholder: t("passwordPlaceholder"),
-      forgotPassword: t("forgotPassword"),
       submit: t("submit"),
       signUpPrefix: t("signUpPrefix"),
       signUpLink: t("signUpLink"),
-      privacyNotice: t("privacyNotice"),
+      privacyNoticePrefix: t("privacyNotice.prefix"),
+      privacyNoticeLink: t("privacyNotice.link"),
+      privacyNoticeSuffix: t("privacyNotice.suffix"),
+      privacyNoticeLinkAriaLabel: t("privacyNotice.linkAriaLabel"),
     },
   };
 }

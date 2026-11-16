@@ -94,11 +94,15 @@
       "emailPlaceholder": "seu.email@empresa.com",
       "passwordLabel": "Senha",
       "passwordPlaceholder": "Digite sua senha",
-      "forgotPassword": "Esqueceu sua senha?",
       "submit": "Entrar",
       "signUpPrefix": "Não tem uma conta?",
       "signUpLink": "Cadastre-se",
-      "privacyNotice": "Ao continuar você aceita nossos termos de privacidade.",
+      "privacyNotice": {
+        "prefix": "Ao continuar você aceita nosso",
+        "link": "termo de privacidade",
+        "suffix": ".",
+        "linkAriaLabel": "Ler o termo de privacidade"
+      },
       "validation": {
         "emailRequired": "O e-mail é obrigatório.",
         "emailInvalid": "Informe um e-mail válido.",
