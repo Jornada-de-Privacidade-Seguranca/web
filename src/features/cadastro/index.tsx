@@ -80,7 +80,30 @@ export function CadastroView() {
                 ) : null}
               </div>
 
-              {/* Código de funcionário & Departamento */}
+              {/* Órgão ou empresa */}
+              <div className="space-y-1.5">
+                <label
+                  className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+                  htmlFor="empresa"
+                >
+                  {labels.companyLabel}
+                </label>
+                <Input
+                  id="empresa"
+                  aria-invalid={Boolean(errors.empresa)}
+                  {...register("empresa")}
+                  placeholder={labels.companyPlaceholder}
+                  className="h-10 border-input bg-input/30 text-foreground placeholder:text-muted-foreground"
+                  autoComplete="organization"
+                />
+                {errors.empresa?.message ? (
+                  <p className="text-xs text-destructive">
+                    {errors.empresa.message}
+                  </p>
+                ) : null}
+              </div>
+
+              {/* Código de funcionário & Setor (lado a lado; no celular, um embaixo do outro) */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <label
@@ -123,29 +146,6 @@ export function CadastroView() {
                     </p>
                   ) : null}
                 </div>
-              </div>
-
-              {/* Órgão ou empresa */}
-              <div className="space-y-1.5">
-                <label
-                  className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-muted-foreground"
-                  htmlFor="empresa"
-                >
-                  {labels.companyLabel}
-                </label>
-                <Input
-                  id="empresa"
-                  aria-invalid={Boolean(errors.empresa)}
-                  {...register("empresa")}
-                  placeholder={labels.companyPlaceholder}
-                  className="h-10 border-input bg-input/30 text-foreground placeholder:text-muted-foreground"
-                  autoComplete="organization"
-                />
-                {errors.empresa?.message ? (
-                  <p className="text-xs text-destructive">
-                    {errors.empresa.message}
-                  </p>
-                ) : null}
               </div>
 
               {/* E-mail institucional */}
@@ -221,25 +221,41 @@ export function CadastroView() {
                 </div>
               </div>
 
-              {/* Termos de uso e política de privacidade */}
+              {/* Termo de privacidade */}
               <div className="pt-2">
                 <div className="flex items-start gap-2.5">
                   <input
                     id="aceitouTermos"
                     type="checkbox"
                     aria-invalid={Boolean(errors.aceitouTermos)}
+                    aria-labelledby="aceitouTermos-label aceitouTermos-link"
+                    aria-describedby={errors.aceitouTermos ? "aceitouTermos-error" : undefined}
                     {...register("aceitouTermos")}
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-input bg-input/30 text-primary accent-primary focus:ring-primary"
                   />
-                  <label
-                    htmlFor="aceitouTermos"
-                    className="cursor-pointer text-xs leading-snug text-muted-foreground"
-                  >
-                    {labels.termsCheckbox}
-                  </label>
+                  {/* O link fica fora do label: clicar nele não marca nem desmarca a caixa */}
+                  <p className="text-xs leading-snug text-muted-foreground">
+                    <label id="aceitouTermos-label" htmlFor="aceitouTermos" className="cursor-pointer">
+                      {labels.termsCheckboxPrefix}
+                    </label>{" "}
+                    <Link
+                      href="/privacy-terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span id="aceitouTermos-link">{labels.termsCheckboxLink}</span>
+                      <span className="sr-only"> {labels.termsLinkNewTab}</span>
+                    </Link>
+                    {labels.termsCheckboxSuffix}
+                  </p>
                 </div>
                 {errors.aceitouTermos?.message ? (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p
+                    id="aceitouTermos-error"
+                    role="alert"
+                    className="mt-1 text-xs text-destructive"
+                  >
                     {errors.aceitouTermos.message}
                   </p>
                 ) : null}

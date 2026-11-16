@@ -5,6 +5,7 @@ const LEGACY_REDIRECT_PAIRS = [
   ["/assessments", "/jornadas"],
   ["/avaliacoes", "/jornadas"],
   ["/results", "/resultados"],
+  ["/cadastro", "/signup"],
 ] as const;
 
 export const nextConfig: NextConfig = {

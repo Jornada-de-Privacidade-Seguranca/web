@@ -126,17 +126,16 @@
       "fullNamePlaceholder": "Ex.: Maria Silva",
       "employeeCodeLabel": "CÓDIGO DE FUNCIONÁRIO",
       "employeeCodePlaceholder": "Ex.: 00123456",
-      "departmentLabel": "DEPARTAMENTO",
+      "departmentLabel": "SETOR",
       "departmentPlaceholder": "Ex.: Tecnologia",
-      "companyLabel": "EMPRESA",
-      "companyPlaceholder": "Ex.: ACME Corp",
+      "companyLabel": "ÓRGÃO/EMPRESA",
+      "companyPlaceholder": "Ex.: Prefeitura de Recife ou Empresa Exemplo",
       "emailLabel": "E-MAIL INSTITUCIONAL",
       "emailPlaceholder": "voce@empresa.com",
       "passwordLabel": "SENHA",
       "passwordPlaceholder": "Mínimo 8 caracteres",
       "confirmPasswordLabel": "CONFIRMAR SENHA",
       "confirmPasswordPlaceholder": "Repita sua senha",
-      "termsCheckbox": "Aceito os termos de uso e a política de privacidade",
       "submit": "Criar conta",
       "hasAccountText": "Já possui uma conta?",
       "loginLink": "Entrar",
@@ -146,10 +145,10 @@
         "fullNameMaxLength": "O nome deve ter no máximo 50 caracteres.",
         "employeeCodeRequired": "O código de funcionário/matrícula é obrigatório.",
         "employeeCodeMaxLength": "O código de funcionário/matrícula deve ter no máximo 50 caracteres.",
-        "departmentRequired": "O departamento é obrigatório.",
-        "departmentMaxLength": "O departamento deve ter no máximo 100 caracteres.",
-        "companyRequired": "A empresa é obrigatória.",
-        "companyMaxLength": "A empresa deve ter no máximo 100 caracteres.",
+        "departmentRequired": "O setor é obrigatório.",
+        "departmentMaxLength": "O setor deve ter no máximo 100 caracteres.",
+        "companyRequired": "O órgão ou empresa é obrigatório.",
+        "companyMaxLength": "O órgão ou empresa deve ter no máximo 100 caracteres.",
         "emailRequired": "O e-mail institucional é obrigatório.",
         "emailInvalid": "Informe um e-mail institucional válido.",
         "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
@@ -158,7 +157,7 @@
         "passwordMaxLength": "A senha deve ter no máximo 100 caracteres.",
         "confirmPasswordRequired": "A confirmação de senha é obrigatória.",
         "passwordsDoNotMatch": "As senhas não coincidem.",
-        "termsRequired": "Você deve aceitar os termos de uso e política de privacidade."
+        "termsRequired": "Você precisa aceitar o termo de privacidade."
       },
       "serverError": {
         "invalidFieldsTitle": "Campo inválido",
@@ -170,6 +169,12 @@
       "serverSuccess": {
         "title": "Conta criada com sucesso!",
         "description": "Sua conta foi criada e precisa ser ativada por um administrador antes do primeiro acesso."
+      },
+      "terms": {
+        "prefix": "Li e aceito o",
+        "link": "termo de privacidade",
+        "suffix": ".",
+        "newTab": "(abre em outra aba)"
       }
     },
     "initialPassword": {

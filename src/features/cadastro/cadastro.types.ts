@@ -92,7 +92,12 @@ export interface CadastroLabels {
   passwordPlaceholder: string;
   confirmPasswordLabel: string;
   confirmPasswordPlaceholder: string;
-  termsCheckbox: string;
+  /** Caixa de aceite: texto antes do link, o link do termo e o texto depois. */
+  termsCheckboxPrefix: string;
+  termsCheckboxLink: string;
+  termsCheckboxSuffix: string;
+  /** Aviso de que o link abre em outra aba, para leitores de tela. */
+  termsLinkNewTab: string;
   submit: string;
   hasAccountText: string;
   loginLink: string;
