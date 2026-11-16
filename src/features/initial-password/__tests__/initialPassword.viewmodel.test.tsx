@@ -42,6 +42,7 @@ const activatedUser: InvitedUserResponse = {
   id: 42,
   email: "ana@exemplo.com",
   user_type_id: null,
+  profile_type_id: 3,
   active_status: 1,
   account_status: "active",
 };
@@ -128,6 +129,17 @@ describe("useInitialPasswordVM", () => {
 
       await waitFor(() => expect(result.current.status).toBe("ready"));
       expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it("deve avisar muitas tentativas quando a validação responde 429", async () => {
+      vi.spyOn(invitationService, "validateInvitation").mockRejectedValue(
+        new InvitationRequestError("too_many_requests", "Muitas tentativas.")
+      );
+
+      const { result } = renderHook(() => useInitialPasswordVM(), { wrapper: createWrapper() });
+
+      await waitFor(() => expect(result.current.status).toBe("validation_failed"));
+      expect(result.current.labels.validationFailed).toBe("tooManyAttempts");
     });
   });
 
@@ -224,6 +236,20 @@ describe("useInitialPasswordVM", () => {
       expect(result.current.serverMessage).toEqual({
         title: "submitError",
         description: "Campo fora do formulário.",
+        variant: "destructive",
+      });
+    });
+
+    it("deve avisar muitas tentativas quando o envio responde 429", async () => {
+      vi.spyOn(invitationService, "completeInvitation").mockRejectedValueOnce(
+        new InvitationRequestError("too_many_requests", "Muitas tentativas.")
+      );
+      const { result } = await renderValidated();
+
+      await fillAndSubmit(result);
+
+      expect(result.current.serverMessage).toEqual({
+        title: "tooManyAttempts",
         variant: "destructive",
       });
     });

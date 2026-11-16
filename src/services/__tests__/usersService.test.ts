@@ -381,23 +381,55 @@ describe("usersService", () => {
     expect(profiles[1]).toMatchObject({ id: 9, role: null, isDefault: false, permissions: [] });
   });
 
-  describe("mocks mantidos até a #176 e a #170", () => {
-    it("inviteUser cria convite pendente e responde 409 para e-mail já cadastrado", async () => {
-      const response = await inviteUser({ email: "Novo.Convidado@Empresa.com", role: "manager" });
-      expect(response).toMatchObject({
+  describe("inviteUser", () => {
+    it("envia e-mail normalizado e perfil por POST com CSRF e mapeia a resposta", async () => {
+      const spy = mockRequests(() =>
+        mockResponse({
+          success: true,
+          data: {
+            id: 31,
+            email: "novo.convidado@empresa.com",
+            user_type_id: 2,
+            profile_type_id: 2,
+            active_status: 2,
+            account_status: "pending_initial_password",
+          },
+        })
+      );
+
+      const response = await inviteUser({ email: " Novo.Convidado@Empresa.com ", profileTypeId: 2 });
+
+      const [config] = callsTo(spy, "/admin/user-invitations");
+      expect(config.method).toBe("POST");
+      expect(config.data).toEqual({ email: "novo.convidado@empresa.com", profile_type_id: 2 });
+      expect(config.headers).toMatchObject({ "X-CSRF-TOKEN": "token-123" });
+      expect(response).toEqual({
+        id: "31",
         email: "novo.convidado@empresa.com",
-        role: "manager",
-        roleLabel: "Gestor",
+        profileTypeId: 2,
         status: "pending",
       });
+    });
 
-      const error = await inviteUser({ email: "novo.convidado@empresa.com", role: "user" }).catch(
+    it("propaga o 409 de conta existente como ApiRequestError", async () => {
+      mockRequests(() => {
+        throw mockAxiosError(409, {
+          success: false,
+          message: "Ja existe uma conta cadastrada com este e-mail.",
+          code: "ACCOUNT_ALREADY_EXISTS",
+          errors: { email: ["Informe outro e-mail."] },
+        });
+      });
+
+      const error = await inviteUser({ email: "ana@empresa.com", profileTypeId: 3 }).catch(
         (err: unknown) => err
       );
       expect(error).toBeInstanceOf(ApiRequestError);
       expect(error).toMatchObject({ status: 409, code: "ACCOUNT_ALREADY_EXISTS" });
     });
+  });
 
+  describe("mocks mantidos até a #170", () => {
     it("atribui e cancela a jornada sobre o usuário informado", async () => {
       const user = {
         id: "7",

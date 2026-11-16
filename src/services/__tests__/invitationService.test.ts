@@ -1,15 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
 
 import {
   InvitationRequestError,
-  MOCK_EXPIRED_TOKEN,
-  MOCK_EXPIRES_ON_SUBMIT_TOKEN,
   completeInvitation,
   toCompleteInvitationPayload,
   toInvitationRequestError,
   validateInvitation,
 } from "../invitationService";
-import { ApiRequestError } from "../httpClient";
+import { ApiRequestError, axiosInstance } from "../httpClient";
 import type { InitialPasswordFormValues } from "@features/initial-password/initialPassword.types";
 
 const credentials = { email: "ana@exemplo.com", token: "abc" };
@@ -23,25 +22,36 @@ const formValues: InitialPasswordFormValues = {
   confirmarSenha: "senha-segura",
 };
 
-/** Resolve a chamada simulada sem esperar o atraso do mock. */
-async function settle<T>(promise: Promise<T>): Promise<T> {
-  const settled = promise.then(
-    (value) => ({ value }),
-    (error: unknown) => ({ error })
-  );
-  await vi.runAllTimersAsync();
-  const result = await settled;
-  if ("error" in result) throw result.error;
-  return result.value;
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return { data, status: 200, statusText: "OK", headers: {}, config: {} as AxiosResponse["config"] };
 }
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError("Request failed", "ERR_BAD_REQUEST", undefined, undefined, {
+    data,
+    status,
+    statusText: "",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  } as AxiosResponse);
+}
+
+function mockRequest(handler: (config: AxiosRequestConfig) => unknown) {
+  return vi
+    .spyOn(axiosInstance, "request")
+    .mockImplementation(async (config) => handler(config) as AxiosResponse);
+}
+
+const invalidTokenError = () =>
+  mockAxiosError(422, {
+    success: false,
+    message: "O convite e invalido, expirou ou ja foi utilizado.",
+    code: "INVALID_INVITATION_TOKEN",
+  });
 
 describe("invitationService", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe("toCompleteInvitationPayload", () => {
@@ -95,6 +105,13 @@ describe("invitationService", () => {
       expect(error.otherErrors).toEqual(["Campo fora do formulário."]);
     });
 
+    it("deve tratar o 429 como muitas tentativas", () => {
+      expect(
+        toInvitationRequestError(new ApiRequestError("Muitas tentativas.", 429, "TOO_MANY_ATTEMPTS"))
+          .type
+      ).toBe("too_many_requests");
+    });
+
     it("deve tratar as demais falhas como erro de servidor", () => {
       expect(toInvitationRequestError(new ApiRequestError("Erro interno.", 500)).type).toBe(
         "server_error"
@@ -104,48 +121,99 @@ describe("invitationService", () => {
   });
 
   describe("validateInvitation", () => {
-    it("deve validar o convite no formato da resposta do backend", async () => {
-      await expect(settle(validateInvitation(credentials))).resolves.toEqual({
+    it("envia e-mail e código ao POST /auth/invitations/validate, sem CSRF", async () => {
+      const spy = mockRequest(() =>
+        mockResponse({ success: true, data: { email: "ana@exemplo.com", is_valid: true } })
+      );
+
+      await expect(validateInvitation(credentials)).resolves.toEqual({
         email: "ana@exemplo.com",
         is_valid: true,
       });
+
+      const [config] = spy.mock.calls[0];
+      expect(config).toMatchObject({
+        url: "/auth/invitations/validate",
+        method: "post",
+        data: { email: "ana@exemplo.com", token: "abc" },
+      });
+      expect(config.headers).not.toHaveProperty("X-CSRF-TOKEN");
     });
 
-    it("deve lançar invalid_invitation para o convite expirado", async () => {
-      const error = await settle(
-        validateInvitation({ ...credentials, token: MOCK_EXPIRED_TOKEN })
-      ).catch((err: unknown) => err);
+    it("lança invalid_invitation para o convite inválido ou expirado", async () => {
+      mockRequest(() => {
+        throw invalidTokenError();
+      });
+
+      const error = await validateInvitation(credentials).catch((err: unknown) => err);
 
       expect(error).toBeInstanceOf(InvitationRequestError);
       expect((error as InvitationRequestError).type).toBe("invalid_invitation");
     });
+
+    it("lança too_many_requests no 429 e server_error no 500", async () => {
+      mockRequest(() => {
+        throw mockAxiosError(429, { success: false, message: "Muitas", code: "TOO_MANY_ATTEMPTS" });
+      });
+      await expect(validateInvitation(credentials)).rejects.toMatchObject({
+        type: "too_many_requests",
+      });
+
+      vi.restoreAllMocks();
+      mockRequest(() => {
+        throw mockAxiosError(500, { success: false, message: "Falhou" });
+      });
+      await expect(validateInvitation(credentials)).rejects.toMatchObject({ type: "server_error" });
+    });
   });
 
   describe("completeInvitation", () => {
-    it("deve ativar a conta no formato da resposta do backend", async () => {
-      await expect(settle(completeInvitation(credentials, formValues))).resolves.toEqual({
+    it("envia os dados e a senha ao POST /auth/invitations/complete", async () => {
+      const data = {
         id: 42,
         email: "ana@exemplo.com",
-        user_type_id: null,
+        user_type_id: 2,
+        profile_type_id: 2,
         active_status: 1,
         account_status: "active",
+      };
+      const spy = mockRequest(() => mockResponse({ success: true, data }));
+
+      await expect(completeInvitation(credentials, formValues)).resolves.toEqual(data);
+
+      expect(spy.mock.calls[0][0]).toMatchObject({
+        url: "/auth/invitations/complete",
+        method: "post",
+        data: toCompleteInvitationPayload(credentials, formValues),
       });
     });
 
-    it("deve lançar invalid_invitation quando o convite expira no envio", async () => {
-      const error = await settle(
-        completeInvitation({ ...credentials, token: MOCK_EXPIRES_ON_SUBMIT_TOKEN }, formValues)
-      ).catch((err: unknown) => err);
+    it("lança invalid_invitation quando o convite expira no envio", async () => {
+      mockRequest(() => {
+        throw invalidTokenError();
+      });
+
+      const error = await completeInvitation(credentials, formValues).catch((err: unknown) => err);
 
       expect((error as InvitationRequestError).type).toBe("invalid_invitation");
     });
 
-    it("não deve aceitar o convite que já era inválido ao abrir", async () => {
-      const error = await settle(
-        completeInvitation({ ...credentials, token: MOCK_EXPIRED_TOKEN }, formValues)
-      ).catch((err: unknown) => err);
+    it("leva as mensagens do 422 aos campos", async () => {
+      mockRequest(() => {
+        throw mockAxiosError(422, {
+          success: false,
+          message: "Validation error.",
+          code: "VALIDATION_ERROR",
+          errors: { registration_number: ["Informe o codigo do funcionario."] },
+        });
+      });
 
-      expect((error as InvitationRequestError).type).toBe("invalid_invitation");
+      const error = (await completeInvitation(credentials, formValues).catch(
+        (err: unknown) => err
+      )) as InvitationRequestError;
+
+      expect(error.type).toBe("validation");
+      expect(error.fieldErrors).toEqual({ codigoFuncionario: "Informe o codigo do funcionario." });
     });
   });
 });

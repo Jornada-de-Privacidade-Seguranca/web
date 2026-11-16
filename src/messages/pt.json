@@ -179,7 +179,8 @@
       "emailLabel": "E-MAIL",
       "submit": "Ativar conta",
       "submitting": "Ativando...",
-      "submitError": "Não foi possível ativar a conta. Tente novamente."
+      "submitError": "Não foi possível ativar a conta. Tente novamente.",
+      "tooManyAttempts": "Muitas tentativas. Aguarde um pouco e tente de novo."
     }
   },
   "sessionExpired": {
@@ -870,7 +871,9 @@
       "infoNotice": "A pessoa receberá um e-mail com um link para definir a senha e completar os próprios dados. O link vale por 60 minutos e pode ser usado uma vez.",
       "cancel": "Cancelar",
       "submit": "Enviar convite",
-      "submitting": "Enviando convite..."
+      "submitting": "Enviando convite...",
+      "profilesLoadError": "Não foi possível carregar os perfis de acesso; o convite segue com o perfil Usuário.",
+      "retry": "Tentar novamente"
     },
     "roles": {
       "admin": "Administrador",
@@ -881,7 +884,10 @@
       "emailRequired": "O e-mail é obrigatório.",
       "emailInvalid": "Insira um endereço de e-mail válido.",
       "accountAlreadyExists": "Já existe uma conta cadastrada com este e-mail.",
-      "genericSubmit": "Não foi possível enviar o convite. Tente novamente."
+      "genericSubmit": "Não foi possível enviar o convite. Tente novamente.",
+      "permissionDenied": "Você não tem permissão para realizar esta ação.",
+      "tooManyAttempts": "Muitas tentativas. Aguarde um pouco e tente de novo.",
+      "validation": "Revise os dados do convite."
     }
   }
 }

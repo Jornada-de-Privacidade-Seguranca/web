@@ -179,7 +179,8 @@
       "emailLabel": "EMAIL",
       "submit": "Activate account",
       "submitting": "Activating...",
-      "submitError": "We couldn't activate the account. Please try again."
+      "submitError": "We couldn't activate the account. Please try again.",
+      "tooManyAttempts": "Too many attempts. Wait a moment and try again."
     }
   },
   "sessionExpired": {
@@ -870,7 +871,9 @@
       "infoNotice": "The person will receive an email with a link to set their password and complete their own profile details. The link is valid for 60 minutes and can be used once.",
       "cancel": "Cancel",
       "submit": "Send invitation",
-      "submitting": "Sending invitation..."
+      "submitting": "Sending invitation...",
+      "profilesLoadError": "Unable to load the access profiles; the invitation will use the User profile.",
+      "retry": "Try again"
     },
     "roles": {
       "admin": "Administrator",
@@ -881,7 +884,10 @@
       "emailRequired": "Email is required.",
       "emailInvalid": "Please enter a valid email address.",
       "accountAlreadyExists": "An account with this email already exists.",
-      "genericSubmit": "Unable to send the invitation. Please try again."
+      "genericSubmit": "Unable to send the invitation. Please try again.",
+      "permissionDenied": "You do not have permission to perform this action.",
+      "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
+      "validation": "Review the invitation details."
     }
   }
 }

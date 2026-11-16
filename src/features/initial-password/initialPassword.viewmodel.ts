@@ -30,6 +30,10 @@ function isInvalidInvitation(err: unknown): boolean {
   return err instanceof InvitationRequestError && err.type === "invalid_invitation";
 }
 
+function isTooManyRequests(err: unknown): boolean {
+  return err instanceof InvitationRequestError && err.type === "too_many_requests";
+}
+
 export function useInitialPasswordVM(): InitialPasswordViewModelReturn {
   const t = useTranslations("auth.initialPassword");
   const tRegister = useTranslations("auth.register");
@@ -116,6 +120,11 @@ export function useInitialPasswordVM(): InitialPasswordViewModelReturn {
         return;
       }
 
+      if (err instanceof InvitationRequestError && err.type === "too_many_requests") {
+        setServerMessage({ title: t("tooManyAttempts"), variant: "destructive" });
+        return;
+      }
+
       setServerMessage({ title: t("submitError"), variant: "destructive" });
     }
   });
@@ -139,7 +148,9 @@ export function useInitialPasswordVM(): InitialPasswordViewModelReturn {
       validating: t("validating"),
       invalidInvitation: t("invalidInvitation"),
       backToLogin: t("backToLogin"),
-      validationFailed: t("validationFailed"),
+      validationFailed: isTooManyRequests(validationQuery.error)
+        ? t("tooManyAttempts")
+        : t("validationFailed"),
       retry: t("retry"),
       emailLabel: t("emailLabel"),
       fullNameLabel: tRegister("fullNameLabel"),

@@ -47,11 +47,16 @@ const mockLabels: AdminUserInviteLabels = {
   cancelButton: "Cancelar",
   submitButton: "Enviar convite",
   submittingButton: "Enviando convite...",
+  profilesLoadError: "Não foi possível carregar os perfis de acesso.",
+  retryButton: "Tentar novamente",
   errors: {
     emailRequired: "O e-mail é obrigatório.",
     emailInvalid: "Insira um endereço de e-mail válido.",
     accountAlreadyExists: "Já existe uma conta cadastrada com este e-mail.",
     genericSubmit: "Não foi possível enviar o convite. Tente novamente.",
+    permissionDenied: "Você não tem permissão para realizar esta ação.",
+    tooManyAttempts: "Muitas tentativas. Aguarde um pouco e tente de novo.",
+    validation: "Revise os dados do convite.",
   },
 };
 
@@ -60,21 +65,26 @@ function makeViewModel(
 ): AdminUserInviteViewModelReturn {
   return {
     email: "",
-    role: "user",
+    profileTypeId: 3,
     summaryTitle: "Novo convite",
     summaryRoleLabel: "Usuário",
     roleOptions: [
-      { value: "user", label: "Usuário" },
-      { value: "manager", label: "Gestor" },
-      { value: "admin", label: "Administrador" },
+      { value: 3, label: "Usuário" },
+      { value: 2, label: "Gestor" },
+      { value: 1, label: "Administrador" },
     ],
     canChangeProfile: true,
+    isProfilesLoading: false,
+    isProfilesError: false,
     emailError: null,
+    roleError: null,
     submitError: null,
     isSubmitting: false,
+    backHref: "/admin/usuarios",
     labels: mockLabels,
     handleEmailChange: vi.fn(),
     handleRoleChange: vi.fn(),
+    handleRetryProfiles: vi.fn(),
     handleCancel: vi.fn(),
     handleSubmit: vi.fn(async (e) => {
       e.preventDefault();
@@ -168,5 +178,31 @@ describe("AdminUserInviteView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(handleCancel).toHaveBeenCalledOnce();
+  });
+
+  it("mostra o erro do perfil, o aviso de perfis indisponíveis e usa o link com os filtros", () => {
+    const handleRetryProfiles = vi.fn();
+    const handleRoleChange = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserInviteVM").mockReturnValue(
+      makeViewModel({
+        roleError: "Informe um perfil de acesso valido.",
+        isProfilesError: true,
+        backHref: "/admin/usuarios?status=pending",
+        handleRetryProfiles,
+        handleRoleChange,
+      })
+    );
+
+    render(<AdminUserInviteView />);
+
+    expect(screen.getByText("Informe um perfil de acesso valido.")).toBeTruthy();
+    expect(screen.getByText(/Não foi possível carregar os perfis de acesso/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    expect(handleRetryProfiles).toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/Perfil de acesso/), { target: { value: "2" } });
+    expect(handleRoleChange).toHaveBeenCalledWith(2);
+    expect(screen.getByText("Voltar para usuários").closest("a")?.getAttribute("href")).toBe(
+      "/admin/usuarios?status=pending"
+    );
   });
 });

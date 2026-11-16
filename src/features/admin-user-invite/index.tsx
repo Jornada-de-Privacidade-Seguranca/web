@@ -11,23 +11,27 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@/shared/i18n/navigation";
 import { Button, Input, Message } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
-import type { UserRole } from "@features/admin-users/adminUsers.types";
 import { useAdminUserInviteVM } from "./adminUserInvite.viewmodel";
 
 export function AdminUserInviteView() {
   const {
     email,
-    role,
+    profileTypeId,
     summaryTitle,
     summaryRoleLabel,
     roleOptions,
     canChangeProfile,
+    isProfilesLoading,
+    isProfilesError,
     emailError,
+    roleError,
     submitError,
     isSubmitting,
+    backHref,
     labels,
     handleEmailChange,
     handleRoleChange,
+    handleRetryProfiles,
     handleCancel,
     handleSubmit,
   } = useAdminUserInviteVM();
@@ -41,7 +45,7 @@ export function AdminUserInviteView() {
           size="sm"
           className="h-8 -ml-2 text-xs text-muted-foreground hover:text-foreground"
         >
-          <Link href="/admin/usuarios">
+          <Link href={backHref}>
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-1.5" />
             <span>{labels.backToList}</span>
           </Link>
@@ -129,11 +133,13 @@ export function AdminUserInviteView() {
                 </label>
                 <select
                   id="invite-user-role"
-                  value={role}
-                  disabled={!canChangeProfile || isSubmitting}
-                  onChange={(e) => handleRoleChange(e.target.value as UserRole)}
+                  value={profileTypeId}
+                  disabled={!canChangeProfile || isSubmitting || isProfilesLoading}
+                  onChange={(e) => handleRoleChange(Number(e.target.value))}
+                  aria-invalid={Boolean(roleError)}
+                  aria-describedby={roleError ? "invite-role-error" : undefined}
                   className={`h-11 w-full rounded-2xl border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                    !canChangeProfile || isSubmitting
+                    !canChangeProfile || isSubmitting || isProfilesLoading
                       ? "cursor-not-allowed bg-muted/40 opacity-60"
                       : ""
                   }`}
@@ -144,9 +150,30 @@ export function AdminUserInviteView() {
                     </option>
                   ))}
                 </select>
+                {roleError && (
+                  <p
+                    id="invite-role-error"
+                    role="alert"
+                    className="text-xs font-medium text-destructive"
+                  >
+                    {roleError}
+                  </p>
+                )}
                 {!canChangeProfile && (
                   <p className="text-xs text-muted-foreground">
                     {labels.roleLockedHint}
+                  </p>
+                )}
+                {isProfilesError && (
+                  <p className="text-xs text-destructive">
+                    {labels.profilesLoadError}{" "}
+                    <button
+                      type="button"
+                      onClick={handleRetryProfiles}
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      {labels.retryButton}
+                    </button>
                   </p>
                 )}
               </div>
