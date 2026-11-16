@@ -36,6 +36,7 @@ export function useUserEditFormVM(
     isDirty,
     isSaving,
     saveSuccessMessage,
+    saveErrorMessage: props.saveErrorMessage ?? null,
     labels,
     roleOptions,
     onFieldChange,

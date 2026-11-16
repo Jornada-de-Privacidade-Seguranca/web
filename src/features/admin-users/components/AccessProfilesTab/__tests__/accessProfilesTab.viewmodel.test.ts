@@ -42,6 +42,7 @@ describe("useAccessProfilesTabVM", () => {
     paginationPageOf: (c, t) => `Página ${c} de ${t}`,
     errorTitle: "Erro",
     errorMessage: "Erro",
+    profilesErrorMessage: "Erro perfis",
     retryButton: "Tentar",
     inviteButton: "Convidar usuário",
     closeMessage: "Fechar aviso",
@@ -51,7 +52,8 @@ describe("useAccessProfilesTabVM", () => {
     const props: AccessProfilesTabProps = {
       profiles: [
         {
-          id: "admin",
+          id: 1,
+          role: "admin" as const,
           name: "Administrador",
           description: "Desc",
           permissions: ["Perm 1"],

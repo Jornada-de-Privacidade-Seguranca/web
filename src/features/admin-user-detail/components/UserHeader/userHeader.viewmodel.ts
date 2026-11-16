@@ -55,5 +55,6 @@ export function useUserHeaderVM(
     canManageUser: props.canManageUser ?? true,
     onToggleStatus,
     backToListText: labels.backToList,
+    backHref: props.backHref ?? "/admin/usuarios",
   };
 }

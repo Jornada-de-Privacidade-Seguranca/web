@@ -6,29 +6,72 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/shared/i18n/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
+import { ApiRequestError } from "@services/httpClient";
 import {
   getUserById,
   updateUser,
+  changeUserAccessProfile,
   toggleUserStatus,
   deleteUser,
   getAssignableJourneyProfiles,
   assignJourneyToUser,
   cancelAssignedJourney,
+  FORM_FIELD_BY_API_FIELD,
 } from "@services/usersService";
+import { useAdminUsersStore } from "@features/admin-users/adminUsers.store";
 import type {
   ActiveJourneySectionLabels,
+  AdminUserDetails,
   AdminUserDetailViewModelReturn,
   AdminUserDetailLabels,
   AssignableJourneyOption,
   AssignJourneyModalLabels,
   CancelAssignmentModalLabels,
+  DetailFeedbackMessage,
+  EditableUserField,
   JourneyDomain,
+  UpdateUserPayload,
   UserFormValues,
   UserFormErrors,
 } from "./adminUserDetail.types";
 
 interface UseAdminUserDetailVMProps {
   userId: string;
+}
+
+/** Limites do PATCH /users/{user} (UpdateUserRequest). */
+const MAX_LENGTH: Record<EditableUserField, number> = {
+  name: 50,
+  email: 100,
+  organization: 100,
+  department: 100,
+  employeeCode: 50,
+};
+
+const EDITABLE_FIELDS: EditableUserField[] = [
+  "name",
+  "email",
+  "organization",
+  "department",
+  "employeeCode",
+];
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_AND_SURNAME_PATTERN = /^\S+\s+\S+/;
+
+function toFormValues(user: AdminUserDetails): UserFormValues {
+  return {
+    name: user.name,
+    organization: user.organization || "",
+    employeeCode: user.employeeCode || "",
+    email: user.email,
+    department: user.department,
+    role: user.role,
+  };
+}
+
+function apiErrorOf(error: unknown): ApiRequestError | null {
+  return error instanceof ApiRequestError ? error : null;
 }
 
 const INITIAL_FORM: UserFormValues = {
@@ -45,14 +88,25 @@ export function useAdminUserDetailVM({
 }: UseAdminUserDetailVMProps): AdminUserDetailViewModelReturn {
   const t = useTranslations("adminUserDetail");
   const locale = useLocale();
+  const apiLocale = locale === "en" ? "en" : "pt";
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuth();
   const { can } = usePermission();
+  const listQuery = useAdminUsersStore((s) => s.listQuery);
+  const setDeletedUserName = useAdminUsersStore((s) => s.setDeletedUserName);
+
+  // Volta para a listagem com a busca, os filtros e a página de antes
+  const backHref = listQuery ? `/admin/usuarios?${listQuery}` : "/admin/usuarios";
+
+  const userQueryKey = useMemo(
+    () => ["admin", "user", userId, apiLocale] as const,
+    [userId, apiLocale]
+  );
 
   const userQuery = useQuery({
-    queryKey: ["admin", "user", userId],
-    queryFn: () => getUserById(userId),
+    queryKey: userQueryKey,
+    queryFn: () => getUserById(userId, apiLocale),
     retry: false,
   });
 
@@ -65,7 +119,27 @@ export function useAdminUserDetailVM({
   const user = userQuery.data ?? null;
   const isLoading = userQuery.isLoading;
   const isError = userQuery.isError;
-  const errorMessage = userQuery.error ? t("editForm.save") : null;
+  const isNotFound = apiErrorOf(userQuery.error)?.status === 404;
+  const errorMessage = userQuery.error
+    ? isNotFound
+      ? t("notFound.description")
+      : t("loadError")
+    : null;
+
+  // A própria conta não pode ser desativada, excluída nem ter o perfil alterado
+  const isOwnAccount = Boolean(user && authUser && String(authUser.id) === user.id);
+  const canManageUser = can("users.manage");
+  const canDeleteUser = canManageUser && !isOwnAccount;
+  const canManageRoles = can("users.change_profile") && !isOwnAccount;
+  const canToggleStatus = can("users.deactivate") && !isOwnAccount;
+
+  /** Atualiza o detalhe e a listagem depois de salvar, ativar ou excluir. */
+  const invalidateUserQueries = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "user", userId] }),
+    ]);
+  }, [queryClient, userId]);
 
   // Form State
   const [formData, setFormData] = useState<UserFormValues>(INITIAL_FORM);
@@ -74,9 +148,11 @@ export function useAdminUserDetailVM({
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(
     null
   );
+  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
 
   // Status Toggle Loading
   const [isTogglingStatus, setIsTogglingStatus] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<DetailFeedbackMessage | null>(null);
 
   // Inactive User Banner
   const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(false);
@@ -84,6 +160,7 @@ export function useAdminUserDetailVM({
   // Delete Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
 
   // Journey Assignment Modals & Feedback
   const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
@@ -108,14 +185,7 @@ export function useAdminUserDetailVM({
   // Synchronize form when user data loads
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        organization: user.organization || "",
-        employeeCode: user.employeeCode || "",
-        email: user.email,
-        department: user.department,
-        role: user.role,
-      });
+      setFormData(toFormValues(user));
     }
   }, [user]);
 
@@ -136,6 +206,7 @@ export function useAdminUserDetailVM({
     (field: keyof UserFormValues, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
       setSaveSuccessMessage(null);
+      setSaveErrorMessage(null);
       // Clear error for edited field
       setFormErrors((prev) => ({ ...prev, [field]: undefined }));
     },
@@ -144,28 +215,31 @@ export function useAdminUserDetailVM({
 
   const handleResetForm = useCallback(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        organization: user.organization || "",
-        employeeCode: user.employeeCode || "",
-        email: user.email,
-        department: user.department,
-        role: user.role,
-      });
+      setFormData(toFormValues(user));
       setFormErrors({});
       setSaveSuccessMessage(null);
+      setSaveErrorMessage(null);
     }
   }, [user]);
 
   const validateForm = (): boolean => {
     const errors: UserFormErrors = {};
-    if (!formData.name.trim()) {
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+
+    if (!name) {
       errors.name = t("editForm.validation.nameRequired");
+    } else if (!NAME_AND_SURNAME_PATTERN.test(name)) {
+      errors.name = t("editForm.validation.nameSurname");
     }
-    if (!formData.email.trim()) {
+    if (!email) {
       errors.email = t("editForm.validation.emailRequired");
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+    } else if (!EMAIL_PATTERN.test(email)) {
       errors.email = t("editForm.validation.emailInvalid");
+    }
+    // A API não aceita apagar o órgão: só é obrigatório se já estava preenchido
+    if (!formData.organization.trim() && user?.organization) {
+      errors.organization = t("editForm.validation.organizationRequired");
     }
     if (!formData.department.trim()) {
       errors.department = t("editForm.validation.departmentRequired");
@@ -174,35 +248,132 @@ export function useAdminUserDetailVM({
       errors.employeeCode = t("editForm.validation.employeeCodeRequired");
     }
 
+    EDITABLE_FIELDS.forEach((field) => {
+      if (!errors[field] && formData[field].trim().length > MAX_LENGTH[field]) {
+        errors[field] = t("editForm.validation.maxLength", { max: MAX_LENGTH[field] });
+      }
+    });
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  /** Erros da API no salvar: por campo quando possível, senão no aviso do formulário. */
+  const applySaveError = (error: unknown) => {
+    const apiError = apiErrorOf(error);
+    const fieldErrors: UserFormErrors = {};
+    let generalMessage: string | null = null;
+
+    if (apiError?.code === "EMAIL_ALREADY_IN_USE") {
+      fieldErrors.email = t("errors.emailInUse");
+    } else if (apiError?.code === "SELF_PROFILE_CHANGE_FORBIDDEN") {
+      fieldErrors.role = t("errors.selfProfileChange");
+    } else if (apiError?.code === "LAST_ADMIN_REQUIRED") {
+      fieldErrors.role = t("errors.lastAdmin");
+    } else if (apiError?.code === "PERMISSION_DENIED") {
+      generalMessage = t("errors.permissionDenied");
+    } else if (apiError?.status === 404) {
+      generalMessage = t("errors.notFound");
+    } else if (apiError?.status === 422 && apiError.errors) {
+      Object.entries(apiError.errors).forEach(([apiField, messages]) => {
+        const formField =
+          apiField === "profile_type_id" ? "role" : FORM_FIELD_BY_API_FIELD[apiField];
+        if (formField) {
+          fieldErrors[formField] = messages[0];
+        } else {
+          generalMessage = t("errors.validation");
+        }
+      });
+      generalMessage = generalMessage ?? t("errors.validation");
+    } else {
+      generalMessage = t("errors.saveFailed");
+    }
+
+    setFormErrors((prev) => ({ ...prev, ...fieldErrors }));
+    setSaveErrorMessage(generalMessage);
+  };
+
   const handleSaveForm = async (): Promise<void> => {
-    if (!validateForm() || !user) return;
+    if (!user || !validateForm()) return;
+
+    const changes: UpdateUserPayload = {};
+    EDITABLE_FIELDS.forEach((field) => {
+      const original = (user[field] ?? "").trim();
+      const current = formData[field].trim();
+      if (current !== original) changes[field] = current;
+    });
+    const roleChanged = canManageRoles && formData.role !== user.role;
+
+    if (Object.keys(changes).length === 0 && !roleChanged) return;
+
     setIsSaving(true);
+    setSaveErrorMessage(null);
+    setSaveSuccessMessage(null);
+    setStatusMessage(null);
+    let savedSomething = false;
     try {
-      const updated = await updateUser(user.id, formData);
-      queryClient.setQueryData(["admin", "user", userId], updated);
+      if (Object.keys(changes).length > 0) {
+        await updateUser(user.id, changes);
+        savedSomething = true;
+      }
+      if (roleChanged) {
+        await changeUserAccessProfile(user.id, formData.role);
+        savedSomething = true;
+      }
       setSaveSuccessMessage(t("editForm.saveSuccess"));
-      setTimeout(() => setSaveSuccessMessage(null), 4000);
+    } catch (error) {
+      applySaveError(error);
     } finally {
+      // Se algo foi gravado (mesmo com erro depois), a tela volta a refletir o servidor
+      if (savedSomething) {
+        await invalidateUserQueries();
+      }
       setIsSaving(false);
     }
   };
 
-  // Toggle user activation
+  const statusErrorMessage = (error: unknown): string => {
+    const apiError = apiErrorOf(error);
+    switch (apiError?.code) {
+      case "SELF_DEACTIVATION_FORBIDDEN":
+        return t("errors.selfDeactivation");
+      case "LAST_ADMIN_REQUIRED":
+        return t("errors.lastAdmin");
+      case "INVALID_USER_ACCOUNT_STATE":
+        return t("errors.invalidAccountState");
+      case "PERMISSION_DENIED":
+        return t("errors.permissionDenied");
+      default:
+        return apiError?.status === 404 ? t("errors.notFound") : t("errors.statusFailed");
+    }
+  };
+
+  // Ativar (pendente ou inativa) ou desativar (ativa) a conta: o aviso de inativo usa o mesmo fluxo
   const handleToggleStatus = async (): Promise<void> => {
-    if (!user) return;
+    if (!user || isTogglingStatus) return;
     setIsTogglingStatus(true);
+    setStatusMessage(null);
+    const targetStatus = user.status === "active" ? "inactive" : "active";
     try {
-      const targetStatus = user.status === "active" ? "inactive" : "active";
-      const updated = await toggleUserStatus(user.id, targetStatus);
-      queryClient.setQueryData(["admin", "user", userId], updated);
+      await toggleUserStatus(user.id, targetStatus);
+      setStatusMessage({
+        variant: "success",
+        text:
+          targetStatus === "active"
+            ? t("status.activateSuccess")
+            : t("status.deactivateSuccess"),
+      });
+      await invalidateUserQueries();
+    } catch (error) {
+      setStatusMessage({ variant: "destructive", text: statusErrorMessage(error) });
     } finally {
       setIsTogglingStatus(false);
     }
   };
+
+  const handleDismissStatusMessage = useCallback(() => {
+    setStatusMessage(null);
+  }, []);
 
   // Banner logic
   const storageKey = `admin_dont_show_inactive_banner_${userId}`;
@@ -223,6 +394,7 @@ export function useAdminUserDetailVM({
   }, [storageKey]);
 
   const showInactiveBanner =
+    canToggleStatus &&
     user?.status === "inactive" &&
     !isBannerDismissed &&
     !isPermanentlyDismissed;
@@ -245,20 +417,43 @@ export function useAdminUserDetailVM({
 
   // Delete modal
   const handleOpenDeleteModal = useCallback(() => {
+    setDeleteErrorMessage(null);
     setIsDeleteModalOpen(true);
   }, []);
 
   const handleCloseDeleteModal = useCallback(() => {
+    if (isDeleting) return;
     setIsDeleteModalOpen(false);
-  }, []);
+    setDeleteErrorMessage(null);
+  }, [isDeleting]);
+
+  const deleteErrorText = (error: unknown): string => {
+    const apiError = apiErrorOf(error);
+    switch (apiError?.code) {
+      case "SELF_DELETION_FORBIDDEN":
+        return t("errors.selfDeletion");
+      case "LAST_ADMIN_REQUIRED":
+        return t("errors.lastAdmin");
+      case "PERMISSION_DENIED":
+        return t("errors.permissionDenied");
+      default:
+        return apiError?.status === 404 ? t("errors.notFound") : t("errors.deleteFailed");
+    }
+  };
 
   const handleConfirmDelete = async (): Promise<void> => {
     if (!user) return;
     setIsDeleting(true);
+    setDeleteErrorMessage(null);
     try {
       await deleteUser(user.id);
+      setDeletedUserName(user.name?.trim() || user.email);
       setIsDeleteModalOpen(false);
-      router.push("/admin/usuarios");
+      queryClient.removeQueries({ queryKey: ["admin", "user", userId] });
+      await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      router.push(backHref);
+    } catch (error) {
+      setDeleteErrorMessage(deleteErrorText(error));
     } finally {
       setIsDeleting(false);
     }
@@ -343,11 +538,11 @@ export function useAdminUserDetailVM({
             name: authUser.name,
           }
         : undefined;
-      const updated = await assignJourneyToUser(user.id, {
+      const updated = await assignJourneyToUser(user, {
         profileId: selectedProfileId,
         assignedBy,
       });
-      queryClient.setQueryData(["admin", "user", userId], updated);
+      queryClient.setQueryData(userQueryKey, updated);
       setIsAssignModalOpen(false);
       setJourneySuccessMessage(t("assignJourney.success"));
     } catch {
@@ -374,8 +569,8 @@ export function useAdminUserDetailVM({
     setIsCancellingAssignment(true);
     setCancelErrorMessage(null);
     try {
-      const updated = await cancelAssignedJourney(user.id);
-      queryClient.setQueryData(["admin", "user", userId], updated);
+      const updated = await cancelAssignedJourney(user);
+      queryClient.setQueryData(userQueryKey, updated);
       setIsCancelAssignModalOpen(false);
       setJourneySuccessMessage(t("activeJourney.cancelSuccess"));
     } catch {
@@ -422,6 +617,9 @@ export function useAdminUserDetailVM({
     formSaving: t("editForm.saving"),
     formSaveSuccess: t("editForm.saveSuccess"),
     valNameRequired: t("editForm.validation.nameRequired"),
+    valNameSurname: t("editForm.validation.nameSurname"),
+    valOrganizationRequired: t("editForm.validation.organizationRequired"),
+    valMaxLength: (max: number) => t("editForm.validation.maxLength", { max }),
     valEmailRequired: t("editForm.validation.emailRequired"),
     valEmailInvalid: t("editForm.validation.emailInvalid"),
     valDepartmentRequired: t("editForm.validation.departmentRequired"),
@@ -443,6 +641,12 @@ export function useAdminUserDetailVM({
     modalCancel: t("dangerZone.modalCancel"),
     modalConfirm: t("dangerZone.modalConfirm"),
     deleteSuccess: t("dangerZone.deleteSuccess"),
+    deleting: t("dangerZone.deleting"),
+    loadErrorMessage: t("loadError"),
+    retryButton: t("retry"),
+    notFoundTitle: t("notFound.title"),
+    notFoundDescription: t("notFound.description"),
+    closeMessage: t("closeMessage"),
   };
 
   const activeJourneyLabels: ActiveJourneySectionLabels = {
@@ -480,9 +684,7 @@ export function useAdminUserDetailVM({
     cancellingButton: t("activeJourney.cancellingButton"),
   };
 
-  const canDeleteUser = can("users.manage");
-  const canManageRoles = can("users.change_profile");
-  const canManageUser = can("users.manage") || can("users.deactivate");
+
   const canAssignJourney = can("journeys.assign");
   const activeJourneyAssignedBy =
     activeJourney?.assignedBy ?? activeJourney?.assigned_by ?? null;
@@ -498,11 +700,15 @@ export function useAdminUserDetailVM({
     user,
     isLoading,
     isError,
+    isNotFound,
     errorMessage,
     handleRetry,
+    backHref,
 
     isTogglingStatus,
     handleToggleStatus,
+    statusMessage,
+    handleDismissStatusMessage,
 
     showInactiveBanner,
     handleDismissBanner,
@@ -513,6 +719,7 @@ export function useAdminUserDetailVM({
     isDirty,
     isSaving,
     saveSuccessMessage,
+    saveErrorMessage,
     handleFieldChange,
     handleResetForm,
     handleSaveForm,
@@ -546,6 +753,7 @@ export function useAdminUserDetailVM({
 
     isDeleteModalOpen,
     isDeleting,
+    deleteErrorMessage,
     handleOpenDeleteModal,
     handleCloseDeleteModal,
     handleConfirmDelete,
@@ -553,6 +761,7 @@ export function useAdminUserDetailVM({
     canDeleteUser,
     canManageRoles,
     canManageUser,
+    canToggleStatus,
 
     labels,
   };

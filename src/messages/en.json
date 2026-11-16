@@ -626,10 +626,12 @@
       "title": "Access Profiles and Permissions",
       "subtitle": "View system pre-configured permission levels.",
       "defaultBadge": "Default",
-      "permissionsTitle": "Read-only permissions:",
+      "permissionsTitle": "Permissions:",
       "historyNotice": "Profile changes and registration updates are permanently recorded in the audit history.",
       "descriptions": {
-        "manager": "Sees everything the administrator sees and can assign journeys, but cannot change users or profiles."
+        "manager": "Sees everything the administrator sees and can assign journeys, but cannot change users or profiles.",
+        "admin": "Full access to user management, settings and corporate reports.",
+        "user": "Default profile assigned to every employee when they sign up."
       }
     },
     "empty": {
@@ -645,11 +647,18 @@
     "error": {
       "title": "Error loading users",
       "message": "Unable to load system users list.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "profilesMessage": "Unable to load the access profiles."
     },
     "inviteButton": "Invite user",
     "inviteSuccess": "Invitation sent to {email}",
-    "closeMessage": "Close notice"
+    "closeMessage": "Close notice",
+    "roles": {
+      "admin": "Administrator",
+      "manager": "Manager",
+      "user": "User"
+    },
+    "deleteSuccess": "User {name} deleted successfully."
   },
   "adminUserDetail": {
     "backToList": "Back to users",
@@ -662,7 +671,9 @@
       "accountActive": "Active account",
       "accountInactive": "Inactive account",
       "accountPending": "Pending account",
-      "toggleSuccess": "User status updated successfully."
+      "toggleSuccess": "User status updated successfully.",
+      "activateSuccess": "Account activated successfully.",
+      "deactivateSuccess": "Account deactivated successfully."
     },
     "inactiveBanner": {
       "title": "Inactive User",
@@ -693,7 +704,10 @@
         "emailRequired": "Email is required.",
         "emailInvalid": "Please enter a valid email address.",
         "departmentRequired": "Department is required.",
-        "employeeCodeRequired": "Employee code is required."
+        "employeeCodeRequired": "Employee code is required.",
+        "nameSurname": "Enter first and last name.",
+        "maxLength": "Use at most {max} characters.",
+        "organizationRequired": "The organization or company is required."
       }
     },
     "journeys": {
@@ -714,7 +728,8 @@
       "modalDescription": "Are you sure you want to delete user {name}? This action cannot be undone.",
       "modalCancel": "Cancel",
       "modalConfirm": "Yes, delete user",
-      "deleteSuccess": "User deleted successfully."
+      "deleteSuccess": "User deleted successfully.",
+      "deleting": "Deleting..."
     },
     "activeJourney": {
       "title": "Journey in progress",
@@ -751,6 +766,27 @@
         "security": "Information Security",
         "joint": "Joint"
       }
+    },
+    "loadError": "Unable to load the user data.",
+    "retry": "Try again",
+    "closeMessage": "Close message",
+    "notFound": {
+      "title": "User not found",
+      "description": "This user does not exist or has been deleted."
+    },
+    "errors": {
+      "emailInUse": "This email is already used by another account.",
+      "selfProfileChange": "You cannot change your own access profile.",
+      "selfDeactivation": "You cannot deactivate your own account.",
+      "selfDeletion": "You cannot delete your own account.",
+      "lastAdmin": "The system must keep at least one active administrator.",
+      "permissionDenied": "You do not have permission to perform this action.",
+      "invalidAccountState": "This account status does not allow this action. A pending invitation is activated when the person sets their password.",
+      "notFound": "This user no longer exists. Go back to the user list.",
+      "validation": "Review the highlighted fields.",
+      "saveFailed": "Unable to save the changes. Try again.",
+      "statusFailed": "Unable to change the account status. Try again.",
+      "deleteFailed": "Unable to delete the user. Try again."
     }
   },
   "privacyPolicy": {

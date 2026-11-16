@@ -51,10 +51,14 @@ export function AdminUsersView() {
 
     accessProfiles,
     isProfilesLoading,
+    isProfilesError,
+    handleRetryProfiles,
 
     canInviteUsers,
     inviteSuccessMessage,
     handleDismissInviteMessage,
+    deleteSuccessMessage,
+    handleDismissDeleteMessage,
 
     labels,
   } = useAdminUsersVM();
@@ -67,6 +71,15 @@ export function AdminUsersView() {
             variant="success"
             title={inviteSuccessMessage}
             onClose={handleDismissInviteMessage}
+            closeLabel={labels.closeMessage}
+          />
+        )}
+
+        {deleteSuccessMessage && (
+          <Message
+            variant="success"
+            title={deleteSuccessMessage}
+            onClose={handleDismissDeleteMessage}
             closeLabel={labels.closeMessage}
           />
         )}
@@ -186,6 +199,8 @@ export function AdminUsersView() {
               profiles={accessProfiles}
               labels={labels}
               isLoading={isProfilesLoading}
+              isError={isProfilesError}
+              onRetry={handleRetryProfiles}
             />
           </TabsContent>
         </Tabs>
