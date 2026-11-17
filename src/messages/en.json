@@ -94,11 +94,15 @@
       "emailPlaceholder": "your.email@company.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Type your password",
-      "forgotPassword": "Forgot your password?",
       "submit": "Sign in",
       "signUpPrefix": "Don't have an account?",
       "signUpLink": "Sign up",
-      "privacyNotice": "By continuing you accept our privacy terms.",
+      "privacyNotice": {
+        "prefix": "By continuing you accept our",
+        "link": "privacy terms",
+        "suffix": ".",
+        "linkAriaLabel": "Read the privacy terms"
+      },
       "validation": {
         "emailRequired": "Email is required.",
         "emailInvalid": "Enter a valid email address.",
