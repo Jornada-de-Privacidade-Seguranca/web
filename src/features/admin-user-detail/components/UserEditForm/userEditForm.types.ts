@@ -11,6 +11,7 @@ export interface UserEditFormProps {
   isDirty: boolean;
   isSaving: boolean;
   saveSuccessMessage: string | null;
+  saveErrorMessage?: string | null;
   labels: AdminUserDetailLabels;
   canManageRoles?: boolean;
   canManageUser?: boolean;
@@ -30,6 +31,7 @@ export interface UserEditFormViewModelReturn {
   isDirty: boolean;
   isSaving: boolean;
   saveSuccessMessage: string | null;
+  saveErrorMessage: string | null;
   labels: AdminUserDetailLabels;
   roleOptions: RoleSelectOption[];
   canManageRoles: boolean;

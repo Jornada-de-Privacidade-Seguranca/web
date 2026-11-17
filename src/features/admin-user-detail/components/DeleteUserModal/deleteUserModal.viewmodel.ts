@@ -14,6 +14,8 @@ export function useDeleteUserModalVM(
     description: labels.modalDescription(userName),
     cancelText: labels.modalCancel,
     confirmText: labels.modalConfirm,
+    deletingText: labels.deleting,
+    errorMessage: props.errorMessage ?? null,
     isDeleting,
     onCancel,
     onConfirm,

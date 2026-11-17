@@ -12,6 +12,8 @@ export function DeleteUserModal(props: DeleteUserModalProps) {
     description,
     cancelText,
     confirmText,
+    deletingText,
+    errorMessage,
     isDeleting,
     onCancel,
     onConfirm,
@@ -69,6 +71,12 @@ export function DeleteUserModal(props: DeleteUserModalProps) {
           {description}
         </p>
 
+        {errorMessage && (
+          <p role="alert" className="mt-4 text-xs font-medium text-destructive">
+            {errorMessage}
+          </p>
+        )}
+
         <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
           <Button
             ref={cancelButtonRef}
@@ -89,7 +97,7 @@ export function DeleteUserModal(props: DeleteUserModalProps) {
             disabled={isDeleting}
             className="w-full sm:w-auto rounded-full text-xs font-semibold shadow-md"
           >
-            {isDeleting ? "Excluindo..." : confirmText}
+            {isDeleting ? deletingText : confirmText}
           </Button>
         </div>
       </div>

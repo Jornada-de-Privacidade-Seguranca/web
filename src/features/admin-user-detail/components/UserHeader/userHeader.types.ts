@@ -6,6 +6,8 @@ import type {
 export interface UserHeaderProps {
   user: AdminUserDetails;
   labels: AdminUserDetailLabels;
+  /** Link do "Voltar", com a busca, os filtros e a página da listagem. */
+  backHref?: string;
   isTogglingStatus: boolean;
   canManageUser?: boolean;
   onToggleStatus: () => void;
@@ -24,4 +26,5 @@ export interface UserHeaderViewModelReturn {
   canManageUser: boolean;
   onToggleStatus: () => void;
   backToListText: string;
+  backHref: string;
 }

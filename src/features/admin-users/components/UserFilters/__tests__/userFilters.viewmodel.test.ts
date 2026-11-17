@@ -42,6 +42,7 @@ describe("useUserFiltersVM", () => {
     paginationPageOf: (c, t) => `Página ${c} de ${t}`,
     errorTitle: "Erro",
     errorMessage: "Erro desc",
+    profilesErrorMessage: "Erro perfis",
     retryButton: "Tentar",
     inviteButton: "Convidar usuário",
     closeMessage: "Fechar aviso",

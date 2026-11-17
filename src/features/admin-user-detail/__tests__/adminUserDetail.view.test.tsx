@@ -98,6 +98,15 @@ describe("AdminUserDetailView", () => {
     modalCancel: "Cancelar",
     modalConfirm: "Sim, excluir usuário",
     deleteSuccess: "Usuário excluído com sucesso.",
+    valNameSurname: "Informe nome e sobrenome.",
+    valOrganizationRequired: "Órgão obrigatório",
+    valMaxLength: (max: number) => `Máximo ${max}`,
+    deleting: "Excluindo...",
+    loadErrorMessage: "Erro ao carregar o usuário",
+    retryButton: "Tentar novamente",
+    notFoundTitle: "Usuário não encontrado",
+    notFoundDescription: "Este usuário não existe ou foi excluído.",
+    closeMessage: "Fechar aviso",
   };
 
   function createMockVMReturn(
@@ -113,6 +122,7 @@ describe("AdminUserDetailView", () => {
         department: "TI",
         organization: "Secretaria de Governo",
         role: "admin",
+        profileTypeId: 1,
         roleLabel: "Administrador",
         status: "active",
         journeysCount: 1,
@@ -130,11 +140,15 @@ describe("AdminUserDetailView", () => {
       },
       isLoading: false,
       isError: false,
+      isNotFound: false,
       errorMessage: null,
       handleRetry: vi.fn(),
+      backHref: "/admin/usuarios?page=2",
 
       isTogglingStatus: false,
       handleToggleStatus: vi.fn(),
+      statusMessage: null,
+      handleDismissStatusMessage: vi.fn(),
 
       showInactiveBanner: false,
       handleDismissBanner: vi.fn(),
@@ -152,6 +166,7 @@ describe("AdminUserDetailView", () => {
       isDirty: false,
       isSaving: false,
       saveSuccessMessage: null,
+      saveErrorMessage: null,
       handleFieldChange: vi.fn(),
       handleResetForm: vi.fn(),
       handleSaveForm: vi.fn().mockResolvedValue(undefined),
@@ -239,6 +254,7 @@ describe("AdminUserDetailView", () => {
 
       isDeleteModalOpen: false,
       isDeleting: false,
+      deleteErrorMessage: null,
       handleOpenDeleteModal: vi.fn(),
       handleCloseDeleteModal: vi.fn(),
       handleConfirmDelete: vi.fn().mockResolvedValue(undefined),
@@ -246,6 +262,7 @@ describe("AdminUserDetailView", () => {
       canDeleteUser: true,
       canManageRoles: true,
       canManageUser: true,
+      canToggleStatus: true,
 
       labels: mockLabels,
       ...overrides,
@@ -600,5 +617,76 @@ describe("AdminUserDetailView", () => {
     );
 
     expect(screen.getByText("Erro ao tentar cancelar atribuição")).toBeDefined();
+  });
+
+  function renderView() {
+    render(
+      <AppProviders>
+        <AdminUserDetailView userId="1" />
+      </AppProviders>
+    );
+  }
+
+  it("mostra o estado de não encontrado com o link de volta à listagem", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({ user: null, isError: true, isNotFound: true })
+    );
+    renderView();
+
+    expect(screen.getByTestId("user-detail-not-found")).toBeDefined();
+    expect(screen.getAllByText("Usuário não encontrado").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Voltar para usuários").closest("a")?.getAttribute("href")).toBe(
+      "/admin/usuarios?page=2"
+    );
+  });
+
+  it("mostra erro de carregamento com Tentar novamente", () => {
+    const handleRetry = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({ user: null, isError: true, errorMessage: "Erro ao carregar o usuário", handleRetry })
+    );
+    renderView();
+
+    expect(screen.getByText("Erro ao carregar o usuário")).toBeDefined();
+    fireEvent.click(screen.getByText("Tentar novamente"));
+    expect(handleRetry).toHaveBeenCalled();
+  });
+
+  it("o Voltar do cabeçalho mantém os filtros da listagem", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(createMockVMReturn());
+    renderView();
+
+    expect(screen.getByText("Voltar para usuários").closest("a")?.getAttribute("href")).toBe(
+      "/admin/usuarios?page=2"
+    );
+  });
+
+  it("mostra o aviso da ativação, o erro do salvar e o erro da exclusão", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        statusMessage: { variant: "destructive", text: "Você não pode desativar a sua própria conta." },
+        saveErrorMessage: "Revise os campos destacados.",
+        formErrors: { role: "O sistema precisa manter ao menos um administrador ativo." },
+        isDeleteModalOpen: true,
+        deleteErrorMessage: "Não foi possível excluir o usuário.",
+      })
+    );
+    renderView();
+
+    expect(screen.getByText("Você não pode desativar a sua própria conta.")).toBeDefined();
+    expect(screen.getByText("Revise os campos destacados.")).toBeDefined();
+    expect(
+      screen.getByText("O sistema precisa manter ao menos um administrador ativo.")
+    ).toBeDefined();
+    expect(screen.getByText("Não foi possível excluir o usuário.")).toBeDefined();
+  });
+
+  it("esconde o botão de ativação sem permissão para isso", () => {
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({ canToggleStatus: false })
+    );
+    renderView();
+
+    expect(screen.queryByText("Desativar conta")).toBeNull();
   });
 });

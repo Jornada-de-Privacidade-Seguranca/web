@@ -3,13 +3,15 @@
 import {
   CheckmarkCircle02Icon,
   InformationCircleIcon,
+  RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "@/components/ui";
 import { useAccessProfilesTabVM } from "./accessProfilesTab.viewmodel";
 import type { AccessProfilesTabProps } from "./accessProfilesTab.types";
 
 export function AccessProfilesTab(props: AccessProfilesTabProps) {
-  const { profiles, labels, isLoading } = useAccessProfilesTabVM(props);
+  const { profiles, labels, isLoading, isError, onRetry } = useAccessProfilesTabVM(props);
 
   if (isLoading) {
     return (
@@ -20,6 +22,20 @@ export function AccessProfilesTab(props: AccessProfilesTabProps) {
             className="h-64 rounded-3xl border border-border/40 bg-muted/40 p-6"
           />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-destructive/30 bg-destructive/5 p-8 text-center space-y-3">
+        <p className="text-sm font-medium text-destructive">
+          {labels.profilesErrorMessage}
+        </p>
+        <Button onClick={onRetry} variant="outline" size="sm">
+          <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
+          {labels.retryButton}
+        </Button>
       </div>
     );
   }
@@ -55,9 +71,11 @@ export function AccessProfilesTab(props: AccessProfilesTabProps) {
                 )}
               </div>
 
-              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                {profile.description}
-              </p>
+              {profile.description && (
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  {profile.description}
+                </p>
+              )}
 
               <div className="mt-5 border-t border-border/50 pt-4 space-y-2.5">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">

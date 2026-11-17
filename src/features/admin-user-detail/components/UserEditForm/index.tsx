@@ -19,6 +19,7 @@ export function UserEditForm(props: UserEditFormProps) {
     isDirty,
     isSaving,
     saveSuccessMessage,
+    saveErrorMessage,
     labels,
     roleOptions,
     canManageRoles,
@@ -103,7 +104,14 @@ export function UserEditForm(props: UserEditFormProps) {
               value={formData.organization}
               onChange={(e) => onFieldChange("organization", e.target.value)}
               className="h-11 rounded-2xl bg-background border-border/80 text-sm"
+              aria-invalid={!!formErrors.organization}
+              aria-describedby={formErrors.organization ? "organization-error" : undefined}
             />
+            {formErrors.organization && (
+              <p id="organization-error" className="text-xs text-destructive font-medium">
+                {formErrors.organization}
+              </p>
+            )}
           </div>
 
           {/* Campo: Código de Funcionário */}
@@ -167,6 +175,8 @@ export function UserEditForm(props: UserEditFormProps) {
               value={formData.role}
               disabled={!canManageRoles || !canManageUser}
               onChange={(e) => onFieldChange("role", e.target.value as UserRole)}
+              aria-invalid={!!formErrors.role}
+              aria-describedby={formErrors.role ? "role-error" : undefined}
               className={`w-full h-11 rounded-2xl bg-background border border-border/80 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                 !canManageRoles || !canManageUser
                   ? "opacity-60 cursor-not-allowed bg-muted/40"
@@ -179,6 +189,11 @@ export function UserEditForm(props: UserEditFormProps) {
                 </option>
               ))}
             </select>
+            {formErrors.role && (
+              <p id="role-error" className="text-xs text-destructive font-medium">
+                {formErrors.role}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -190,7 +205,15 @@ export function UserEditForm(props: UserEditFormProps) {
           className="sticky bottom-4 z-20 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card/95 p-4 shadow-xl backdrop-blur-xl animate-in fade-in-50 duration-200"
         >
           <div className="flex items-center gap-2">
-            {saveSuccessMessage ? (
+            {saveErrorMessage ? (
+              <div
+                role="alert"
+                className="flex items-center gap-2 text-xs font-semibold text-destructive"
+              >
+                <HugeiconsIcon icon={AlertCircleIcon} size={16} />
+                <span>{saveErrorMessage}</span>
+              </div>
+            ) : saveSuccessMessage ? (
               <div
                 role="status"
                 className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400"

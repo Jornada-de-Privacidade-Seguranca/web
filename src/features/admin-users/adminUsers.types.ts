@@ -8,19 +8,27 @@ export interface AdminUserListItem {
   initials: string;
   employeeCode: string;
   department: string;
+  /** Perfil de acesso (Administrador, Gestor ou Usuário); "user" quando a conta não tem perfil. */
   role: UserRole;
+  /** Id do perfil em TB_TIPO_PERFIL, ou null quando a conta não tem perfil. */
+  profileTypeId: number | null;
   roleLabel: string;
   status: UserStatus;
+  /** Jornadas finalizadas (sem as em andamento e as canceladas). */
   journeysCount: number;
   organization: string;
   createdAt: string;
 }
 
 export interface AccessProfile {
-  id: UserRole;
+  /** Id do perfil em TB_TIPO_PERFIL. */
+  id: number;
+  /** Perfil conhecido pelo front, ou null para um perfil criado só no backend. */
+  role: UserRole | null;
   name: string;
   description: string;
   isDefault?: boolean;
+  /** Descrição das permissões no idioma atual. */
   permissions: string[];
 }
 
@@ -36,19 +44,18 @@ export interface UserCompletedJourney {
 export interface GetUsersListParams {
   search?: string;
   department?: string;
-  role?: string;
-  status?: string;
+  role?: UserRole | "";
+  status?: UserStatus | "";
   page?: number;
-  limit?: number;
-  per_page?: number;
+  perPage?: number;
 }
 
 export interface PaginatedUsersResponse {
   items: AdminUserListItem[];
+  /** Total de usuários que atendem à busca e aos filtros. */
   total: number;
-  filteredTotal: number;
   page: number;
-  limit: number;
+  perPage: number;
   totalPages: number;
 }
 
@@ -99,6 +106,7 @@ export interface AdminUsersLabels {
   paginationPageOf: (current: number, total: number) => string;
   errorTitle: string;
   errorMessage: string;
+  profilesErrorMessage: string;
   retryButton: string;
   inviteButton: string;
   closeMessage: string;
@@ -113,6 +121,13 @@ export interface AdminUsersStore {
   invitedEmail: string | null;
   setInvitedEmail: (email: string | null) => void;
   clearInvitedEmail: () => void;
+  /** Nome (ou e-mail) do usuário excluído, para o aviso de sucesso na listagem. */
+  deletedUserName: string | null;
+  setDeletedUserName: (name: string | null) => void;
+  clearDeletedUserName: () => void;
+  /** Query string da listagem (busca, filtros e página), para o "Voltar" do detalhe. */
+  listQuery: string;
+  setListQuery: (query: string) => void;
 }
 
 export interface AdminUsersViewModelReturn {
@@ -128,6 +143,8 @@ export interface AdminUsersViewModelReturn {
   isError: boolean;
   errorMessage: string | null;
   handleRetry: () => void;
+  isProfilesError: boolean;
+  handleRetryProfiles: () => void;
   filters: AdminUsersFilters;
   availableDepartments: string[];
   availableRoles: SelectOption[];
@@ -143,5 +160,7 @@ export interface AdminUsersViewModelReturn {
   canInviteUsers: boolean;
   inviteSuccessMessage: string | null;
   handleDismissInviteMessage: () => void;
+  deleteSuccessMessage: string | null;
+  handleDismissDeleteMessage: () => void;
   labels: AdminUsersLabels;
 }

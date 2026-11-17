@@ -1,8 +1,9 @@
 "use client";
 
-import { RefreshIcon, AlertDiamondIcon } from "@hugeicons/core-free-icons";
+import { RefreshIcon, AlertDiamondIcon, ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@/components/ui";
+import { Link } from "@/shared/i18n/navigation";
+import { Button, Message } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { useAdminUserDetailVM } from "./adminUserDetail.viewmodel";
 import {
@@ -25,11 +26,15 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     user,
     isLoading,
     isError,
+    isNotFound,
     errorMessage,
     handleRetry,
+    backHref,
 
     isTogglingStatus,
     handleToggleStatus,
+    statusMessage,
+    handleDismissStatusMessage,
 
     showInactiveBanner,
     handleDismissBanner,
@@ -40,6 +45,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     isDirty,
     isSaving,
     saveSuccessMessage,
+    saveErrorMessage,
     handleFieldChange,
     handleResetForm,
     handleSaveForm,
@@ -73,6 +79,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
 
     isDeleteModalOpen,
     isDeleting,
+    deleteErrorMessage,
     handleOpenDeleteModal,
     handleCloseDeleteModal,
     handleConfirmDelete,
@@ -80,6 +87,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     canDeleteUser,
     canManageRoles,
     canManageUser,
+    canToggleStatus,
 
     labels,
   } = useAdminUserDetailVM({ userId });
@@ -95,16 +103,38 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     );
   }
 
+  if (isNotFound) {
+    return (
+      <PageShell title={labels.notFoundTitle} subtitle={labels.notFoundDescription}>
+        <div
+          data-testid="user-detail-not-found"
+          className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border p-12 text-center space-y-3"
+        >
+          <h2 className="font-heading text-base font-bold text-foreground">
+            {labels.notFoundTitle}
+          </h2>
+          <p className="text-xs text-muted-foreground">{labels.notFoundDescription}</p>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link href={backHref}>
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={14} className="mr-1.5" />
+              {labels.backToList}
+            </Link>
+          </Button>
+        </div>
+      </PageShell>
+    );
+  }
+
   if (isError || !user) {
     return (
       <PageShell title={labels.formTitle} subtitle={labels.formSubtitle}>
         <div className="flex flex-col items-center justify-center rounded-3xl border border-destructive/30 bg-destructive/5 p-8 text-center space-y-3">
           <p className="text-sm font-medium text-destructive">
-            {errorMessage || "Usuário não encontrado."}
+            {errorMessage || labels.loadErrorMessage}
           </p>
           <Button onClick={handleRetry} variant="outline" size="sm">
             <HugeiconsIcon icon={RefreshIcon} size={14} className="mr-1.5" />
-            Tentar novamente
+            {labels.retryButton}
           </Button>
         </div>
       </PageShell>
@@ -121,10 +151,20 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
         <UserHeader
           user={user}
           labels={labels}
+          backHref={backHref}
           isTogglingStatus={isTogglingStatus}
-          canManageUser={canManageUser}
+          canManageUser={canToggleStatus}
           onToggleStatus={handleToggleStatus}
         />
+
+        {statusMessage && (
+          <Message
+            variant={statusMessage.variant}
+            title={statusMessage.text}
+            onClose={handleDismissStatusMessage}
+            closeLabel={labels.closeMessage}
+          />
+        )}
 
         {/* Banner de Usuário Inativo (Condicional) */}
         {showInactiveBanner && (
@@ -144,6 +184,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
           isDirty={isDirty}
           isSaving={isSaving}
           saveSuccessMessage={saveSuccessMessage}
+          saveErrorMessage={saveErrorMessage}
           labels={labels}
           canManageRoles={canManageRoles}
           canManageUser={canManageUser}
@@ -212,6 +253,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
             isOpen={isDeleteModalOpen}
             userName={displayName}
             isDeleting={isDeleting}
+            errorMessage={deleteErrorMessage}
             labels={labels}
             onCancel={handleCloseDeleteModal}
             onConfirm={handleConfirmDelete}
