@@ -1,4 +1,4 @@
-import { getJourneyResultUrl } from "@shared/utils/journeyRoutes";
+import { getAdminJourneyResultUrl } from "@shared/utils/journeyRoutes";
 import { getScoreBadgeClasses } from "../../adminResults.utils";
 import type {
   AdminResultsTableProps,
@@ -9,7 +9,7 @@ import type {
 export function useAdminResultsTableVM(
   props: AdminResultsTableProps
 ): AdminResultsTableViewModelReturn {
-  const { results, labels } = props;
+  const { results, labels, listQuery } = props;
 
   const rows: AdminResultsTableRow[] = results.map((item) => ({
     id: item.id,
@@ -24,7 +24,7 @@ export function useAdminResultsTableVM(
     scoreText: labels.scoreValue(item.score),
     scoreBadgeClasses: getScoreBadgeClasses(item.scoreBand),
     scoreAriaLabel: labels.scoreAriaLabel(item.score, item.scoreBand),
-    resultHref: getJourneyResultUrl(item.journeyId),
+    resultHref: getAdminJourneyResultUrl(item.journeyId, listQuery),
     viewAriaLabel: `${labels.tableView} — ${item.user.name} — ${item.profileTitle}`,
   }));
 

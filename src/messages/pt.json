@@ -589,12 +589,23 @@
       "serverErrorMessage": "Não foi possível carregar o resultado da jornada. Tente novamente.",
       "backToResultsLink": "Voltar para Resultados",
       "goToSummaryLink": "Ir para o resumo da jornada",
-      "retryButton": "Tentar novamente"
+      "retryButton": "Tentar novamente",
+      "backToAdminResultsLink": "Voltar para Resultados dos Usuários"
     },
     "pdf": {
       "downloadButton": "Baixar PDF",
       "generatingLabel": "Gerando PDF…",
       "error": "Não foi possível gerar o PDF. Tente novamente."
+    },
+    "admin": {
+      "pageTitle": "Resultado do usuário",
+      "person": {
+        "ariaLabel": "Dados do usuário avaliado",
+        "organization": "Órgão/Empresa",
+        "sector": "Setor",
+        "registration": "Matrícula",
+        "notInformed": "Não informado"
+      }
     }
   },
   "adminUsers": {

@@ -32,6 +32,27 @@ export function getJourneyResultUrl(journeyId: string): string {
   return `/jornada/${journeyId}/resultado`;
 }
 
+/** Listagem de resultados de todos os usuários, na visão do admin. */
+export const ADMIN_RESULTS_PATH = "/admin/resultados";
+
+function withQuery(path: string, query?: string): string {
+  const normalized = (query ?? "").replace(/^\?/, "");
+  return normalized ? `${path}?${normalized}` : path;
+}
+
+/**
+ * Monta o caminho do resultado de uma jornada visto pelo admin. A query string
+ * da listagem vai junto, para o "Voltar" devolver os mesmos filtros e página.
+ */
+export function getAdminJourneyResultUrl(journeyId: string, listQuery?: string): string {
+  return withQuery(`${ADMIN_RESULTS_PATH}/${journeyId}`, listQuery);
+}
+
+/** Monta o caminho da listagem de resultados do admin com os filtros informados. */
+export function getAdminResultsUrl(listQuery?: string): string {
+  return withQuery(ADMIN_RESULTS_PATH, listQuery);
+}
+
 /**
  * Monta o caminho do resumo de um perfil de jornada, de onde a jornada é iniciada.
  */

@@ -589,12 +589,23 @@
       "serverErrorMessage": "We couldn't load the journey result. Please try again.",
       "backToResultsLink": "Back to Results",
       "goToSummaryLink": "Go to the journey overview",
-      "retryButton": "Try again"
+      "retryButton": "Try again",
+      "backToAdminResultsLink": "Back to Users' Results"
     },
     "pdf": {
       "downloadButton": "Download PDF",
       "generatingLabel": "Generating PDF…",
       "error": "We couldn't generate the PDF. Please try again."
+    },
+    "admin": {
+      "pageTitle": "User result",
+      "person": {
+        "ariaLabel": "Evaluated user details",
+        "organization": "Organization/Company",
+        "sector": "Department",
+        "registration": "Employee ID",
+        "notInformed": "Not provided"
+      }
     }
   },
   "adminUsers": {

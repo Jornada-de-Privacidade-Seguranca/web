@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ApiRequestError } from "@services/httpClient";
@@ -9,8 +9,10 @@ import {
   getJourneyResult,
   JourneyResultRequestError,
 } from "@services/journeyResultService";
+import { useRouter } from "@shared/i18n/navigation";
 import { saveBlobAsFile } from "@shared/utils/fileDownload";
-import { getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
+import { getInitials } from "@shared/utils/initials";
+import { getAdminResultsUrl, getProfileSummaryUrl } from "@shared/utils/journeyRoutes";
 import { buildJourneyResultModel, buildScoreValue } from "./journeyResult.utils";
 import type {
   JourneyResultErrorLabels,
@@ -18,11 +20,17 @@ import type {
   JourneyResultFormatters,
   JourneyResultLabels,
   JourneyResultModel,
+  JourneyResultOptions,
+  JourneyResultPerson,
   JourneyResultTranslate,
+  JourneyResultUserApi,
   JourneyResultViewModelReturn,
 } from "./journeyResult.types";
 
 const RESULTS_HREF = "/resultados";
+
+/** Para onde o admin vai quando a API nega o acesso ao resultado (403). */
+const ACCESS_DENIED_HREF = "/painel?error=access_denied";
 
 /** Nota mínima recomendada em cada área, indicada pelo marcador das barras. */
 export const RECOMMENDED_AREA_SCORE = 60;
@@ -39,9 +47,16 @@ const EMPTY_MODEL: Omit<JourneyResultModel, "score"> = {
   undeclaredCompetencies: [],
 };
 
-export function useJourneyResultVM(journeyId: string): JourneyResultViewModelReturn {
+export function useJourneyResultVM(
+  journeyId: string,
+  options: JourneyResultOptions = {}
+): JourneyResultViewModelReturn {
   const t = useTranslations("journeyResult");
   const isEnglish = useLocale() === "en";
+  const router = useRouter();
+  const isAdminView = options.variant === "admin";
+  // O admin volta para a listagem de todos os usuários, com os filtros de onde saiu
+  const backHref = isAdminView ? getAdminResultsUrl(options.listQuery) : RESULTS_HREF;
 
   const query = useQuery({
     queryKey: [JOURNEY_RESULT_QUERY_KEY, journeyId],
@@ -90,12 +105,26 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
     error = "not_completed";
   }
 
+  // Na visão do admin, a API negou o acesso: leva à página de acesso negado
+  const isAdminForbidden = isAdminView && error === "forbidden";
+  useEffect(() => {
+    if (isAdminForbidden) router.replace(ACCESS_DENIED_HREF);
+  }, [isAdminForbidden, router]);
+
   // Refazer (ou continuar) parte do resumo do perfil, de onde a jornada é iniciada
   const profileId = journey?.journey_profile?.id;
-  const retakeUrl = profileId ? getProfileSummaryUrl(String(profileId)) : RESULTS_HREF;
+  // A jornada de outra pessoa não pode ser refeita (nem continuada) por quem a consulta
+  const retakeUrl = isAdminView
+    ? null
+    : profileId
+      ? getProfileSummaryUrl(String(profileId))
+      : RESULTS_HREF;
+
+  const person =
+    isAdminView && journey?.user && isCompleted ? buildPerson(journey.user, t) : null;
 
   const labels: JourneyResultLabels = {
-    pageTitle: t("pageTitle"),
+    pageTitle: isAdminView ? t("admin.pageTitle") : t("pageTitle"),
     loadingAriaLabel: t("loadingAriaLabel"),
     overallLabel: t("overallLabel"),
     overallScoreAriaLabel: t("scoreAriaLabel", {
@@ -127,7 +156,15 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
       downloadButton: t("pdf.downloadButton"),
       generatingLabel: t("pdf.generatingLabel"),
     },
-    errors: error ? buildErrorLabels(error, retakeUrl, t) : null,
+    errors:
+      error && !isAdminForbidden
+        ? buildErrorLabels(error, retakeUrl, t, {
+            linkText: isAdminView
+              ? t("errors.backToAdminResultsLink")
+              : t("errors.backToResultsLink"),
+            linkHref: backHref,
+          })
+        : null,
   };
 
   const handleRetry = () => {
@@ -152,9 +189,11 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
   return {
     ...model,
     retakeUrl,
-    resultsUrl: RESULTS_HREF,
+    resultsUrl: backHref,
+    person,
     recommendedAreaScore: RECOMMENDED_AREA_SCORE,
-    isLoading: query.isLoading || isRetrying,
+    // Enquanto leva à página de acesso negado, a tela segue em carregamento
+    isLoading: query.isLoading || isRetrying || isAdminForbidden,
     error,
     labels,
     handleRetry,
@@ -166,16 +205,16 @@ export function useJourneyResultVM(journeyId: string): JourneyResultViewModelRet
 }
 
 /**
- * Mensagem de cada erro. A jornada em andamento leva ao resumo do perfil; a
- * falha de servidor oferece nova tentativa; os demais voltam para Resultados.
+ * Mensagem de cada erro. A jornada em andamento leva ao resumo do perfil (na
+ * visão do admin, sem `retakeUrl`, volta para a listagem); a falha de servidor
+ * oferece nova tentativa; os demais voltam para a listagem de resultados.
  */
 function buildErrorLabels(
   error: JourneyResultErrorType,
-  retakeUrl: string,
-  t: JourneyResultTranslate
+  retakeUrl: string | null,
+  t: JourneyResultTranslate,
+  backToResults: Pick<JourneyResultErrorLabels, "linkText" | "linkHref">
 ): JourneyResultErrorLabels {
-  const backToResults = { linkText: t("errors.backToResultsLink"), linkHref: RESULTS_HREF };
-
   switch (error) {
     case "not_found":
       return {
@@ -195,8 +234,9 @@ function buildErrorLabels(
       return {
         title: t("errors.notCompletedTitle"),
         message: t("errors.notCompletedMessage"),
-        linkText: t("errors.goToSummaryLink"),
-        linkHref: retakeUrl,
+        ...(retakeUrl
+          ? { linkText: t("errors.goToSummaryLink"), linkHref: retakeUrl }
+          : backToResults),
         retryButton: null,
       };
     case "incomplete":
@@ -214,4 +254,34 @@ function buildErrorLabels(
         retryButton: t("errors.retryButton"),
       };
   }
+}
+
+/** Bloco de identificação da pessoa; dados ausentes aparecem como "não informado". */
+function buildPerson(user: JourneyResultUserApi, t: JourneyResultTranslate): JourneyResultPerson {
+  const name = user.name?.trim() || t("admin.person.notInformed");
+  const orNotInformed = (value: string | null) => value?.trim() || t("admin.person.notInformed");
+
+  return {
+    ariaLabel: t("admin.person.ariaLabel"),
+    initials: getInitials(user.name ?? ""),
+    name,
+    email: user.email ?? "",
+    fields: [
+      {
+        id: "organization",
+        label: t("admin.person.organization"),
+        value: orNotInformed(user.organization),
+      },
+      {
+        id: "sector",
+        label: t("admin.person.sector"),
+        value: orNotInformed(user.sector),
+      },
+      {
+        id: "registration",
+        label: t("admin.person.registration"),
+        value: orNotInformed(user.registration),
+      },
+    ],
+  };
 }

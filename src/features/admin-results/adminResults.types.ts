@@ -157,6 +157,8 @@ export interface AdminResultsLabels {
 export interface AdminResultsViewModelReturn {
   summary: AdminResultsSummary;
   results: AdminResultItem[];
+  /** Query string atual (filtros e página), levada ao resultado de cada linha */
+  listQuery: string;
   totalResults: number;
   filteredTotal: number;
   page: number;

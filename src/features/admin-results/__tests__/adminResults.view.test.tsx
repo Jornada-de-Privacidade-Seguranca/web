@@ -99,6 +99,7 @@ function createMockVM(
   overrides?: Partial<AdminResultsViewModelReturn>
 ): AdminResultsViewModelReturn {
   return {
+    listQuery: "",
     summary: {
       totalCompletedJourneys: 14,
       totalEvaluatedUsers: 6,
@@ -265,7 +266,7 @@ describe("AdminResultsView", () => {
     const viewLink = within(table).getByRole("link", {
       name: /Ver — Ana Beatriz Silva/i,
     });
-    expect(viewLink.getAttribute("href")).toBe("/jornada/101/resultado");
+    expect(viewLink.getAttribute("href")).toBe("/admin/resultados/101");
 
     expect(screen.getByText("2 de 14 resultados")).toBeDefined();
     expect(screen.getByText("Página 1 de 3")).toBeDefined();

@@ -5,6 +5,8 @@ import {
   getJourneyResultUrl,
   getJourneySummaryUrl,
   getProfileSummaryUrl,
+  getAdminJourneyResultUrl,
+  getAdminResultsUrl,
 } from "../journeyRoutes";
 
 describe("journeyRoutes utils", () => {
@@ -31,6 +33,20 @@ describe("journeyRoutes utils", () => {
   describe("getProfileSummaryUrl", () => {
     it("deve montar a URL do resumo de um perfil de jornada", () => {
       expect(getProfileSummaryUrl("4")).toBe("/jornada/perfil/4");
+    });
+  });
+
+  describe("rotas do resultado na visão do admin", () => {
+    it("deve levar a query string da listagem ao resultado e de volta", () => {
+      expect(getAdminJourneyResultUrl("78", "department=TI&page=2")).toBe(
+        "/admin/resultados/78?department=TI&page=2"
+      );
+      expect(getAdminJourneyResultUrl("78", "?page=2")).toBe("/admin/resultados/78?page=2");
+      expect(getAdminJourneyResultUrl("78")).toBe("/admin/resultados/78");
+      expect(getAdminResultsUrl("domains=privacy&domains=joint")).toBe(
+        "/admin/resultados?domains=privacy&domains=joint"
+      );
+      expect(getAdminResultsUrl("")).toBe("/admin/resultados");
     });
   });
 });

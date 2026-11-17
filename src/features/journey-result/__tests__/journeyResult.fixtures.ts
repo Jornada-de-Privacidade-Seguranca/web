@@ -47,6 +47,14 @@ export const c4 = buildCompetency({
 export function buildJourney(overrides: Partial<JourneyResultApi> = {}): JourneyResultApi {
   return {
     id: 10,
+    user: {
+      id: 4,
+      name: "Ana Beatriz Silva",
+      email: "ana@empresa.gov.br",
+      organization: "Ministério X",
+      sector: "Jurídico",
+      registration: null,
+    },
     journey_profile: {
       id: 2,
       name_pt: "Encarregado de Dados",

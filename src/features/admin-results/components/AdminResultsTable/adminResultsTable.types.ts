@@ -2,6 +2,8 @@ import type { AdminResultItem, AdminResultsLabels } from "../../adminResults.typ
 
 export interface AdminResultsTableProps {
   results: AdminResultItem[];
+  /** Query string atual da listagem, levada ao resultado para o "Voltar" manter filtros e página */
+  listQuery?: string;
   labels: Pick<
     AdminResultsLabels,
     | "tableUser"
