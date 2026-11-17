@@ -49,9 +49,11 @@ describe("assessmentsService", () => {
           user_name: "Maria Silva",
           journey_profile: {
             id: 1,
-            name: "Encarregado pelo Tratamento de Dados Pessoais",
-            description: "Privacidade e Seguranca",
-            knowledge_domain: { id: 1, name: "Privacidade" },
+            name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+            name_en: "Data Protection Officer (DPO)",
+            description_pt: "Privacidade e Seguranca",
+            description_en: "Privacy and Security",
+            knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
           },
           started_at: "2026-07-23 16:30:00",
           finished_at: null,
@@ -103,6 +105,70 @@ describe("assessmentsService", () => {
       page: 2,
       limit: 6,
       totalPages: 2,
+    });
+  });
+
+  it("deve usar o nome e a descrição em inglês quando o idioma for en", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 10,
+            user_id: 2,
+            journey_profile: {
+              id: 1,
+              name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+              name_en: "Data Protection Officer (DPO)",
+              description_pt: "Privacidade e Seguranca",
+              description_en: "Privacy and Security",
+              knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
+            },
+            status: "ongoing",
+            is_completed: false,
+          },
+        ],
+        meta: { pagination: { current_page: 1, per_page: 1, total: 1, last_page: 1 } },
+      })
+    );
+
+    const result = await getPendingAssessments({ userId: 2, perPage: 1, locale: "en" });
+
+    expect(result.items[0]).toMatchObject({
+      title: "Data Protection Officer (DPO)",
+      description: "Privacy and Security",
+    });
+  });
+
+  it("deve usar o português quando faltar a tradução em inglês", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 10,
+            user_id: 2,
+            journey_profile: {
+              id: 1,
+              name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
+              name_en: null,
+              description_pt: "Privacidade e Seguranca",
+              description_en: null,
+              knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: null },
+            },
+            status: "ongoing",
+            is_completed: false,
+          },
+        ],
+        meta: { pagination: { current_page: 1, per_page: 1, total: 1, last_page: 1 } },
+      })
+    );
+
+    const result = await getPendingAssessments({ userId: 2, perPage: 1, locale: "en" });
+
+    expect(result.items[0]).toMatchObject({
+      title: "Encarregado pelo Tratamento de Dados Pessoais",
+      description: "Privacidade e Seguranca",
     });
   });
 
@@ -283,7 +349,7 @@ describe("assessmentsService", () => {
     );
   });
 
-  it("deve usar description como fallback de title quando name for ausente", async () => {
+  it("deve usar a descrição como título quando o nome for ausente", async () => {
     vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
       mockResponse({
         success: true,
@@ -293,8 +359,11 @@ describe("assessmentsService", () => {
             user_id: 2,
             journey_profile: {
               id: 1,
-              description: "Especialista em Proteção de Dados",
-              knowledge_domain: { id: 1, name: "Privacidade" },
+              name_pt: null,
+              name_en: null,
+              description_pt: "Especialista em Proteção de Dados",
+              description_en: null,
+              knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
             },
             status: "ongoing",
             is_completed: false,

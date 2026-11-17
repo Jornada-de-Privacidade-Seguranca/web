@@ -149,6 +149,10 @@ describe("useAssessmentsVM", () => {
     expect(result.current.pendingJourney?.title).toBe("Segurança na Nuvem");
     expect(result.current.catalogJourneys).toHaveLength(3);
     expect(result.current.catalogTotalPages).toBe(1);
+    // O idioma da tela vai para o service, que escolhe o nome da jornada pendente
+    expect(assessmentsService.getPendingAssessments).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 1, page: 1, perPage: 1, locale: "pt" })
+    );
   });
 
   it("deve ocultar a seção de jornada pendente quando não houver nenhuma", async () => {
