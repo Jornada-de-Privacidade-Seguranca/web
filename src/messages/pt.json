@@ -850,5 +850,67 @@
       "accountAlreadyExists": "Já existe uma conta cadastrada com este e-mail.",
       "genericSubmit": "Não foi possível enviar o convite. Tente novamente."
     }
+  },
+  "adminResults": {
+    "title": "Resultados dos Usuários",
+    "subtitle": "Acompanhe as jornadas concluídas e as médias por domínio de toda a organização.",
+    "loadingAriaLabel": "Carregando resultados dos usuários",
+    "summary": {
+      "ariaLabel": "Resumo dos resultados",
+      "totalCompleted": "Jornadas concluídas",
+      "totalUsers": "Usuários avaliados",
+      "domainScore": "{score}/100",
+      "emptyScore": "—"
+    },
+    "filters": {
+      "ariaLabel": "Filtros avançados",
+      "searchPlaceholder": "Buscar por usuário, e-mail ou perfil...",
+      "user": "Usuário",
+      "allUsers": "Todos os usuários",
+      "department": "Setor",
+      "allDepartments": "Todos os setores",
+      "profile": "Perfil de jornada",
+      "allProfiles": "Todos os perfis de jornada",
+      "domains": "Domínios",
+      "dateFrom": "Concluídas a partir de",
+      "dateTo": "Concluídas até",
+      "clear": "Limpar filtros",
+      "counter": "{filtered} de {total, plural, one {# resultado} other {# resultados}}"
+    },
+    "table": {
+      "user": "Usuário",
+      "department": "Setor",
+      "profile": "Perfil de jornada",
+      "domain": "Domínio",
+      "completedAt": "Data de conclusão",
+      "score": "Nota",
+      "actions": "Ações",
+      "view": "Ver",
+      "emptyDepartment": "—",
+      "scoreValue": "{score}/100",
+      "scoreAriaLabel": "Nota {score} de 100, nível {band}"
+    },
+    "bands": {
+      "strong": "Forte",
+      "medium": "Médio",
+      "weak": "A desenvolver"
+    },
+    "empty": {
+      "title": "Nenhum resultado encontrado",
+      "description": "Nenhum resultado corresponde aos filtros aplicados. Tente ajustar os critérios ou limpar os filtros.",
+      "noDataTitle": "Ainda não há resultados concluídos",
+      "noDataDescription": "Quando os colaboradores concluírem suas jornadas, os resultados aparecerão aqui.",
+      "clearButton": "Limpar filtros"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próxima",
+      "pageOf": "Página {current} de {total}"
+    },
+    "error": {
+      "title": "Erro ao carregar resultados",
+      "message": "Não foi possível carregar os resultados dos usuários.",
+      "retry": "Tentar novamente"
+    }
   }
 }
