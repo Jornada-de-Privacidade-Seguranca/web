@@ -1,4 +1,4 @@
-import { apiRequestWithMeta } from "@services/httpClient";
+import { apiRequest, apiRequestWithMeta } from "@services/httpClient";
 import {
   getJourneyProfile,
   getJourneyProfiles,
@@ -88,8 +88,8 @@ function mapUserJourneyToJourney(
     href: getCompetenciesAreaUrl(0),
     // O resumo traz só quantas competências já foram respondidas, não o total
     // do perfil; a quantidade fica oculta até a API fornecê-la (#98)
-    origin: item.origin ?? "self_started",
-    isSelfStarted: item.origin !== "assigned",
+    origin: item.origin ?? null,
+    isSelfStarted: item.origin === "self_started",
     assignedByName: item.assigned_by?.name ?? undefined,
   };
 }
@@ -215,4 +215,18 @@ export async function getCatalogAssessments({
     limit: profilePage.perPage,
     totalPages: profilePage.totalPages,
   };
+}
+
+/**
+ * POST /journeys/{journey}/cancel: cancela a jornada pendente iniciada pelo
+ * próprio usuário. Erros chegam como `ApiRequestError`: 409
+ * `JOURNEY_CANCELLATION_NOT_ALLOWED` (concluída, já cancelada ou atribuída),
+ * 403 (jornada de outra pessoa) e 404 (jornada inexistente).
+ */
+export async function cancelPendingJourney(journeyId: string): Promise<void> {
+  await apiRequest<unknown>(
+    `/journeys/${journeyId}/cancel`,
+    { method: "post", withCsrf: true },
+    "Não foi possível cancelar a jornada."
+  );
 }

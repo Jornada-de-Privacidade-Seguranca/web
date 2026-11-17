@@ -7,7 +7,7 @@ import {
   FilterHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Message } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { useAssessmentsVM } from "./assessments.viewmodel";
 import {
@@ -29,6 +29,10 @@ export function AssessmentsView() {
     handleRetryPending,
 
     isCancelModalOpen,
+    isCancellingJourney,
+    cancelErrorMessage,
+    cancelSuccessMessage,
+    handleDismissCancelSuccess,
     handleOpenCancelModal,
     handleCloseCancelModal,
     handleConfirmCancelJourney,
@@ -62,6 +66,15 @@ export function AssessmentsView() {
   return (
     <PageShell title={labels.title} subtitle={labels.subtitle}>
       <div className="space-y-10">
+        {cancelSuccessMessage && (
+          <Message
+            variant="success"
+            title={cancelSuccessMessage}
+            onClose={handleDismissCancelSuccess}
+            closeLabel={labels.closeMessage}
+          />
+        )}
+
         {/* Seção 1: Jornada Pendente em Destaque (No singular; NÃO aparece se não houver pendente) */}
         {(isPendingLoading || hasPendingJourney || pendingError) && (
           <section aria-labelledby="pending-journey-section-title" className="space-y-4">
@@ -216,6 +229,9 @@ export function AssessmentsView() {
         description={labels.cancelModalDescription}
         keepLabel={labels.cancelModalKeep}
         confirmLabel={labels.cancelModalConfirm}
+        confirmingLabel={labels.cancelModalConfirming}
+        isConfirming={isCancellingJourney}
+        errorMessage={cancelErrorMessage}
         onCancel={handleCloseCancelModal}
         onConfirm={handleConfirmCancelJourney}
       />

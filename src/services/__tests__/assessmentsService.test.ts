@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
 import {
   getPendingAssessments,
+  cancelPendingJourney,
   getCatalogAssessments,
 } from "../assessmentsService";
-import { axiosInstance } from "../httpClient";
+import { axiosInstance, clearCsrfToken } from "../httpClient";
 import * as journeyProfileService from "../journeyProfileService";
 
 function mockResponse<T>(data: T): AxiosResponse<T> {
@@ -102,8 +103,8 @@ describe("assessmentsService", () => {
           domain: "privacy",
           status: "in_progress",
           href: "/jornada/atual/competencias/0",
-          origin: "self_started",
-          isSelfStarted: true,
+          origin: null,
+          isSelfStarted: false,
         },
       ],
       total: 7,
@@ -535,6 +536,47 @@ describe("assessmentsService", () => {
       page: 1,
       limit: 6,
       totalPages: 1,
+    });
+  });
+
+  describe("cancelPendingJourney", () => {
+    beforeEach(() => {
+      clearCsrfToken();
+    });
+
+    it("chama POST /journeys/{journey}/cancel com o token CSRF", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-1" } }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { id: 10, status: "cancelled" } }));
+
+      await cancelPendingJourney("10");
+
+      expect(requestSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: "/journeys/10/cancel",
+          method: "post",
+          headers: expect.objectContaining({ "X-CSRF-TOKEN": "token-1" }),
+        })
+      );
+    });
+
+    it("propaga o 409 de cancelamento não permitido", async () => {
+      vi.spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-1" } }))
+        .mockRejectedValueOnce(
+          mockAxiosError(409, {
+            success: false,
+            message: "Esta jornada nao pode ser cancelada.",
+            errors: [],
+            code: "JOURNEY_CANCELLATION_NOT_ALLOWED",
+          })
+        );
+
+      await expect(cancelPendingJourney("10")).rejects.toMatchObject({
+        status: 409,
+        code: "JOURNEY_CANCELLATION_NOT_ALLOWED",
+      });
     });
   });
 });

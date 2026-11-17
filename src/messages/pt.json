@@ -260,6 +260,12 @@
     "cancelModalDescription": "Tem certeza de que deseja cancelar esta jornada? Suas respostas até aqui não serão salvas.",
     "cancelModalKeep": "Manter jornada",
     "cancelModalConfirm": "Cancelar jornada",
+    "cancelModalConfirming": "Cancelando...",
+    "cancelSuccess": "Jornada cancelada. Você já pode iniciar outra.",
+    "cancelError": "Não foi possível cancelar a jornada. Tente novamente.",
+    "cancelNotAllowed": "Esta jornada não pode mais ser cancelada. A lista foi atualizada.",
+    "cancelUnavailable": "Esta jornada não está mais disponível. A lista foi atualizada.",
+    "closeMessage": "Fechar aviso",
     "pagination": {
       "previous": "Anterior",
       "next": "Próximo",

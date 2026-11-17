@@ -16,6 +16,9 @@ describe("CancelJourneyModal Component", () => {
         description="Tem certeza de que deseja cancelar?"
         keepLabel="Manter jornada"
         confirmLabel="Cancelar jornada"
+        confirmingLabel="Cancelando..."
+        isConfirming={false}
+        errorMessage={null}
         onCancel={onCancelMock}
         onConfirm={onConfirmMock}
       />
@@ -47,11 +50,63 @@ describe("CancelJourneyModal Component", () => {
         description="Tem certeza?"
         keepLabel="Manter jornada"
         confirmLabel="Cancelar jornada"
+        confirmingLabel="Cancelando..."
+        isConfirming={false}
+        errorMessage={null}
         onCancel={vi.fn()}
         onConfirm={vi.fn()}
       />
     );
 
     expect(container.firstChild).toBeNull();
+  });
+
+  it("durante o cancelamento desabilita os dois botões, mostra o carregamento e não fecha", () => {
+    const onCancelMock = vi.fn();
+    const onConfirmMock = vi.fn();
+
+    render(
+      <CancelJourneyModal
+        isOpen={true}
+        title="Cancelar jornada"
+        description="Tem certeza?"
+        keepLabel="Manter jornada"
+        confirmLabel="Cancelar jornada"
+        confirmingLabel="Cancelando..."
+        isConfirming={true}
+        errorMessage={null}
+        onCancel={onCancelMock}
+        onConfirm={onConfirmMock}
+      />
+    );
+
+    const keepBtn = screen.getByRole("button", { name: "Manter jornada" }) as HTMLButtonElement;
+    const confirmBtn = screen.getByRole("button", { name: "Cancelando..." }) as HTMLButtonElement;
+    expect(keepBtn.disabled).toBe(true);
+    expect(confirmBtn.disabled).toBe(true);
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.click(screen.getByRole("presentation"));
+    expect(onCancelMock).not.toHaveBeenCalled();
+    expect(onConfirmMock).not.toHaveBeenCalled();
+  });
+
+  it("mostra a mensagem de erro na confirmação", () => {
+    render(
+      <CancelJourneyModal
+        isOpen={true}
+        title="Cancelar jornada"
+        description="Tem certeza?"
+        keepLabel="Manter jornada"
+        confirmLabel="Cancelar jornada"
+        confirmingLabel="Cancelando..."
+        isConfirming={false}
+        errorMessage="Não foi possível cancelar a jornada."
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("alert").textContent).toBe("Não foi possível cancelar a jornada.");
   });
 });

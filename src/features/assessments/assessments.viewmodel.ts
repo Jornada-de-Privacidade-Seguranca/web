@@ -2,14 +2,16 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useJourneyContext } from "@hooks/useJourneyContext";
+import { CURRENT_JOURNEY_QUERY_KEY, useJourneyContext } from "@hooks/useJourneyContext";
 import { getCompetenciesAreaUrl, getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import {
+  cancelPendingJourney,
   getPendingAssessments,
   getCatalogAssessments,
 } from "@services/assessmentsService";
+import { ApiRequestError } from "@services/httpClient";
 import type {
   AssessmentsViewModelReturn,
   AssessmentsLabels,
@@ -26,6 +28,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const currentJourney = useJourneyContext();
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const queryClient = useQueryClient();
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -39,9 +42,12 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   // Pagination State for Catalog
   const [catalogPage, setCatalogPage] = useState<number>(1);
 
-  // Cancellation Modal State (simulação local para #148; integração real com backend na issue #121)
+  // Cancelamento da jornada pendente (POST /journeys/{journey}/cancel)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
-  const [isCancelledLocally, setIsCancelledLocally] = useState<boolean>(false);
+  const [isCancellingJourney, setIsCancellingJourney] = useState<boolean>(false);
+  const [cancelErrorMessage, setCancelErrorMessage] = useState<string | null>(null);
+  const [cancelSuccessMessage, setCancelSuccessMessage] = useState<string | null>(null);
+  const isCancellingRef = useRef<boolean>(false);
 
   // Debounce for search term (300ms)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -109,7 +115,7 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   // Derived pending journey. "Continuar jornada" retoma na primeira área com
   // competências sem resposta, como no resumo da jornada.
   const pendingItem =
-    !isCancelledLocally && pendingQuery.data?.items && pendingQuery.data.items.length > 0
+    pendingQuery.data?.items && pendingQuery.data.items.length > 0
       ? pendingQuery.data.items[0]
       : null;
   const rawPendingJourney = useMemo(() => {
@@ -178,16 +184,60 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // Handlers for cancel modal
   const handleOpenCancelModal = useCallback(() => {
+    setCancelErrorMessage(null);
+    setCancelSuccessMessage(null);
     setIsCancelModalOpen(true);
   }, []);
 
   const handleCloseCancelModal = useCallback(() => {
+    // Durante a chamada a confirmação não fecha
+    if (isCancellingRef.current) return;
     setIsCancelModalOpen(false);
+    setCancelErrorMessage(null);
   }, []);
 
-  const handleConfirmCancelJourney = useCallback(() => {
-    setIsCancelledLocally(true);
-    setIsCancelModalOpen(false);
+  /** Recarrega o que depende da jornada pendente: listagem, catálogo, Painel e jornada atual. */
+  const refreshAfterCancellation = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["assessments"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: CURRENT_JOURNEY_QUERY_KEY }),
+    ]);
+  }, [queryClient]);
+
+  const handleConfirmCancelJourney = useCallback(async () => {
+    const journeyId = pendingItem?.id;
+    // Um segundo clique durante a chamada não dispara outro cancelamento
+    if (!journeyId || isCancellingRef.current) return;
+
+    isCancellingRef.current = true;
+    setIsCancellingJourney(true);
+    setCancelErrorMessage(null);
+    try {
+      await cancelPendingJourney(journeyId);
+      setIsCancelModalOpen(false);
+      setCancelSuccessMessage(t("cancelSuccess"));
+      await refreshAfterCancellation();
+    } catch (error) {
+      const status = error instanceof ApiRequestError ? error.status : undefined;
+      if (status === 409) {
+        setCancelErrorMessage(t("cancelNotAllowed"));
+        await queryClient.invalidateQueries({ queryKey: ["assessments", "pending"] });
+      } else if (status === 403 || status === 404) {
+        setCancelErrorMessage(t("cancelUnavailable"));
+        await queryClient.invalidateQueries({ queryKey: ["assessments", "pending"] });
+      } else {
+        // Rede ou 5xx: a confirmação continua aberta para tentar de novo
+        setCancelErrorMessage(t("cancelError"));
+      }
+    } finally {
+      isCancellingRef.current = false;
+      setIsCancellingJourney(false);
+    }
+  }, [pendingItem?.id, queryClient, refreshAfterCancellation, t]);
+
+  const handleDismissCancelSuccess = useCallback(() => {
+    setCancelSuccessMessage(null);
   }, []);
 
   // Handlers for pagination and retry
@@ -245,6 +295,12 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     cancelModalDescription: t("cancelModalDescription"),
     cancelModalKeep: t("cancelModalKeep"),
     cancelModalConfirm: t("cancelModalConfirm"),
+    cancelModalConfirming: t("cancelModalConfirming"),
+    cancelSuccess: t("cancelSuccess"),
+    cancelError: t("cancelError"),
+    cancelNotAllowed: t("cancelNotAllowed"),
+    cancelUnavailable: t("cancelUnavailable"),
+    closeMessage: t("closeMessage"),
     paginationPrevious: t("pagination.previous"),
     paginationNext: t("pagination.next"),
     paginationPageOf: (current: number, total: number) =>
@@ -263,9 +319,13 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     handleRetryPending,
 
     isCancelModalOpen,
+    isCancellingJourney,
+    cancelErrorMessage,
+    cancelSuccessMessage,
     handleOpenCancelModal,
     handleCloseCancelModal,
     handleConfirmCancelJourney,
+    handleDismissCancelSuccess,
 
     catalogJourneys,
     catalogPage,

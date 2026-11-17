@@ -4,6 +4,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as assessmentsService from "@services/assessmentsService";
+import { ApiRequestError } from "@services/httpClient";
 import { useAssessmentsVM } from "../assessments.viewmodel";
 
 const mockAuth = vi.hoisted(() => ({
@@ -22,6 +23,7 @@ const mockCurrentJourney = vi.hoisted(() => ({
 }));
 
 vi.mock("@hooks/useJourneyContext", () => ({
+  CURRENT_JOURNEY_QUERY_KEY: ["journey", "current"],
   useJourneyContext: () => ({
     ...mockCurrentJourney,
     profileName: null,
@@ -48,6 +50,8 @@ vi.mock("next-intl", () => ({
   },
 }));
 
+let lastQueryClient: QueryClient;
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -57,6 +61,7 @@ function createWrapper() {
       },
     },
   });
+  lastQueryClient = queryClient;
   function TestQueryProvider({ children }: { children: React.ReactNode }) {
     return React.createElement(QueryClientProvider, { client: queryClient }, children);
   }
@@ -74,6 +79,7 @@ describe("useAssessmentsVM", () => {
         competenciesCount: 10,
         estimatedMinutes: 15,
         status: "in_progress" as const,
+        origin: "self_started" as const,
         isSelfStarted: true,
       },
     ],
@@ -178,32 +184,126 @@ describe("useAssessmentsVM", () => {
     expect(result.current.pendingJourney).toBeNull();
   });
 
-  it("deve gerenciar modal de cancelamento para jornada iniciada pelo usuário", async () => {
-    const { result } = renderHook(() => useAssessmentsVM(), {
-      wrapper: createWrapper(),
-    });
+  async function renderWithOpenCancelModal() {
+    const hook = renderHook(() => useAssessmentsVM(), { wrapper: createWrapper() });
+    await waitFor(() => expect(hook.result.current.hasPendingJourney).toBe(true));
+    act(() => hook.result.current.handleOpenCancelModal());
+    expect(hook.result.current.isCancelModalOpen).toBe(true);
+    return hook;
+  }
 
-    await waitFor(() => {
-      expect(result.current.hasPendingJourney).toBe(true);
-    });
+  it("abre e fecha a confirmação sem cancelar", async () => {
+    const cancelSpy = vi.spyOn(assessmentsService, "cancelPendingJourney").mockResolvedValue();
+    const { result } = await renderWithOpenCancelModal();
+
+    act(() => result.current.handleCloseCancelModal());
 
     expect(result.current.isCancelModalOpen).toBe(false);
+    expect(cancelSpy).not.toHaveBeenCalled();
+  });
 
-    act(() => {
-      result.current.handleOpenCancelModal();
+  it("cancela a jornada pendente pela API e recarrega a listagem, o Painel e a jornada atual", async () => {
+    const cancelSpy = vi.spyOn(assessmentsService, "cancelPendingJourney").mockResolvedValue();
+    const { result } = await renderWithOpenCancelModal();
+    const invalidateSpy = vi.spyOn(lastQueryClient, "invalidateQueries");
+    vi.mocked(assessmentsService.getPendingAssessments).mockResolvedValue({
+      ...mockPendingJourneys,
+      items: [],
+      total: 0,
     });
+
+    await act(async () => {
+      await result.current.handleConfirmCancelJourney();
+    });
+
+    expect(cancelSpy).toHaveBeenCalledWith("p1");
+    expect(result.current.isCancelModalOpen).toBe(false);
+    expect(result.current.cancelSuccessMessage).toBe("cancelSuccess");
+    expect(invalidateSpy.mock.calls.map(([filters]) => filters?.queryKey)).toEqual([
+      ["assessments"],
+      ["dashboard"],
+      ["journey", "current"],
+    ]);
+    await waitFor(() => expect(result.current.hasPendingJourney).toBe(false));
+
+    act(() => result.current.handleDismissCancelSuccess());
+    expect(result.current.cancelSuccessMessage).toBeNull();
+  });
+
+  it("ignora o segundo clique e não fecha a confirmação durante a chamada", async () => {
+    let resolveCancel: () => void = () => {};
+    const cancelSpy = vi.spyOn(assessmentsService, "cancelPendingJourney").mockImplementation(
+      () => new Promise<void>((resolve) => {
+        resolveCancel = resolve;
+      })
+    );
+    const { result } = await renderWithOpenCancelModal();
+
+    let firstCall: Promise<void> = Promise.resolve();
+    act(() => {
+      firstCall = result.current.handleConfirmCancelJourney();
+    });
+    await waitFor(() => expect(result.current.isCancellingJourney).toBe(true));
+
+    await act(async () => {
+      await result.current.handleConfirmCancelJourney();
+    });
+    act(() => result.current.handleCloseCancelModal());
+
+    expect(cancelSpy).toHaveBeenCalledTimes(1);
     expect(result.current.isCancelModalOpen).toBe(true);
 
-    act(() => {
-      result.current.handleCloseCancelModal();
+    await act(async () => {
+      resolveCancel();
+      await firstCall;
     });
-    expect(result.current.isCancelModalOpen).toBe(false);
+    expect(result.current.isCancellingJourney).toBe(false);
+  });
 
-    act(() => {
-      result.current.handleConfirmCancelJourney();
+  it.each([
+    [new ApiRequestError("Nao permitido", 409, "JOURNEY_CANCELLATION_NOT_ALLOWED"), "cancelNotAllowed"],
+    [new ApiRequestError("Sem permissao", 403, "PERMISSION_DENIED"), "cancelUnavailable"],
+    [new ApiRequestError("Nao encontrada", 404, "JOURNEY_NOT_FOUND"), "cancelUnavailable"],
+  ])("no erro %#, mostra a mensagem e recarrega a jornada pendente", async (error, message) => {
+    vi.spyOn(assessmentsService, "cancelPendingJourney").mockRejectedValue(error);
+    const { result } = await renderWithOpenCancelModal();
+    const pendingCalls = vi.mocked(assessmentsService.getPendingAssessments).mock.calls.length;
+
+    await act(async () => {
+      await result.current.handleConfirmCancelJourney();
     });
+
+    expect(result.current.cancelErrorMessage).toBe(message);
+    expect(result.current.cancelSuccessMessage).toBeNull();
+    await waitFor(() =>
+      expect(vi.mocked(assessmentsService.getPendingAssessments).mock.calls.length).toBeGreaterThan(
+        pendingCalls
+      )
+    );
+  });
+
+  it("em erro de rede ou 5xx, mantém a confirmação aberta para tentar de novo", async () => {
+    const cancelSpy = vi
+      .spyOn(assessmentsService, "cancelPendingJourney")
+      .mockRejectedValueOnce(new ApiRequestError("Erro", 500))
+      .mockResolvedValueOnce();
+    const { result } = await renderWithOpenCancelModal();
+    const pendingCalls = vi.mocked(assessmentsService.getPendingAssessments).mock.calls.length;
+
+    await act(async () => {
+      await result.current.handleConfirmCancelJourney();
+    });
+
+    expect(result.current.isCancelModalOpen).toBe(true);
+    expect(result.current.cancelErrorMessage).toBe("cancelError");
+    expect(vi.mocked(assessmentsService.getPendingAssessments).mock.calls.length).toBe(pendingCalls);
+
+    await act(async () => {
+      await result.current.handleConfirmCancelJourney();
+    });
+
+    expect(cancelSpy).toHaveBeenCalledTimes(2);
     expect(result.current.isCancelModalOpen).toBe(false);
-    expect(result.current.hasPendingJourney).toBe(false);
   });
 
   it("deve buscar o catálogo na API com 9 por página, sem busca nem filtros", async () => {
