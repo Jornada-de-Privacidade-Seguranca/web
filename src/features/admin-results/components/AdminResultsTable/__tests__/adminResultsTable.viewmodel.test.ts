@@ -4,6 +4,7 @@ import { useAdminResultsTableVM } from "../adminResultsTable.viewmodel";
 describe("useAdminResultsTableVM", () => {
   it("deve mapear linhas com rota do resultado, classes de faixa de nota e fallback de setor", () => {
     const vm = useAdminResultsTableVM({
+      listQuery: "department=TI&page=2",
       results: [
         {
           id: "ar-1",
@@ -48,7 +49,7 @@ describe("useAdminResultsTableVM", () => {
       department: "—",
       formattedDate: "08/06/2026",
       scoreText: "70/100",
-      resultHref: "/jornada/101/resultado",
+      resultHref: "/admin/resultados/101?department=TI&page=2",
       viewAriaLabel: "Ver — Ana Beatriz Silva — Encarregado",
     });
     expect(vm.rows[0].scoreBadgeClasses).toContain("amber");

@@ -15,6 +15,7 @@ export function AdminResultsView() {
   const {
     summary,
     results,
+    listQuery,
     totalResults,
     filteredTotal,
     page,
@@ -106,7 +107,7 @@ export function AdminResultsView() {
           </div>
         ) : (
           <div className="space-y-6">
-            <AdminResultsTable results={results} labels={labels} />
+            <AdminResultsTable results={results} labels={labels} listQuery={listQuery} />
 
             <Pagination
               currentPage={page}

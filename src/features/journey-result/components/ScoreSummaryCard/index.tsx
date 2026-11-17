@@ -63,12 +63,14 @@ export function ScoreSummaryCard(props: ScoreSummaryCardProps) {
       <p className="mt-3 text-sm text-muted-foreground">{declaredCountText}</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <Button asChild className="gap-2">
-          <Link href={retakeHref}>
-            <HugeiconsIcon icon={RefreshIcon} size={16} aria-hidden="true" />
-            {retakeLabel}
-          </Link>
-        </Button>
+        {retakeHref && (
+          <Button asChild className="gap-2">
+            <Link href={retakeHref}>
+              <HugeiconsIcon icon={RefreshIcon} size={16} aria-hidden="true" />
+              {retakeLabel}
+            </Link>
+          </Button>
+        )}
         {canDownloadPdf && (
           <Button
             type="button"

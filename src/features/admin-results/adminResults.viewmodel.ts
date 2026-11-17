@@ -382,6 +382,7 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
   return {
     summary,
     results,
+    listQuery: currentSearchParamsString,
     totalResults: resultsQuery.data?.total ?? 0,
     filteredTotal: resultsQuery.data?.filteredTotal ?? 0,
     page: resultsQuery.data?.page ?? page,

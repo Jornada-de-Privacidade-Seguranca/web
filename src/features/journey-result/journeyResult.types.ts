@@ -34,8 +34,19 @@ export interface JourneyResultAcquiredKnowledgeApi {
   competency: JourneyResultCompetencyApi | null;
 }
 
+/** Dono da jornada, como GET /journeys/{journey} devolve em `user`. */
+export interface JourneyResultUserApi {
+  id: number | null;
+  name: string | null;
+  email: string | null;
+  organization: string | null;
+  sector: string | null;
+  registration: string | null;
+}
+
 export interface JourneyResultApi {
   id: number;
+  user?: JourneyResultUserApi | null;
   journey_profile: JourneyResultProfileApi | null;
   status: "ongoing" | "completed";
   finished_at: string | null;
@@ -165,6 +176,35 @@ export interface JourneyResultLabels {
   errors: JourneyResultErrorLabels | null;
 }
 
+/**
+ * "own": o resultado da própria pessoa (/jornada/[id]/resultado).
+ * "admin": o resultado de outra pessoa, aberto pela listagem do admin (/admin/resultados/[id]).
+ */
+export type JourneyResultVariant = "own" | "admin";
+
+export interface JourneyResultOptions {
+  variant?: JourneyResultVariant;
+  /** Query string da listagem do admin, devolvida no "Voltar" para manter filtros e página */
+  listQuery?: string;
+}
+
+/** Um dado do bloco de identificação da pessoa. */
+export interface JourneyResultPersonField {
+  id: "organization" | "sector" | "registration";
+  label: string;
+  /** Valor informado, ou o texto de "não informado" */
+  value: string;
+}
+
+/** Bloco que identifica de quem é o resultado, só na visão do admin. */
+export interface JourneyResultPerson {
+  ariaLabel: string;
+  initials: string;
+  name: string;
+  email: string;
+  fields: JourneyResultPersonField[];
+}
+
 /** PDF do resultado devolvido por GET /journeys/{journey}/pdf. */
 export interface JourneyResultPdfFile {
   blob: Blob;
@@ -193,8 +233,11 @@ export interface JourneyResultViewModelReturn {
   areaScoreGroups: AreaScoreGroup[];
   declaredCompetencies: CompetencyAreaGroup[];
   undeclaredCompetencies: CompetencyAreaGroup[];
-  retakeUrl: string;
+  /** Link de "Refazer"; null na visão do admin, em que a jornada é de outra pessoa */
+  retakeUrl: string | null;
   resultsUrl: string;
+  /** Identificação da pessoa; null no resultado da própria pessoa */
+  person: JourneyResultPerson | null;
   /** Nota mínima recomendada por área, posição do marcador das barras */
   recommendedAreaScore: number;
   isLoading: boolean;
@@ -209,7 +252,7 @@ export interface JourneyResultViewModelReturn {
   handleDownloadPdf: () => void;
 }
 
-export interface JourneyResultViewProps {
+export interface JourneyResultViewProps extends JourneyResultOptions {
   /** Parâmetro [id] da rota */
   journeyId: string;
 }
