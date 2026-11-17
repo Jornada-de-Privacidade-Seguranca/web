@@ -1,4 +1,4 @@
-import { getCompetenciesAreaUrl, getProfileSummaryUrl } from "@/shared/utils/journeyRoutes";
+import { getCompetenciesAreaUrl } from "@/shared/utils/journeyRoutes";
 import type {
   PendingJourneyCardProps,
   PendingJourneyCardViewModelReturn,
@@ -16,9 +16,12 @@ export function usePendingJourneyCardVM(
 
   const buttonText = isAssigned ? labels.actionStart : labels.actionContinue;
 
-  const actionHref = isAssigned
-    ? getProfileSummaryUrl(journey.id)
-    : journey.href ?? getCompetenciesAreaUrl(0);
+  // A jornada atribuída já existe na API: o botão leva às competências, como a iniciada pelo usuário
+  const actionHref = journey.href ?? getCompetenciesAreaUrl(0);
+
+  const assignedByText =
+    isAssigned && journey.assignedByName ? labels.assignedBy(journey.assignedByName) : null;
+  const cancelNoticeText = isAssigned ? labels.onlyAssignerCanCancel : null;
 
   // Jornada iniciada pelo usuário pode ser cancelada; atribuída por admin/gestor NÃO pode
   const canCancel = !isAssigned && Boolean(onCancelJourney);
@@ -54,6 +57,8 @@ export function usePendingJourneyCardVM(
     buttonText,
     actionHref,
     canCancel,
+    assignedByText,
+    cancelNoticeText,
     cancelButtonText: labels.actionCancel,
     competenciesText,
     timeText,

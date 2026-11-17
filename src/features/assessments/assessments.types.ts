@@ -20,6 +20,8 @@ export interface Journey {
   href?: string;
   origin?: JourneyOrigin;
   isSelfStarted?: boolean;
+  /** Nome de quem atribuiu a jornada (`assigned_by.name`), quando ela foi atribuída */
+  assignedByName?: string;
 }
 
 export interface JourneyFilters {
@@ -61,6 +63,8 @@ export interface UserJourneyListItemApi {
   finished_at: string | null;
   status: UserJourneyApiStatus;
   is_completed: boolean;
+  origin: JourneyOrigin | null;
+  assigned_by: { id: number; name: string | null } | null;
   summary: {
     acquired_knowledges_count: number;
     professional_certifications_count: number;
@@ -98,6 +102,8 @@ export interface AssessmentsLabels {
   actionCancel: string;
   assignedBadge: string;
   inProgressBadge: string;
+  assignedBy: (name: string) => string;
+  onlyAssignerCanCancel: string;
   completedScoreBadge: (score: number) => string;
   competenciesCount: (count: number) => string;
   questionsCount: (count: number) => string;

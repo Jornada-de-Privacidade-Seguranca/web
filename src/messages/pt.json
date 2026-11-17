@@ -238,6 +238,8 @@
     "actionCancel": "Cancelar jornada",
     "assignedBadge": "Atribuída",
     "inProgressBadge": "Em andamento",
+    "assignedBy": "Atribuída por {name}",
+    "onlyAssignerCanCancel": "Apenas quem atribuiu pode cancelar.",
     "completedScoreBadge": "Concluída · {score}/100",
     "competenciesCount": "{count} competências",
     "questionsCount": "{count} perguntas",
