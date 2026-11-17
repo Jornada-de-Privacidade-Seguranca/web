@@ -21,11 +21,15 @@ export interface AuthLabels {
   emailPlaceholder: string;
   passwordLabel: string;
   passwordPlaceholder: string;
-  forgotPassword: string;
   submit: string;
   signUpPrefix: string;
   signUpLink: string;
-  privacyNotice: string;
+  /** Aviso do termo: texto antes do link, o link e o texto depois. */
+  privacyNoticePrefix: string;
+  privacyNoticeLink: string;
+  privacyNoticeSuffix: string;
+  /** Nome do link para leitores de tela. */
+  privacyNoticeLinkAriaLabel: string;
 }
 
 export interface AuthServerMessage {

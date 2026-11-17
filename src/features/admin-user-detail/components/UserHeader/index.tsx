@@ -25,6 +25,7 @@ export function UserHeader(props: UserHeaderProps) {
     canManageUser,
     onToggleStatus,
     backToListText,
+    backHref,
   } = useUserHeaderVM(props);
 
   return (
@@ -36,7 +37,7 @@ export function UserHeader(props: UserHeaderProps) {
         size="sm"
         className="h-8 -ml-2 text-xs text-muted-foreground hover:text-foreground"
       >
-        <Link href="/admin/usuarios">
+        <Link href={backHref}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="mr-1.5" />
           <span>{backToListText}</span>
         </Link>

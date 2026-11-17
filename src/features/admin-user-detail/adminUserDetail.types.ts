@@ -51,14 +51,11 @@ export interface AdminUserDetails extends AdminUserListItem {
   initialJourneyProfileId?: number | null;
 }
 
-export interface UpdateUserPayload {
-  name: string;
-  organization: string;
-  employeeCode: string;
-  email: string;
-  department: string;
-  role: UserRole;
-}
+/** Campos cadastrais editáveis pelo PATCH /users/{user}. */
+export type EditableUserField = "name" | "email" | "organization" | "department" | "employeeCode";
+
+/** Só os campos alterados são enviados. */
+export type UpdateUserPayload = Partial<Record<EditableUserField, string>>;
 
 export interface UserFormValues {
   name: string;
@@ -72,8 +69,17 @@ export interface UserFormValues {
 export interface UserFormErrors {
   name?: string;
   email?: string;
+  organization?: string;
   department?: string;
   employeeCode?: string;
+  role?: string;
+}
+
+export type DetailMessageVariant = "success" | "destructive";
+
+export interface DetailFeedbackMessage {
+  variant: DetailMessageVariant;
+  text: string;
 }
 
 export interface AdminUserDetailLabels {
@@ -109,6 +115,9 @@ export interface AdminUserDetailLabels {
   formSaving: string;
   formSaveSuccess: string;
   valNameRequired: string;
+  valNameSurname: string;
+  valOrganizationRequired: string;
+  valMaxLength: (max: number) => string;
   valEmailRequired: string;
   valEmailInvalid: string;
   valDepartmentRequired: string;
@@ -129,6 +138,12 @@ export interface AdminUserDetailLabels {
   modalCancel: string;
   modalConfirm: string;
   deleteSuccess: string;
+  deleting: string;
+  loadErrorMessage: string;
+  retryButton: string;
+  notFoundTitle: string;
+  notFoundDescription: string;
+  closeMessage: string;
 }
 
 export interface ActiveJourneySectionLabels {
@@ -168,12 +183,16 @@ export interface AdminUserDetailViewModelReturn {
   user: AdminUserDetails | null;
   isLoading: boolean;
   isError: boolean;
+  isNotFound: boolean;
   errorMessage: string | null;
   handleRetry: () => void;
+  backHref: string;
 
   // Header & Status Toggle
   isTogglingStatus: boolean;
   handleToggleStatus: () => void;
+  statusMessage: DetailFeedbackMessage | null;
+  handleDismissStatusMessage: () => void;
 
   // Inactive User Banner
   showInactiveBanner: boolean;
@@ -186,6 +205,7 @@ export interface AdminUserDetailViewModelReturn {
   isDirty: boolean;
   isSaving: boolean;
   saveSuccessMessage: string | null;
+  saveErrorMessage: string | null;
   handleFieldChange: (field: keyof UserFormValues, value: string) => void;
   handleResetForm: () => void;
   handleSaveForm: () => Promise<void>;
@@ -222,6 +242,7 @@ export interface AdminUserDetailViewModelReturn {
   // Delete Modal
   isDeleteModalOpen: boolean;
   isDeleting: boolean;
+  deleteErrorMessage: string | null;
   handleOpenDeleteModal: () => void;
   handleCloseDeleteModal: () => void;
   handleConfirmDelete: () => Promise<void>;
@@ -230,6 +251,7 @@ export interface AdminUserDetailViewModelReturn {
   canDeleteUser: boolean;
   canManageRoles: boolean;
   canManageUser: boolean;
+  canToggleStatus: boolean;
 
   labels: AdminUserDetailLabels;
 }

@@ -11,8 +11,14 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/shared/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  Link: ({
+    children,
+    href,
+    ...props
+  }: { children: React.ReactNode; href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -30,11 +36,13 @@ describe("AuthView Component", () => {
     emailPlaceholder: "Ex.: usuario@empresa.com",
     passwordLabel: "SENHA",
     passwordPlaceholder: "********",
-    forgotPassword: "Esqueci minha senha",
     submit: "Entrar",
     signUpPrefix: "Não possui uma conta?",
     signUpLink: "Cadastre-se",
-    privacyNotice: "Ao continuar você aceita nossos termos.",
+    privacyNoticePrefix: "Ao continuar você aceita nosso",
+    privacyNoticeLink: "termo de privacidade",
+    privacyNoticeSuffix: ".",
+    privacyNoticeLinkAriaLabel: "Ler o termo de privacidade",
   };
 
   function createMockVMReturn(
@@ -69,5 +77,44 @@ describe("AuthView Component", () => {
 
     const link = screen.getByRole("link", { name: "Cadastre-se" });
     expect(link.getAttribute("href")).toBe("/cadastro");
+  });
+
+  it("deve levar ao termo de privacidade pelo link do aviso, acessível pelo teclado", () => {
+    vi.spyOn(viewModelModule, "useAuthVM").mockReturnValue(
+      createMockVMReturn()
+    );
+
+    render(<AuthView />);
+
+    const link = screen.getByRole("link", { name: "Ler o termo de privacidade" });
+    expect(link.getAttribute("href")).toBe("/privacy-terms");
+    expect(link.textContent).toBe("termo de privacidade");
+    expect(link.closest("p")?.textContent).toBe(
+      "Ao continuar você aceita nosso termo de privacidade."
+    );
+    link.focus();
+    expect(document.activeElement).toBe(link);
+  });
+
+  it("não deve mostrar o Esqueceu sua senha?, sem fluxo de recuperação ainda", () => {
+    vi.spyOn(viewModelModule, "useAuthVM").mockReturnValue(
+      createMockVMReturn()
+    );
+
+    render(<AuthView />);
+
+    expect(screen.queryByText(/esqueceu sua senha|esqueci minha senha/i)).toBeNull();
+    expect(screen.getAllByRole("button").map((button) => button.textContent)).toEqual(["Entrar"]);
+  });
+
+  it("deve falar em e-mail nos rótulos, nunca em usuário", () => {
+    vi.spyOn(viewModelModule, "useAuthVM").mockReturnValue(
+      createMockVMReturn()
+    );
+
+    render(<AuthView />);
+
+    expect(screen.getByLabelText("E-MAIL").getAttribute("type")).toBe("email");
+    expect(screen.queryByText(/usu[aá]rio/i)).toBeNull();
   });
 });

@@ -21,11 +21,22 @@ export interface JourneyProfileApi {
     name_pt: string | null;
     name_en: string | null;
   } | null;
-  /** Campos estendidos para métricas e status do usuário (issue #147 / #98) */
-  user_status?: string | null;
+  /** Situação do perfil para o usuário autenticado, na listagem (#147) */
+  user_status?: JourneyProfileUserStatusApi | null;
   last_score?: number | null;
   competencies_count?: number | null;
-  estimated_minutes?: number | null;
+}
+
+/** Situação do perfil para o usuário em GET /journey-profiles (`user_status`). */
+export type JourneyProfileUserStatusApi = "completed" | "pending" | "not_done";
+
+/** Busca e filtros aceitos por GET /journey-profiles. */
+export interface JourneyProfileListFilters {
+  /** Procura pelo nome do perfil */
+  search?: string;
+  /** Ids dos domínios de conhecimento (1, 2 e 3) */
+  domains?: number[];
+  userStatuses?: JourneyProfileUserStatusApi[];
 }
 
 export interface JourneyProfilePage {
@@ -48,17 +59,24 @@ export class JourneyProfileRequestError extends Error {
   }
 }
 
-/** Catálogo de perfis de jornada, paginado no backend (sem busca por texto). */
+/** Catálogo de perfis de jornada, com paginação, busca e filtros no backend. */
 export async function getJourneyProfiles(
   page: number,
-  perPage: number
+  perPage: number,
+  filters: JourneyProfileListFilters = {}
 ): Promise<JourneyProfilePage> {
+  const params: Record<string, unknown> = { page, per_page: perPage };
+  const search = filters.search?.trim();
+  if (search) params.search = search;
+  if (filters.domains?.length) params["domains[]"] = filters.domains;
+  if (filters.userStatuses?.length) params["user_status[]"] = filters.userStatuses;
+
   const { data, meta } = await apiRequestWithMeta<
     JourneyProfileApi[],
     { pagination?: PaginationMetaApi }
   >(
     "/journey-profiles",
-    { params: { page, per_page: perPage } },
+    { params },
     "Erro ao carregar o catálogo de jornadas."
   );
 
@@ -69,7 +87,7 @@ export async function getJourneyProfiles(
     page: pagination?.current_page ?? page,
     perPage: pagination?.per_page ?? perPage,
     total: pagination?.total ?? items.length,
-    totalPages: pagination?.last_page ?? 1,
+    totalPages: Math.max(pagination?.last_page ?? 1, 1),
   };
 }
 

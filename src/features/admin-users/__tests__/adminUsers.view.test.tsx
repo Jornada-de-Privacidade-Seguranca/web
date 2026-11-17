@@ -89,6 +89,7 @@ describe("AdminUsersView", () => {
     paginationPageOf: (c, t) => `Página ${c} de ${t}`,
     errorTitle: "Erro",
     errorMessage: "Erro ao carregar",
+    profilesErrorMessage: "Erro perfis",
     retryButton: "Tentar novamente",
     inviteButton: "Convidar usuário",
     closeMessage: "Fechar aviso",
@@ -110,6 +111,7 @@ describe("AdminUsersView", () => {
           employeeCode: "EMP-1001",
           department: "TI",
           role: "admin",
+          profileTypeId: 1,
           roleLabel: "Administrador",
           status: "active",
           journeysCount: 3,
@@ -146,17 +148,22 @@ describe("AdminUsersView", () => {
 
       accessProfiles: [
         {
-          id: "admin",
+          id: 1,
+          role: "admin" as const,
           name: "Administrador",
           description: "Acesso total",
           permissions: ["Gerenciar tudo"],
         },
       ],
       isProfilesLoading: false,
+      isProfilesError: false,
+      handleRetryProfiles: vi.fn(),
 
       canInviteUsers: true,
       inviteSuccessMessage: null,
       handleDismissInviteMessage: vi.fn(),
+      deleteSuccessMessage: null,
+      handleDismissDeleteMessage: vi.fn(),
 
       labels: mockLabels,
       ...overrides,
@@ -268,5 +275,40 @@ describe("AdminUsersView", () => {
     );
 
     expect(screen.queryByText("Convidar usuário")).toBeNull();
+  });
+
+  it("mostra o aviso de usuário excluído", () => {
+    const handleDismissDeleteMessage = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUsersVM").mockReturnValue(
+      createMockVMReturn({
+        deleteSuccessMessage: "Usuário Ana Silva excluído com sucesso.",
+        handleDismissDeleteMessage,
+      })
+    );
+
+    render(
+      <AppProviders>
+        <AdminUsersView />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Usuário Ana Silva excluído com sucesso.")).toBeDefined();
+  });
+
+  it("mostra o erro da aba de perfis com Tentar novamente", () => {
+    const handleRetryProfiles = vi.fn();
+    vi.spyOn(viewModelModule, "useAdminUsersVM").mockReturnValue(
+      createMockVMReturn({ currentTab: "roles", isProfilesError: true, handleRetryProfiles })
+    );
+
+    render(
+      <AppProviders>
+        <AdminUsersView />
+      </AppProviders>
+    );
+
+    expect(screen.getByText("Erro perfis")).toBeDefined();
+    fireEvent.click(screen.getAllByText(mockLabels.retryButton)[0]);
+    expect(handleRetryProfiles).toHaveBeenCalled();
   });
 });

@@ -1,72 +1,158 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { usePathname, useRouter } from "@/shared/i18n/navigation";
 import { usePermission } from "@hooks/usePermission";
-import { getUsersList, getAccessProfiles } from "@services/usersService";
+import {
+  getUsersList,
+  getAccessProfiles,
+  getUserDepartments,
+} from "@services/usersService";
 import { useAdminUsersStore } from "./adminUsers.store";
 import type {
   AdminUsersViewModelReturn,
   AdminUsersTab,
   AdminUsersLabels,
   SelectOption,
+  UserRole,
+  UserStatus,
 } from "./adminUsers.types";
 
-const DEPARTMENTS_LIST = [
-  "Tecnologia da Informação",
-  "Jurídico",
-  "Recursos Humanos",
-  "Segurança da Informação",
-  "Compliance",
-  "Operações",
-  "Financeiro",
-];
+export const USERS_PER_PAGE = 10;
+const SEARCH_DEBOUNCE_MS = 400;
+
+const ROLES: UserRole[] = ["admin", "manager", "user"];
+const STATUSES: UserStatus[] = ["active", "pending", "inactive"];
+
+/** Parâmetros da URL usados pela listagem. */
+const PARAM = {
+  search: "search",
+  department: "department",
+  role: "role",
+  status: "status",
+  page: "page",
+} as const;
+
+type ListParam = (typeof PARAM)[keyof typeof PARAM];
+
+function parsePage(value: string | null): number {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function parseOption<T extends string>(value: string | null, options: T[]): T | "" {
+  return value && (options as string[]).includes(value) ? (value as T) : "";
+}
 
 export function useAdminUsersVM(): AdminUsersViewModelReturn {
   const t = useTranslations("adminUsers");
+  const locale = useLocale() === "en" ? "en" : "pt";
   const { can } = usePermission();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const canInviteUsers = can("users.register");
-  const invitedEmail = useAdminUsersStore((s) => s.invitedEmail);
   const clearInvitedEmail = useAdminUsersStore((s) => s.clearInvitedEmail);
+  const clearDeletedUserName = useAdminUsersStore((s) => s.clearDeletedUserName);
+  const setListQuery = useAdminUsersStore((s) => s.setListQuery);
+
+  // Os avisos vindos do convite e da exclusão são lidos uma vez, ao abrir a tela, e
+  // saem do store logo em seguida. Limpar no unmount apagaria o aviso no StrictMode
+  // (o React desmonta e monta de novo em desenvolvimento)
+  const [invitedEmail, setInvitedEmail] = useState<string | null>(
+    () => useAdminUsersStore.getState().invitedEmail
+  );
+  const [deletedUserName, setDeletedUserName] = useState<string | null>(
+    () => useAdminUsersStore.getState().deletedUserName
+  );
+
+  useEffect(() => {
+    clearInvitedEmail();
+    clearDeletedUserName();
+  }, [clearInvitedEmail, clearDeletedUserName]);
 
   const inviteSuccessMessage = invitedEmail
     ? t("inviteSuccess", { email: invitedEmail })
     : null;
+  const deleteSuccessMessage = deletedUserName
+    ? t("deleteSuccess", { name: deletedUserName })
+    : null;
 
   const handleDismissInviteMessage = useCallback(() => {
-    clearInvitedEmail();
-  }, [clearInvitedEmail]);
+    setInvitedEmail(null);
+  }, []);
+
+  const handleDismissDeleteMessage = useCallback(() => {
+    setDeletedUserName(null);
+  }, []);
+
+  // A busca, os filtros e a página vêm da URL, para o "Voltar" do detalhe manter o estado
+  const queryString = searchParams?.toString() ?? "";
+  const urlSearch = searchParams?.get(PARAM.search) ?? "";
+  const department = searchParams?.get(PARAM.department) ?? "";
+  const role = parseOption(searchParams?.get(PARAM.role) ?? null, ROLES);
+  const status = parseOption(searchParams?.get(PARAM.status) ?? null, STATUSES);
+  const page = parsePage(searchParams?.get(PARAM.page) ?? null);
+
+  // Última query enviada à URL: mudanças seguidas não se sobrescrevem antes da URL atualizar
+  const latestQueryRef = useRef(queryString);
 
   useEffect(() => {
-    return () => {
-      clearInvitedEmail();
-    };
-  }, [clearInvitedEmail]);
+    latestQueryRef.current = queryString;
+    setListQuery(queryString);
+  }, [queryString, setListQuery]);
+
+  const updateParams = useCallback(
+    (changes: Partial<Record<ListParam, string | number | null>>) => {
+      const next = new URLSearchParams(latestQueryRef.current);
+      (Object.keys(changes) as ListParam[]).forEach((key) => {
+        const value = changes[key];
+        if (value === null || value === undefined || value === "" || (key === PARAM.page && value === 1)) {
+          next.delete(key);
+        } else {
+          next.set(key, String(value));
+        }
+      });
+      const nextQuery = next.toString();
+      latestQueryRef.current = nextQuery;
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+    },
+    [pathname, router]
+  );
 
   const [currentTab, setCurrentTab] = useState<AdminUsersTab>("users");
-  const [page, setPage] = useState<number>(1);
 
-  // Filters State
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-  const [department, setDepartment] = useState<string>("");
-  const [role, setRole] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
+  // O campo de busca responde na hora; a URL (e a consulta) só depois da pausa na digitação
+  const [searchTerm, setSearchTerm] = useState<string>(urlSearch);
+  const lastSyncedSearchRef = useRef<string>(urlSearch);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleSearchChange = useCallback((term: string) => {
-    setSearchTerm(term);
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+  useEffect(() => {
+    // A URL mudou por fora (limpar filtros, voltar no navegador): o campo acompanha
+    if (urlSearch !== lastSyncedSearchRef.current) {
+      lastSyncedSearchRef.current = urlSearch;
+      setSearchTerm(urlSearch);
     }
-    debounceTimerRef.current = setTimeout(() => {
-      setDebouncedSearch(term);
-      setPage(1);
-    }, 400);
-  }, []);
+  }, [urlSearch]);
+
+  const handleSearchChange = useCallback(
+    (term: string) => {
+      setSearchTerm(term);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        const trimmed = term.trim();
+        lastSyncedSearchRef.current = trimmed;
+        updateParams({ [PARAM.search]: trimmed, [PARAM.page]: null });
+      }, SEARCH_DEBOUNCE_MS);
+    },
+    [updateParams]
+  );
 
   useEffect(() => {
     return () => {
@@ -76,54 +162,57 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
     };
   }, []);
 
-  const handleDepartmentChange = useCallback((dept: string) => {
-    setDepartment(dept);
-    setPage(1);
-  }, []);
+  const handleDepartmentChange = useCallback(
+    (dept: string) => updateParams({ [PARAM.department]: dept, [PARAM.page]: null }),
+    [updateParams]
+  );
 
-  const handleRoleChange = useCallback((newRole: string) => {
-    setRole(newRole);
-    setPage(1);
-  }, []);
+  const handleRoleChange = useCallback(
+    (newRole: string) =>
+      updateParams({ [PARAM.role]: parseOption(newRole, ROLES), [PARAM.page]: null }),
+    [updateParams]
+  );
 
-  const handleStatusChange = useCallback((newStatus: string) => {
-    setStatus(newStatus);
-    setPage(1);
-  }, []);
+  const handleStatusChange = useCallback(
+    (newStatus: string) =>
+      updateParams({ [PARAM.status]: parseOption(newStatus, STATUSES), [PARAM.page]: null }),
+    [updateParams]
+  );
 
   const handleClearFilters = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    lastSyncedSearchRef.current = "";
     setSearchTerm("");
-    setDebouncedSearch("");
-    setDepartment("");
-    setRole("");
-    setStatus("");
-    setPage(1);
-  }, []);
+    updateParams({
+      [PARAM.search]: null,
+      [PARAM.department]: null,
+      [PARAM.role]: null,
+      [PARAM.status]: null,
+      [PARAM.page]: null,
+    });
+  }, [updateParams]);
 
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
-  }, []);
+  const handlePageChange = useCallback(
+    (newPage: number) => updateParams({ [PARAM.page]: newPage }),
+    [updateParams]
+  );
 
   const handleTabChange = useCallback((tab: AdminUsersTab) => {
     setCurrentTab(tab);
   }, []);
 
-  // TanStack Queries
+  const hasActiveFilters =
+    urlSearch.trim().length > 0 || department !== "" || role !== "" || status !== "";
+
   const usersQuery = useQuery({
-    queryKey: [
-      "admin",
-      "users",
-      page,
-      debouncedSearch,
-      department,
-      role,
-      status,
-    ],
+    queryKey: ["admin", "users", "list", { page, search: urlSearch, department, role, status }],
     queryFn: () =>
       getUsersList({
         page,
-        limit: 6,
-        search: debouncedSearch,
+        perPage: USERS_PER_PAGE,
+        search: urlSearch,
         department,
         role,
         status,
@@ -131,39 +220,54 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
     retry: false,
   });
 
+  // Total geral do sistema, para o contador "Mostrando X de Y" quando há filtros
+  const totalQuery = useQuery({
+    queryKey: ["admin", "users", "total"],
+    queryFn: () => getUsersList({ page: 1, perPage: 1 }),
+    enabled: hasActiveFilters,
+    retry: false,
+  });
+
+  const departmentsQuery = useQuery({
+    queryKey: ["admin", "users", "departments"],
+    queryFn: getUserDepartments,
+    retry: false,
+  });
+
   const profilesQuery = useQuery({
-    queryKey: ["admin", "roles"],
-    queryFn: getAccessProfiles,
+    queryKey: ["admin", "access-profiles", locale],
+    queryFn: () => getAccessProfiles(locale),
     retry: false,
   });
 
   const users = usersQuery.data?.items ?? [];
-  const totalUsers = usersQuery.data?.total ?? 0;
-  const filteredTotal = usersQuery.data?.filteredTotal ?? 0;
+  const filteredTotal = usersQuery.data?.total ?? 0;
+  const totalUsers = hasActiveFilters ? (totalQuery.data?.total ?? filteredTotal) : filteredTotal;
   const totalPages = usersQuery.data?.totalPages ?? 1;
 
   const isLoading = usersQuery.isLoading;
   const isError = usersQuery.isError;
-  const errorMessage = usersQuery.error
-    ? t("error.message")
-    : null;
+  const errorMessage = usersQuery.error ? t("error.message") : null;
 
   const handleRetry = useCallback(() => {
     void usersQuery.refetch();
-    void profilesQuery.refetch();
-  }, [usersQuery, profilesQuery]);
+  }, [usersQuery]);
 
-  const hasActiveFilters =
-    debouncedSearch.trim().length > 0 ||
-    department !== "" ||
-    role !== "" ||
-    status !== "";
+  const handleRetryProfiles = useCallback(() => {
+    void profilesQuery.refetch();
+  }, [profilesQuery]);
+
+  const availableDepartments = useMemo(() => {
+    const list = departmentsQuery.data ?? [];
+    // O setor da URL continua selecionável mesmo que a lista não o traga
+    return department && !list.includes(department) ? [department, ...list] : list;
+  }, [departmentsQuery.data, department]);
 
   const availableRoles: SelectOption[] = useMemo(
     () => [
-      { value: "admin", label: t("filters.role") + " — " + "Administrador" },
-      { value: "manager", label: t("filters.role") + " — " + "Gestor" },
-      { value: "user", label: t("filters.role") + " — " + "Usuário" },
+      { value: "admin", label: t("roles.admin") },
+      { value: "manager", label: t("roles.manager") },
+      { value: "user", label: t("roles.user") },
     ],
     [t]
   );
@@ -217,6 +321,7 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
       t("pagination.pageOf", { current, total }),
     errorTitle: t("error.title"),
     errorMessage: t("error.message"),
+    profilesErrorMessage: t("error.profilesMessage"),
     retryButton: t("error.retry"),
     inviteButton: t("inviteButton"),
     closeMessage: t("closeMessage"),
@@ -224,11 +329,10 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
 
   const accessProfiles = useMemo(
     () =>
-      (profilesQuery.data ?? []).map((profile) =>
-        profile.id === "manager"
-          ? { ...profile, description: t("rolesTab.descriptions.manager") }
-          : profile
-      ),
+      (profilesQuery.data ?? []).map((profile) => ({
+        ...profile,
+        description: profile.role ? t(`rolesTab.descriptions.${profile.role}`) : "",
+      })),
     [profilesQuery.data, t]
   );
 
@@ -254,7 +358,7 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
       role,
       status,
     },
-    availableDepartments: DEPARTMENTS_LIST,
+    availableDepartments,
     availableRoles,
     availableStatuses,
     handleSearchChange,
@@ -266,10 +370,14 @@ export function useAdminUsersVM(): AdminUsersViewModelReturn {
 
     accessProfiles,
     isProfilesLoading: profilesQuery.isLoading,
+    isProfilesError: profilesQuery.isError,
+    handleRetryProfiles,
 
     canInviteUsers,
     inviteSuccessMessage,
     handleDismissInviteMessage,
+    deleteSuccessMessage,
+    handleDismissDeleteMessage,
 
     labels,
   };

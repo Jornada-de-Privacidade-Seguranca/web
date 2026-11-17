@@ -94,11 +94,15 @@
       "emailPlaceholder": "seu.email@empresa.com",
       "passwordLabel": "Senha",
       "passwordPlaceholder": "Digite sua senha",
-      "forgotPassword": "Esqueceu sua senha?",
       "submit": "Entrar",
       "signUpPrefix": "Não tem uma conta?",
       "signUpLink": "Cadastre-se",
-      "privacyNotice": "Ao continuar você aceita nossos termos de privacidade.",
+      "privacyNotice": {
+        "prefix": "Ao continuar você aceita nosso",
+        "link": "termo de privacidade",
+        "suffix": ".",
+        "linkAriaLabel": "Ler o termo de privacidade"
+      },
       "validation": {
         "emailRequired": "O e-mail é obrigatório.",
         "emailInvalid": "Informe um e-mail válido.",
@@ -640,10 +644,12 @@
       "title": "Perfis de Acesso e Atribuições",
       "subtitle": "Consulte os níveis de permissão pré-configurados do sistema.",
       "defaultBadge": "Padrão",
-      "permissionsTitle": "Permissões de consulta:",
+      "permissionsTitle": "Permissões:",
       "historyNotice": "As mudanças de perfil e alterações cadastrais ficam permanentemente registradas no histórico de auditoria.",
       "descriptions": {
-        "manager": "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis."
+        "manager": "Vê tudo o que o administrador vê e pode atribuir jornadas, mas não altera usuários nem perfis.",
+        "admin": "Acesso total à gestão de usuários, configurações e relatórios corporativos.",
+        "user": "Perfil padrão atribuído a todos os colaboradores ao se cadastrarem."
       }
     },
     "empty": {
@@ -659,11 +665,18 @@
     "error": {
       "title": "Erro ao carregar usuários",
       "message": "Não foi possível carregar a listagem de usuários do sistema.",
-      "retry": "Tentar novamente"
+      "retry": "Tentar novamente",
+      "profilesMessage": "Não foi possível carregar os perfis de acesso."
     },
     "inviteButton": "Convidar usuário",
     "inviteSuccess": "Convite enviado para {email}",
-    "closeMessage": "Fechar aviso"
+    "closeMessage": "Fechar aviso",
+    "roles": {
+      "admin": "Administrador",
+      "manager": "Gestor",
+      "user": "Usuário"
+    },
+    "deleteSuccess": "Usuário {name} excluído com sucesso."
   },
   "adminUserDetail": {
     "backToList": "Voltar para usuários",
@@ -676,7 +689,9 @@
       "accountActive": "Conta ativa",
       "accountInactive": "Conta inativa",
       "accountPending": "Conta pendente",
-      "toggleSuccess": "Situação do usuário alterada com sucesso."
+      "toggleSuccess": "Situação do usuário alterada com sucesso.",
+      "activateSuccess": "Conta ativada com sucesso.",
+      "deactivateSuccess": "Conta desativada com sucesso."
     },
     "inactiveBanner": {
       "title": "Usuário Inativo",
@@ -707,7 +722,10 @@
         "emailRequired": "O e-mail é obrigatório.",
         "emailInvalid": "Insira um endereço de e-mail válido.",
         "departmentRequired": "O setor é obrigatório.",
-        "employeeCodeRequired": "O código de funcionário é obrigatório."
+        "employeeCodeRequired": "O código de funcionário é obrigatório.",
+        "nameSurname": "Informe nome e sobrenome.",
+        "maxLength": "Use no máximo {max} caracteres.",
+        "organizationRequired": "O órgão ou empresa é obrigatório."
       }
     },
     "journeys": {
@@ -728,7 +746,8 @@
       "modalDescription": "Tem certeza de que deseja excluir o usuário {name}? Esta ação não pode ser desfeita.",
       "modalCancel": "Cancelar",
       "modalConfirm": "Sim, excluir usuário",
-      "deleteSuccess": "Usuário excluído com sucesso."
+      "deleteSuccess": "Usuário excluído com sucesso.",
+      "deleting": "Excluindo..."
     },
     "activeJourney": {
       "title": "Jornada em andamento",
@@ -765,6 +784,27 @@
         "security": "Segurança da Informação",
         "joint": "Conjunta"
       }
+    },
+    "loadError": "Não foi possível carregar os dados do usuário.",
+    "retry": "Tentar novamente",
+    "closeMessage": "Fechar aviso",
+    "notFound": {
+      "title": "Usuário não encontrado",
+      "description": "Este usuário não existe ou foi excluído."
+    },
+    "errors": {
+      "emailInUse": "Este e-mail já está em uso por outra conta.",
+      "selfProfileChange": "Você não pode alterar o seu próprio perfil de acesso.",
+      "selfDeactivation": "Você não pode desativar a sua própria conta.",
+      "selfDeletion": "Você não pode excluir a sua própria conta.",
+      "lastAdmin": "O sistema precisa manter ao menos um administrador ativo.",
+      "permissionDenied": "Você não tem permissão para realizar esta ação.",
+      "invalidAccountState": "A situação desta conta não permite esta ação. Um convite pendente é ativado quando a pessoa define a senha.",
+      "notFound": "Este usuário não existe mais. Volte para a listagem de usuários.",
+      "validation": "Revise os campos destacados.",
+      "saveFailed": "Não foi possível salvar as alterações. Tente novamente.",
+      "statusFailed": "Não foi possível alterar a situação da conta. Tente novamente.",
+      "deleteFailed": "Não foi possível excluir o usuário. Tente novamente."
     }
   },
   "privacyPolicy": {
