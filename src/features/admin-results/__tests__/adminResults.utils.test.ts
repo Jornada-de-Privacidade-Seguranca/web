@@ -1,12 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
-  computeDomainAverages,
   formatAdminResultDate,
   getScoreBadgeClasses,
   parseAdminResultsSearchParams,
   serializeAdminResultsSearchParams,
 } from "../adminResults.utils";
-import type { AdminResultDomainOption, AdminResultItem } from "../adminResults.types";
 
 describe("adminResults.utils", () => {
   describe("parseAdminResultsSearchParams / serializeAdminResultsSearchParams", () => {
@@ -63,28 +61,6 @@ describe("adminResults.utils", () => {
         3
       );
       expect(qsWithPage).toBe("userId=2&page=3");
-    });
-  });
-
-  describe("computeDomainAverages", () => {
-    const catalog: AdminResultDomainOption[] = [
-      { id: "privacy", namePt: "Privacidade", nameEn: "Privacy", label: "Privacidade" },
-      { id: "security", namePt: "Segurança da Informação", nameEn: "Information Security", label: "Segurança da Informação" },
-      { id: "joint", namePt: "Conjunta", nameEn: "Joint", label: "Conjunta" },
-    ];
-
-    it("deve calcular a média de cada domínio e deixar nulo quando não houver jornada concluída", () => {
-      const items = [
-        { domain: "privacy", score: 80 },
-        { domain: "privacy", score: 91 },
-        { domain: "security", score: 70 },
-      ] as AdminResultItem[];
-
-      const averages = computeDomainAverages(items, catalog);
-
-      expect(averages[0]).toMatchObject({ domain: "privacy", averageScore: 86, completedCount: 2 });
-      expect(averages[1]).toMatchObject({ domain: "security", averageScore: 70, completedCount: 1 });
-      expect(averages[2]).toMatchObject({ domain: "joint", averageScore: null, completedCount: 0 });
     });
   });
 

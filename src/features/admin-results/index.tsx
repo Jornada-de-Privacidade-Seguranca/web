@@ -1,11 +1,10 @@
 "use client";
 
-import { RefreshIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Pagination } from "@/components/ui";
 import { PageShell } from "@/components/layout/PageShell";
 import { useAdminResultsVM } from "./adminResults.viewmodel";
 import {
+  AdminResultsErrorState,
   AdminResultsFilters,
   AdminResultsSummary,
   AdminResultsTable,
@@ -20,9 +19,12 @@ export function AdminResultsView() {
     filteredTotal,
     page,
     totalPages,
-    isLoading,
-    isError,
-    errorMessage,
+    isResultsLoading,
+    isResultsError,
+    isSummaryLoading,
+    isSummaryError,
+    isFilterOptionsLoading,
+    isFilterOptionsError,
     hasActiveFilters,
     filters,
     filterOptions,
@@ -35,15 +37,25 @@ export function AdminResultsView() {
     handleDateToChange,
     handleClearFilters,
     handlePageChange,
-    handleRetry,
+    handleRetryResults,
+    handleRetrySummary,
+    handleRetryFilterOptions,
     labels,
   } = useAdminResultsVM();
 
   return (
     <PageShell title={labels.title} subtitle={labels.subtitle}>
       <div className="space-y-6">
-        {!isError && (
-          <AdminResultsSummary summary={summary} isLoading={isLoading} labels={labels} />
+        {isSummaryError ? (
+          <AdminResultsErrorState
+            testId="admin-results-summary-error"
+            title={labels.errorTitle}
+            message={labels.summaryErrorMessage}
+            retryLabel={labels.retryButton}
+            onRetry={handleRetrySummary}
+          />
+        ) : (
+          <AdminResultsSummary summary={summary} isLoading={isSummaryLoading} labels={labels} />
         )}
 
         <AdminResultsFilters
@@ -52,6 +64,7 @@ export function AdminResultsView() {
           filteredTotal={filteredTotal}
           totalResults={totalResults}
           hasActiveFilters={hasActiveFilters}
+          isOptionsLoading={isFilterOptionsLoading}
           onSearchChange={handleSearchChange}
           onUserChange={handleUserChange}
           onDepartmentChange={handleDepartmentChange}
@@ -63,25 +76,31 @@ export function AdminResultsView() {
           labels={labels}
         />
 
-        {isLoading ? (
+        {isFilterOptionsError && (
+          <AdminResultsErrorState
+            testId="admin-results-filter-options-error"
+            title={labels.errorTitle}
+            message={labels.filterOptionsErrorMessage}
+            retryLabel={labels.retryButton}
+            onRetry={handleRetryFilterOptions}
+          />
+        )}
+
+        {isResultsLoading ? (
           <div
             data-testid="admin-results-skeleton"
             aria-busy="true"
             aria-label={labels.loadingAriaLabel}
             className="h-64 animate-pulse rounded-3xl border border-border/50 bg-muted/40"
           />
-        ) : isError ? (
-          <div
-            role="alert"
-            className="flex flex-col items-center justify-center space-y-3 rounded-3xl border border-destructive/30 bg-destructive/5 p-8 text-center"
-          >
-            <p className="font-heading text-sm font-bold text-destructive">{labels.errorTitle}</p>
-            <p className="text-xs text-destructive/90">{errorMessage}</p>
-            <Button onClick={handleRetry} variant="outline" size="sm">
-              <HugeiconsIcon icon={RefreshIcon} size={14} aria-hidden="true" className="mr-1.5" />
-              {labels.retryButton}
-            </Button>
-          </div>
+        ) : isResultsError ? (
+          <AdminResultsErrorState
+            testId="admin-results-list-error"
+            title={labels.errorTitle}
+            message={labels.errorMessage}
+            retryLabel={labels.retryButton}
+            onRetry={handleRetryResults}
+          />
         ) : results.length === 0 ? (
           <div
             data-testid="admin-results-empty-state"

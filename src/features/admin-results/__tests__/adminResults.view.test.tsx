@@ -91,6 +91,8 @@ const mockLabels: AdminResultsLabels = {
   paginationPageOf: (current, total) => `Página ${current} de ${total}`,
   errorTitle: "Erro ao carregar resultados",
   errorMessage: "Não foi possível carregar os resultados.",
+  summaryErrorMessage: "Não foi possível carregar o resumo dos resultados.",
+  filterOptionsErrorMessage: "Não foi possível carregar as opções dos filtros.",
   retryButton: "Tentar novamente",
   loadingAriaLabel: "Carregando resultados dos usuários",
 };
@@ -180,9 +182,12 @@ function createMockVM(
     filteredTotal: 2,
     page: 1,
     totalPages: 3,
-    isLoading: false,
-    isError: false,
-    errorMessage: null,
+    isResultsLoading: false,
+    isResultsError: false,
+    isSummaryLoading: false,
+    isSummaryError: false,
+    isFilterOptionsLoading: false,
+    isFilterOptionsError: false,
     hasActiveFilters: false,
     filters: {
       search: "",
@@ -218,7 +223,9 @@ function createMockVM(
     handleDateToChange: vi.fn(),
     handleClearFilters: vi.fn(),
     handlePageChange: vi.fn(),
-    handleRetry: vi.fn(),
+    handleRetryResults: vi.fn(),
+    handleRetrySummary: vi.fn(),
+    handleRetryFilterOptions: vi.fn(),
     labels: mockLabels,
     ...overrides,
   };
@@ -331,28 +338,61 @@ describe("AdminResultsView", () => {
     expect(vm.handleClearFilters).toHaveBeenCalled();
   });
 
-  it("deve exibir estado de carregamento e estado de erro com nova tentativa", () => {
-    vi.spyOn(viewModelModule, "useAdminResultsVM").mockReturnValue(
-      createMockVM({ isLoading: true })
-    );
-    const { rerender } = render(<AdminResultsView />);
-    expect(screen.getByTestId("admin-results-skeleton")).toBeDefined();
-
-    const handleRetry = vi.fn();
+  it("mostra o skeleton de cada seção enquanto carrega, com a busca editável", () => {
     vi.spyOn(viewModelModule, "useAdminResultsVM").mockReturnValue(
       createMockVM({
-        isLoading: false,
-        isError: true,
-        errorMessage: "Não foi possível carregar os resultados.",
-        handleRetry,
+        isResultsLoading: true,
+        isSummaryLoading: true,
+        isFilterOptionsLoading: true,
       })
     );
-    rerender(<AdminResultsView />);
-    expect(screen.getByRole("alert").textContent).toContain(
-      "Não foi possível carregar os resultados."
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
-    expect(handleRetry).toHaveBeenCalledTimes(1);
+    render(<AdminResultsView />);
+
+    expect(screen.getByTestId("admin-results-skeleton")).toBeDefined();
+    expect(screen.getByTestId("admin-results-domains-skeleton")).toBeDefined();
+    expect(within(screen.getByTestId("admin-results-summary")).getByLabelText("Carregando resultados dos usuários")).toBeDefined();
+    expect((screen.getByRole("combobox", { name: "Usuário" }) as HTMLSelectElement).disabled).toBe(true);
+    expect((screen.getByRole("textbox", { name: "Buscar por usuário, e-mail ou perfil..." }) as HTMLInputElement).disabled).toBe(false);
+  });
+
+  it("mostra o erro da listagem com nova tentativa só da listagem", () => {
+    const vm = createMockVM({ isResultsError: true });
+    vi.spyOn(viewModelModule, "useAdminResultsVM").mockReturnValue(vm);
+    render(<AdminResultsView />);
+
+    const alert = screen.getByTestId("admin-results-list-error");
+    expect(alert.textContent).toContain("Não foi possível carregar os resultados.");
+    expect(screen.getByTestId("admin-results-summary")).toBeDefined();
+
+    fireEvent.click(within(alert).getByRole("button", { name: "Tentar novamente" }));
+    expect(vm.handleRetryResults).toHaveBeenCalledTimes(1);
+    expect(vm.handleRetrySummary).not.toHaveBeenCalled();
+  });
+
+  it("mostra o erro do resumo no lugar dos blocos, com nova tentativa só do resumo", () => {
+    const vm = createMockVM({ isSummaryError: true });
+    vi.spyOn(viewModelModule, "useAdminResultsVM").mockReturnValue(vm);
+    render(<AdminResultsView />);
+
+    expect(screen.queryByTestId("admin-results-summary")).toBeNull();
+    const alert = screen.getByTestId("admin-results-summary-error");
+    expect(alert.textContent).toContain("Não foi possível carregar o resumo dos resultados.");
+    expect(screen.getByRole("table")).toBeDefined();
+
+    fireEvent.click(within(alert).getByRole("button", { name: "Tentar novamente" }));
+    expect(vm.handleRetrySummary).toHaveBeenCalledTimes(1);
+  });
+
+  it("mostra o erro das opções dos filtros, com nova tentativa só das opções", () => {
+    const vm = createMockVM({ isFilterOptionsError: true });
+    vi.spyOn(viewModelModule, "useAdminResultsVM").mockReturnValue(vm);
+    render(<AdminResultsView />);
+
+    const alert = screen.getByTestId("admin-results-filter-options-error");
+    expect(alert.textContent).toContain("Não foi possível carregar as opções dos filtros.");
+
+    fireEvent.click(within(alert).getByRole("button", { name: "Tentar novamente" }));
+    expect(vm.handleRetryFilterOptions).toHaveBeenCalledTimes(1);
   });
 });
 

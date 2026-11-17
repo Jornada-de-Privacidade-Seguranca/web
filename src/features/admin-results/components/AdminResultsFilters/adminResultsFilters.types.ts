@@ -19,6 +19,8 @@ export interface AdminResultsFiltersProps {
   filteredTotal: number;
   totalResults: number;
   hasActiveFilters: boolean;
+  /** Opções dos selects e dos domínios ainda carregando; a busca continua editável */
+  isOptionsLoading: boolean;
   onSearchChange: (search: string) => void;
   onUserChange: (userId: string) => void;
   onDepartmentChange: (department: string) => void;
@@ -42,6 +44,7 @@ export interface AdminResultsFiltersProps {
     | "filterDateTo"
     | "filterClear"
     | "filterCounter"
+    | "loadingAriaLabel"
   >;
 }
 
@@ -58,6 +61,7 @@ export interface AdminResultsFiltersViewModelReturn {
   journeyProfiles: AdminResultProfileOption[];
   counterText: string;
   hasActiveFilters: boolean;
+  isOptionsLoading: boolean;
   labels: AdminResultsFiltersProps["labels"];
   onSearchChange: (search: string) => void;
   onUserChange: (userId: string) => void;

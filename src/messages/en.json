@@ -921,7 +921,9 @@
     "error": {
       "title": "Error loading results",
       "message": "Unable to load user results.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "summaryMessage": "Unable to load the results summary.",
+      "filterOptionsMessage": "Unable to load the filter options."
     }
   }
 }

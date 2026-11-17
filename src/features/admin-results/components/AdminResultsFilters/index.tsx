@@ -21,6 +21,7 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
     journeyProfiles,
     counterText,
     hasActiveFilters,
+    isOptionsLoading,
     labels,
     onSearchChange,
     onUserChange,
@@ -33,6 +34,7 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
   } = useAdminResultsFiltersVM(props);
 
   const dateFromId = useId();
+  const selectLoadingClass = isOptionsLoading ? "animate-pulse cursor-wait opacity-60" : "";
   const dateToId = useId();
 
   return (
@@ -63,7 +65,9 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
           <select
             value={userId}
             onChange={(e) => onUserChange(e.target.value)}
-            className="h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            disabled={isOptionsLoading}
+            aria-busy={isOptionsLoading}
+            className={`h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${selectLoadingClass}`}
             aria-label={labels.filterUser}
           >
             <option value="">{labels.filterAllUsers}</option>
@@ -79,7 +83,9 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
           <select
             value={department}
             onChange={(e) => onDepartmentChange(e.target.value)}
-            className="h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            disabled={isOptionsLoading}
+            aria-busy={isOptionsLoading}
+            className={`h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${selectLoadingClass}`}
             aria-label={labels.filterDepartment}
           >
             <option value="">{labels.filterAllDepartments}</option>
@@ -95,7 +101,9 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
           <select
             value={journeyProfileId}
             onChange={(e) => onProfileChange(e.target.value)}
-            className="h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            disabled={isOptionsLoading}
+            aria-busy={isOptionsLoading}
+            className={`h-10 w-full rounded-full border border-border/80 bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${selectLoadingClass}`}
             aria-label={labels.filterProfile}
           >
             <option value="">{labels.filterAllProfiles}</option>
@@ -114,7 +122,19 @@ export function AdminResultsFilters(props: AdminResultsFiltersProps) {
           <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {labels.filterDomains}
           </span>
-          <div role="group" aria-label={labels.filterDomains} className="flex flex-wrap gap-2">
+          <div
+            role="group"
+            aria-label={labels.filterDomains}
+            aria-busy={isOptionsLoading}
+            className="flex flex-wrap gap-2"
+          >
+            {isOptionsLoading && (
+              <div
+                data-testid="admin-results-domains-skeleton"
+                aria-label={labels.loadingAriaLabel}
+                className="h-7 w-48 animate-pulse rounded-full bg-muted/70"
+              />
+            )}
             {domainOptions.map((option) => (
               <button
                 key={option.id}

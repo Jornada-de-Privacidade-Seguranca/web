@@ -1,8 +1,4 @@
-import { normalizeScore } from "@shared/utils/scoreBand";
 import type {
-  AdminDomainAverage,
-  AdminResultDomainOption,
-  AdminResultItem,
   AdminResultsFilters,
   JourneyDomain,
   ScoreBand,
@@ -101,38 +97,6 @@ const SCORE_BADGE_CLASSES: Record<ScoreBand, string> = {
 /** Retorna classes de cor do badge de nota conforme a faixa (strong, medium, weak). */
 export function getScoreBadgeClasses(band: ScoreBand): string {
   return SCORE_BADGE_CLASSES[band];
-}
-
-/**
- * Calcula a média por domínio a partir dos resultados filtrados para cada domínio
- * conhecido nos dados. Domínios sem jornada concluída retornam `averageScore: null`.
- */
-export function computeDomainAverages(
-  items: AdminResultItem[],
-  domainsCatalog: AdminResultDomainOption[]
-): AdminDomainAverage[] {
-  const totalsByDomain = new Map<JourneyDomain, { sum: number; count: number }>();
-
-  for (const item of items) {
-    const current = totalsByDomain.get(item.domain) ?? { sum: 0, count: 0 };
-    totalsByDomain.set(item.domain, {
-      sum: current.sum + item.score,
-      count: current.count + 1,
-    });
-  }
-
-  return domainsCatalog.map((domainMeta) => {
-    const stats = totalsByDomain.get(domainMeta.id);
-    const completedCount = stats?.count ?? 0;
-    return {
-      domain: domainMeta.id,
-      namePt: domainMeta.namePt,
-      nameEn: domainMeta.nameEn,
-      label: domainMeta.label,
-      averageScore: completedCount > 0 && stats ? normalizeScore(stats.sum / completedCount) : null,
-      completedCount,
-    };
-  });
 }
 
 /** Formata data ISO em UTC para exibição tabular curta conforme idioma (PT/EN). */
