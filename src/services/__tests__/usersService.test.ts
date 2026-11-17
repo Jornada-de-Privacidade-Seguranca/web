@@ -16,7 +16,6 @@ import {
   inviteUser,
   type UserManagementApiItem,
   type UserJourneyApiItem,
-  type AdminUserDetails,
 } from "../usersService";
 import { ApiRequestError, axiosInstance, clearCsrfToken } from "../httpClient";
 
@@ -398,27 +397,100 @@ describe("usersService", () => {
       expect(error).toMatchObject({ status: 409, code: "ACCOUNT_ALREADY_EXISTS" });
     });
 
-    it("atribui e cancela a jornada sobre o usuário informado", async () => {
-      const user = {
-        id: "7",
-        name: "Maria",
-        journeys: [],
-        activeJourney: null,
-      } as unknown as AdminUserDetails;
-      const [profile] = await getAssignableJourneyProfiles();
+    it("lista os perfis atribuíveis de todas as páginas do catálogo", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(
+          mockResponse({
+            success: true,
+            data: [{ id: 1, name_pt: "Encarregado", name_en: "DPO", type: 1 }],
+            meta: { pagination: { current_page: 1, per_page: 100, total: 2, last_page: 2, has_next_page: true } },
+          })
+        )
+        .mockResolvedValueOnce(
+          mockResponse({
+            success: true,
+            data: [{ id: 6, name_pt: "Auditor", name_en: "Auditor", type: 3 }],
+            meta: { pagination: { current_page: 2, per_page: 100, total: 2, last_page: 2, has_next_page: false } },
+          })
+        );
 
-      const assigned = await assignJourneyToUser(user, {
-        profileId: profile.id,
-        assignedBy: { id: 1, name: "Admin" },
-      });
-      expect(assigned.activeJourney).toMatchObject({
-        profileId: profile.id,
-        origin: "assigned",
-        assignedBy: { id: 1, name: "Admin" },
-      });
+      const profiles = await getAssignableJourneyProfiles();
 
-      const cancelled = await cancelAssignedJourney(assigned);
-      expect(cancelled.activeJourney).toBeNull();
+      expect(requestSpy.mock.calls.map(([config]) => [config.url, config.params])).toEqual([
+        ["/journey-profiles", { page: 1, per_page: 100 }],
+        ["/journey-profiles", { page: 2, per_page: 100 }],
+      ]);
+      expect(profiles).toEqual([
+        { id: 1, namePt: "Encarregado", nameEn: "DPO", domain: "privacy" },
+        { id: 6, namePt: "Auditor", nameEn: "Auditor", domain: "joint" },
+      ]);
+    });
+
+    it("atribui a jornada com POST /users/{user}/journeys e o token CSRF", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-1" } }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { id: 90 } }));
+
+      await assignJourneyToUser("7", { profileId: 4 });
+
+      expect(requestSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: "/users/7/journeys",
+          method: "post",
+          data: { journey_profile_id: 4 },
+          headers: expect.objectContaining({ "X-CSRF-TOKEN": "token-1" }),
+        })
+      );
+    });
+
+    it("propaga o 409 de jornada em andamento e o 422 do perfil inicial", async () => {
+      vi.spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-1" } }))
+        .mockRejectedValueOnce(
+          mockAxiosError(409, { success: false, message: "Ja existe", code: "JOURNEY_IN_PROGRESS", errors: [] })
+        )
+        .mockRejectedValueOnce(
+          mockAxiosError(422, {
+            success: false,
+            message: "Escolha o perfil",
+            code: "JOURNEY_PROFILE_SELECTION_REQUIRED",
+            errors: [],
+          })
+        );
+
+      await expect(assignJourneyToUser("7", { profileId: 4 })).rejects.toMatchObject({
+        status: 409,
+        code: "JOURNEY_IN_PROGRESS",
+      });
+      await expect(assignJourneyToUser("7", { profileId: 4 })).rejects.toMatchObject({
+        status: 422,
+        code: "JOURNEY_PROFILE_SELECTION_REQUIRED",
+      });
+    });
+
+    it("cancela a jornada com POST /journeys/{journey}/cancel e propaga o 403", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-1" } }))
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { id: 90 } }))
+        .mockRejectedValueOnce(
+          mockAxiosError(403, { success: false, message: "Sem permissao", code: "PERMISSION_DENIED", errors: [] })
+        )
+        // 403 em requisição com CSRF renova o token e tenta de novo uma vez
+        .mockResolvedValueOnce(mockResponse({ success: true, data: { csrf_token: "token-2" } }))
+        .mockRejectedValueOnce(
+          mockAxiosError(403, { success: false, message: "Sem permissao", code: "PERMISSION_DENIED", errors: [] })
+        );
+
+      await cancelAssignedJourney("90");
+      expect(requestSpy).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ url: "/journeys/90/cancel", method: "post" })
+      );
+
+      await expect(cancelAssignedJourney("90")).rejects.toMatchObject({ status: 403 });
     });
   });
 });

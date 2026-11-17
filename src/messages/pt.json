@@ -749,7 +749,9 @@
       "cancelModalConfirm": "Cancelar atribuição",
       "cancellingButton": "Cancelando...",
       "cancelError": "Não foi possível cancelar a atribuição da jornada. Tente novamente.",
-      "closeMessage": "Fechar aviso"
+      "closeMessage": "Fechar aviso",
+      "cancelForbidden": "Apenas quem atribuiu a jornada pode cancelar a atribuição.",
+      "cancelNotAllowed": "Esta jornada não pode mais ser cancelada."
     },
     "assignJourney": {
       "modalTitle": "Atribuir jornada",
@@ -765,7 +767,8 @@
         "privacy": "Privacidade",
         "security": "Segurança da Informação",
         "joint": "Conjunta"
-      }
+      },
+      "selectionRequiredNotice": "Este usuário ainda não escolheu o perfil de jornada inicial. Ele precisa escolher o perfil antes da primeira jornada."
     },
     "loadError": "Não foi possível carregar os dados do usuário.",
     "retry": "Tentar novamente",

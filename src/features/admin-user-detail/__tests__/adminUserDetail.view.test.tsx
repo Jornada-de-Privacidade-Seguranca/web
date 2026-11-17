@@ -187,6 +187,7 @@ describe("AdminUserDetailView", () => {
         },
       ],
       isFirstJourney: false,
+      isInitialProfileRequired: false,
       selectedProfileId: 1,
       isAssignModalOpen: false,
       isAssigningJourney: false,
@@ -228,6 +229,8 @@ describe("AdminUserDetailView", () => {
         modalDescription: "Selecione um perfil de jornada.",
         firstJourneyNotice:
           "A primeira jornada deve ser do perfil escolhido pelo usuário",
+        selectionRequiredNotice:
+          "Este usuário ainda não escolheu o perfil de jornada inicial.",
         cancel: "Cancelar",
         confirm: "Atribuir",
         submitting: "Atribuindo...",
@@ -570,6 +573,33 @@ describe("AdminUserDetailView", () => {
     });
     fireEvent.click(modalCancelBtns[modalCancelBtns.length - 1]);
     expect(handleConfirmCancelAssignment).toHaveBeenCalledOnce();
+  });
+
+  it("avisa que o usuário precisa escolher o perfil inicial e desabilita o Atribuir", () => {
+    const handleConfirmAssignJourney = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(viewModelModule, "useAdminUserDetailVM").mockReturnValue(
+      createMockVMReturn({
+        isFirstJourney: true,
+        isInitialProfileRequired: true,
+        isAssignModalOpen: true,
+        assignableOptions: [],
+        selectedProfileId: null,
+        handleConfirmAssignJourney,
+      })
+    );
+
+    render(
+      <AppProviders>
+        <AdminUserDetailView userId="4" />
+      </AppProviders>
+    );
+
+    expect(
+      screen.getByText("Este usuário ainda não escolheu o perfil de jornada inicial.")
+    ).toBeDefined();
+    expect(screen.queryByText("Nenhum perfil de jornada disponível.")).toBeNull();
+    const confirm = screen.getByRole("button", { name: "Atribuir" }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
   });
 
   it("renderiza mensagens de erro nos modais de atribuição e cancelamento quando presentes", () => {
