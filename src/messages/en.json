@@ -315,6 +315,12 @@
     "cancelModalDescription": "Are you sure you want to cancel this journey? Your responses so far will not be saved.",
     "cancelModalKeep": "Keep journey",
     "cancelModalConfirm": "Cancel journey",
+    "cancelModalConfirming": "Cancelling...",
+    "cancelSuccess": "Journey cancelled. You can now start another one.",
+    "cancelError": "Unable to cancel the journey. Please try again.",
+    "cancelNotAllowed": "This journey can no longer be cancelled. The list has been updated.",
+    "cancelUnavailable": "This journey is no longer available. The list has been updated.",
+    "closeMessage": "Close message",
     "pagination": {
       "previous": "Previous",
       "next": "Next",

@@ -18,7 +18,8 @@ export interface Journey {
   status: JourneyStatus;
   score?: number;
   href?: string;
-  origin?: JourneyOrigin;
+  /** null quando a API não conhece a origem (jornadas antigas) */
+  origin?: JourneyOrigin | null;
   isSelfStarted?: boolean;
   /** Nome de quem atribuiu a jornada (`assigned_by.name`), quando ela foi atribuída */
   assignedByName?: string;
@@ -124,6 +125,12 @@ export interface AssessmentsLabels {
   cancelModalDescription: string;
   cancelModalKeep: string;
   cancelModalConfirm: string;
+  cancelModalConfirming: string;
+  cancelSuccess: string;
+  cancelError: string;
+  cancelNotAllowed: string;
+  cancelUnavailable: string;
+  closeMessage: string;
   paginationPrevious: string;
   paginationNext: string;
   paginationPageOf: (current: number, total: number) => string;
@@ -143,9 +150,14 @@ export interface AssessmentsViewModelReturn {
 
   /** Modal de confirmação de cancelamento */
   isCancelModalOpen: boolean;
+  /** POST /journeys/{journey}/cancel em andamento: a confirmação fica travada */
+  isCancellingJourney: boolean;
+  cancelErrorMessage: string | null;
+  cancelSuccessMessage: string | null;
   handleOpenCancelModal: () => void;
   handleCloseCancelModal: () => void;
-  handleConfirmCancelJourney: () => void;
+  handleConfirmCancelJourney: () => Promise<void>;
+  handleDismissCancelSuccess: () => void;
 
   /** Catálogo de jornadas filtrado e paginado */
   catalogJourneys: Journey[];

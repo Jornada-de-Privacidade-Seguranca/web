@@ -52,6 +52,12 @@ const mockLabels: AssessmentsLabels = {
   cancelModalDescription: "Tem certeza?",
   cancelModalKeep: "Manter",
   cancelModalConfirm: "Cancelar",
+  cancelModalConfirming: "Cancelando...",
+  cancelSuccess: "Jornada cancelada.",
+  cancelError: "Não foi possível cancelar a jornada.",
+  cancelNotAllowed: "Esta jornada não pode mais ser cancelada.",
+  cancelUnavailable: "Esta jornada não está mais disponível.",
+  closeMessage: "Fechar aviso",
   paginationPrevious: "Anterior",
   paginationNext: "Próximo",
   paginationPageOf: (c, t) => `Página ${c} de ${t}`,
@@ -148,5 +154,25 @@ describe("PendingJourneyCard Component", () => {
     expect(screen.queryByText(/Atribuída por/)).toBeNull();
     expect(screen.queryByText("Apenas quem atribuiu pode cancelar.")).toBeNull();
   });
-});
 
+  it("não mostra o Cancelar jornada nem o aviso quando a origem é desconhecida", () => {
+    render(
+      <PendingJourneyCard
+        journey={{
+          id: "j-legacy",
+          title: "Controlador",
+          description: "",
+          status: "in_progress",
+          origin: null,
+          isSelfStarted: false,
+        }}
+        labels={mockLabels}
+        onCancelJourney={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /Cancelar jornada/i })).toBeNull();
+    expect(screen.queryByText("Apenas quem atribuiu pode cancelar.")).toBeNull();
+    expect(screen.getByText("Em andamento")).toBeDefined();
+  });
+});

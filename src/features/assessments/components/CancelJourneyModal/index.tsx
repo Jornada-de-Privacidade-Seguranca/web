@@ -13,7 +13,9 @@ export function CancelJourneyModal(props: CancelJourneyModalProps) {
     title,
     description,
     keepLabel,
-    confirmLabel,
+    confirmText,
+    isConfirming,
+    errorMessage,
     onCancel,
     onConfirm,
   } = useCancelJourneyModalVM(props);
@@ -103,11 +105,21 @@ export function CancelJourneyModal(props: CancelJourneyModalProps) {
           </div>
         </div>
 
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <Button
             ref={keepButtonRef}
             variant="outline"
             onClick={onCancel}
+            disabled={isConfirming}
             className="w-full sm:w-auto rounded-full"
           >
             {keepLabel}
@@ -115,9 +127,11 @@ export function CancelJourneyModal(props: CancelJourneyModalProps) {
           <Button
             variant="destructive"
             onClick={onConfirm}
+            disabled={isConfirming}
+            aria-busy={isConfirming}
             className="w-full sm:w-auto rounded-full"
           >
-            {confirmLabel}
+            {confirmText}
           </Button>
         </div>
       </div>

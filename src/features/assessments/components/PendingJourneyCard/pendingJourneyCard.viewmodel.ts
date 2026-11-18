@@ -9,7 +9,7 @@ export function usePendingJourneyCardVM(
 ): PendingJourneyCardViewModelReturn {
   const { journey, labels, onCancelJourney } = props;
 
-  const isAssigned = journey.origin === "assigned" || journey.isSelfStarted === false;
+  const isAssigned = journey.origin === "assigned";
 
   const badgeText = isAssigned ? labels.assignedBadge : labels.inProgressBadge;
   const badgeVariant = isAssigned ? "assigned" : "in_progress";
@@ -23,8 +23,9 @@ export function usePendingJourneyCardVM(
     isAssigned && journey.assignedByName ? labels.assignedBy(journey.assignedByName) : null;
   const cancelNoticeText = isAssigned ? labels.onlyAssignerCanCancel : null;
 
-  // Jornada iniciada pelo usuário pode ser cancelada; atribuída por admin/gestor NÃO pode
-  const canCancel = !isAssigned && Boolean(onCancelJourney);
+  // Só a jornada iniciada pelo próprio usuário pode ser cancelada por ele; a
+  // atribuída e a de origem desconhecida (null) não mostram o botão
+  const canCancel = journey.origin === "self_started" && Boolean(onCancelJourney);
 
   const domainLabelsMap: Record<string, string> = {
     privacy: labels.filterDomainPrivacy,
