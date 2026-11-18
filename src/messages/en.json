@@ -780,7 +780,9 @@
       "cancelModalConfirm": "Cancel assignment",
       "cancellingButton": "Cancelling...",
       "cancelError": "Could not cancel journey assignment. Please try again.",
-      "closeMessage": "Close notice"
+      "closeMessage": "Close notice",
+      "cancelForbidden": "Only the person who assigned the journey can cancel the assignment.",
+      "cancelNotAllowed": "This journey can no longer be cancelled."
     },
     "assignJourney": {
       "modalTitle": "Assign journey",
@@ -796,7 +798,8 @@
         "privacy": "Privacy",
         "security": "Information Security",
         "joint": "Joint"
-      }
+      },
+      "selectionRequiredNotice": "This user has not chosen an initial journey profile yet. They must choose it before their first journey."
     },
     "loadError": "Unable to load the user data.",
     "retry": "Try again",

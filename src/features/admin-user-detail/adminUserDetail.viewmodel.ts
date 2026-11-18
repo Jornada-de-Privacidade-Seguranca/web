@@ -466,6 +466,8 @@ export function useAdminUserDetailVM({
   const activeJourney = user?.activeJourney ?? null;
   const isFirstJourney = (user?.journeys.length ?? 0) === 0;
   const initialJourneyProfileId = user?.initialJourneyProfileId;
+  // Sem jornada e sem o perfil inicial escolhido, o usuário precisa escolher antes da primeira
+  const isInitialProfileRequired = isFirstJourney && !initialJourneyProfileId;
   const isEnglish = locale === "en";
 
   const domainLabels: Record<JourneyDomain, string> = useMemo(
@@ -527,26 +529,46 @@ export function useAdminUserDetailVM({
     setAssignErrorMessage(null);
   }, []);
 
+  /** Recarrega o detalhe (com a jornada em andamento) e a listagem de usuários. */
+  const refreshUserAfterJourneyChange = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["admin", "user", userId] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+    ]);
+  }, [queryClient, userId]);
+
+  /**
+   * Mensagem do erro ao atribuir. Os erros que indicam uma tela desatualizada
+   * (já há jornada em andamento ou o perfil inicial mudou) também recarregam o usuário.
+   */
+  const assignErrorText = (error: unknown): { message: string; shouldRefresh: boolean } => {
+    const apiError = apiErrorOf(error);
+    if (apiError?.status === 409) {
+      return { message: t("activeJourney.alreadyActiveHint"), shouldRefresh: true };
+    }
+    if (apiError?.code === "JOURNEY_PROFILE_SELECTION_REQUIRED") {
+      return { message: t("assignJourney.selectionRequiredNotice"), shouldRefresh: true };
+    }
+    if (apiError?.code === "JOURNEY_PROFILE_MISMATCH") {
+      return { message: t("assignJourney.firstJourneyNotice"), shouldRefresh: true };
+    }
+    return { message: t("assignJourney.error"), shouldRefresh: false };
+  };
+
   const handleConfirmAssignJourney = async (): Promise<void> => {
     if (!user || selectedProfileId === null || activeJourney) return;
     setIsAssigningJourney(true);
     setAssignErrorMessage(null);
     try {
-      const assignedBy = authUser
-        ? {
-            id: Number(authUser.id) || 1,
-            name: authUser.name,
-          }
-        : undefined;
-      const updated = await assignJourneyToUser(user, {
-        profileId: selectedProfileId,
-        assignedBy,
-      });
-      queryClient.setQueryData(userQueryKey, updated);
+      await assignJourneyToUser(user.id, { profileId: selectedProfileId });
       setIsAssignModalOpen(false);
       setJourneySuccessMessage(t("assignJourney.success"));
-    } catch {
-      setAssignErrorMessage(t("assignJourney.error"));
+      await refreshUserAfterJourneyChange();
+    } catch (error) {
+      // Erro de rede ou 5xx mantém o modal aberto para tentar de novo
+      const { message, shouldRefresh } = assignErrorText(error);
+      setAssignErrorMessage(message);
+      if (shouldRefresh) await refreshUserAfterJourneyChange();
     } finally {
       setIsAssigningJourney(false);
     }
@@ -564,17 +586,31 @@ export function useAdminUserDetailVM({
     }
   }, [isCancellingAssignment]);
 
+  /** 403 e 409 indicam que a jornada mudou desde que a tela foi carregada. */
+  const cancelErrorText = (error: unknown): { message: string; shouldRefresh: boolean } => {
+    const status = apiErrorOf(error)?.status;
+    if (status === 403) {
+      return { message: t("activeJourney.cancelForbidden"), shouldRefresh: true };
+    }
+    if (status === 409 || status === 404) {
+      return { message: t("activeJourney.cancelNotAllowed"), shouldRefresh: true };
+    }
+    return { message: t("activeJourney.cancelError"), shouldRefresh: false };
+  };
+
   const handleConfirmCancelAssignment = async (): Promise<void> => {
-    if (!user) return;
+    if (!user || !activeJourney) return;
     setIsCancellingAssignment(true);
     setCancelErrorMessage(null);
     try {
-      const updated = await cancelAssignedJourney(user);
-      queryClient.setQueryData(userQueryKey, updated);
+      await cancelAssignedJourney(activeJourney.id);
       setIsCancelAssignModalOpen(false);
       setJourneySuccessMessage(t("activeJourney.cancelSuccess"));
-    } catch {
-      setCancelErrorMessage(t("activeJourney.cancelError"));
+      await refreshUserAfterJourneyChange();
+    } catch (error) {
+      const { message, shouldRefresh } = cancelErrorText(error);
+      setCancelErrorMessage(message);
+      if (shouldRefresh) await refreshUserAfterJourneyChange();
     } finally {
       setIsCancellingAssignment(false);
     }
@@ -669,6 +705,7 @@ export function useAdminUserDetailVM({
     modalTitle: t("assignJourney.modalTitle"),
     modalDescription: t("assignJourney.modalDescription"),
     firstJourneyNotice: t("assignJourney.firstJourneyNotice"),
+    selectionRequiredNotice: t("assignJourney.selectionRequiredNotice"),
     cancel: t("assignJourney.cancel"),
     confirm: t("assignJourney.confirm"),
     submitting: t("assignJourney.submitting"),
@@ -727,6 +764,7 @@ export function useAdminUserDetailVM({
     activeJourney,
     assignableOptions,
     isFirstJourney,
+    isInitialProfileRequired,
     selectedProfileId,
     isAssignModalOpen,
     isAssigningJourney,

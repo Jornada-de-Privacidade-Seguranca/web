@@ -7,6 +7,7 @@ describe("useAssignJourneyModalVM", () => {
     modalTitle: "Atribuir jornada",
     modalDescription: "Selecione uma opção",
     firstJourneyNotice: "Primeira jornada",
+    selectionRequiredNotice: "Usuário precisa escolher o perfil inicial",
     cancel: "Cancelar",
     confirm: "Atribuir",
     submitting: "Atribuindo...",
@@ -25,6 +26,7 @@ describe("useAssignJourneyModalVM", () => {
         },
       ],
       isFirstJourney: false,
+      isInitialProfileRequired: false,
       selectedProfileId: 1,
       isSubmitting: false,
       errorMessage: null,
@@ -54,5 +56,12 @@ describe("useAssignJourneyModalVM", () => {
       isSubmitting: true,
     });
     expect(submitting.canConfirm).toBe(false);
+
+    const initialProfileRequired = useAssignJourneyModalVM({
+      ...props,
+      isFirstJourney: true,
+      isInitialProfileRequired: true,
+    });
+    expect(initialProfileRequired.canConfirm).toBe(false);
   });
 });

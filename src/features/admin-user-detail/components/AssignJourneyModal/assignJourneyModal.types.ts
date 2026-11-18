@@ -7,6 +7,7 @@ export interface AssignJourneyModalProps {
   isOpen: boolean;
   options: AssignableJourneyOption[];
   isFirstJourney: boolean;
+  isInitialProfileRequired: boolean;
   selectedProfileId: number | null;
   isSubmitting: boolean;
   errorMessage?: string | null;
@@ -20,6 +21,7 @@ export interface AssignJourneyModalViewModelReturn {
   isOpen: boolean;
   options: AssignableJourneyOption[];
   isFirstJourney: boolean;
+  isInitialProfileRequired: boolean;
   selectedProfileId: number | null;
   isSubmitting: boolean;
   errorMessage: string | null;
