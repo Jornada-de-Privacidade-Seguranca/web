@@ -223,6 +223,8 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     actionCancel: t("actionCancel"),
     assignedBadge: t("assignedBadge"),
     inProgressBadge: t("inProgressBadge"),
+    assignedBy: (name: string) => t("assignedBy", { name }),
+    onlyAssignerCanCancel: t("onlyAssignerCanCancel"),
     completedScoreBadge: (score: number) => t("completedScoreBadge", { score }),
     competenciesCount: (count: number) => t("competenciesCount", { count }),
     questionsCount: (count: number) => t("questionsCount", { count }),

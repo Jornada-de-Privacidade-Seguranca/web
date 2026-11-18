@@ -88,8 +88,9 @@ function mapUserJourneyToJourney(
     href: getCompetenciesAreaUrl(0),
     // O resumo traz só quantas competências já foram respondidas, não o total
     // do perfil; a quantidade fica oculta até a API fornecê-la (#98)
-    origin: "self_started",
-    isSelfStarted: true,
+    origin: item.origin ?? "self_started",
+    isSelfStarted: item.origin !== "assigned",
+    assignedByName: item.assigned_by?.name ?? undefined,
   };
 }
 

@@ -21,6 +21,8 @@ export function PendingJourneyCard(props: PendingJourneyCardProps) {
     buttonText,
     actionHref,
     canCancel,
+    assignedByText,
+    cancelNoticeText,
     cancelButtonText,
     competenciesText,
     timeText,
@@ -61,6 +63,12 @@ export function PendingJourneyCard(props: PendingJourneyCardProps) {
           {journey.description}
         </p>
 
+        {assignedByText && (
+          <p className="mt-3 text-xs font-semibold text-purple-600 dark:text-purple-400">
+            {assignedByText}
+          </p>
+        )}
+
         {competenciesText && (
           <div className="mt-6 flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <HugeiconsIcon icon={CheckListIcon} size={16} className="text-primary" />
@@ -70,6 +78,9 @@ export function PendingJourneyCard(props: PendingJourneyCardProps) {
       </div>
 
       <div className="mt-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-border/50 pt-5">
+        {cancelNoticeText && (
+          <p className="text-xs text-muted-foreground sm:mr-auto">{cancelNoticeText}</p>
+        )}
         {canCancel && (
           <Button
             type="button"

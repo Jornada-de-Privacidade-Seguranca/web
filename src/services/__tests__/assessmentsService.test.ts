@@ -113,6 +113,48 @@ describe("assessmentsService", () => {
     });
   });
 
+  it("mapeia a origem e quem atribuiu a jornada pendente", async () => {
+    vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+      mockResponse({
+        success: true,
+        data: [
+          {
+            id: 11,
+            user_id: 2,
+            user_name: "Maria Silva",
+            journey_profile: {
+              id: null,
+              name_pt: "Operador",
+              name_en: "Operator",
+              description_pt: null,
+              description_en: null,
+              knowledge_domain: { id: 1, name_pt: "Privacidade", name_en: "Privacy" },
+            },
+            started_at: "2026-11-10 09:00:00",
+            finished_at: null,
+            status: "ongoing",
+            is_completed: false,
+            origin: "assigned",
+            assigned_by: { id: 1, name: "Carla Gestora" },
+            summary: { acquired_knowledges_count: 0, professional_certifications_count: 0 },
+          },
+        ],
+        meta: {
+          pagination: { current_page: 1, per_page: 6, total: 1, last_page: 1, has_next_page: false },
+        },
+      })
+    );
+
+    const result = await getPendingAssessments({ userId: 2 });
+
+    expect(result.items[0]).toMatchObject({
+      id: "11",
+      origin: "assigned",
+      isSelfStarted: false,
+      assignedByName: "Carla Gestora",
+    });
+  });
+
   it("deve usar o nome e a descrição em inglês quando o idioma for en", async () => {
     vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
       mockResponse({

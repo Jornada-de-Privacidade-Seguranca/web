@@ -58,6 +58,8 @@ const mockLabels: AssessmentsLabels = {
   actionCancel: "Cancelar jornada",
   assignedBadge: "Atribuída",
   inProgressBadge: "Em andamento",
+  assignedBy: (name: string) => `Atribuída por ${name}`,
+  onlyAssignerCanCancel: "Apenas quem atribuiu pode cancelar.",
   completedScoreBadge: (score) => `Concluída · ${score}/100`,
   competenciesCount: (count) => `${count} competências`,
   questionsCount: (count) => `${count} perguntas`,

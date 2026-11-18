@@ -293,6 +293,8 @@
     "actionCancel": "Cancel journey",
     "assignedBadge": "Assigned",
     "inProgressBadge": "In progress",
+    "assignedBy": "Assigned by {name}",
+    "onlyAssignerCanCancel": "Only the person who assigned it can cancel.",
     "completedScoreBadge": "Completed · {score}/100",
     "competenciesCount": "{count} competencies",
     "questionsCount": "{count} questions",

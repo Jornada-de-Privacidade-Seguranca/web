@@ -30,6 +30,8 @@ const mockLabels: AssessmentsLabels = {
   actionCancel: "Cancelar jornada",
   assignedBadge: "Atribuída",
   inProgressBadge: "Em andamento",
+  assignedBy: (name: string) => `Atribuída por ${name}`,
+  onlyAssignerCanCancel: "Apenas quem atribuiu pode cancelar.",
   completedScoreBadge: (score) => `Concluída · ${score}/100`,
   competenciesCount: (count) => `${count} competências`,
   questionsCount: (count) => `${count} perguntas`,
@@ -105,6 +107,8 @@ describe("PendingJourneyCard Component", () => {
       estimatedMinutes: 15,
       isSelfStarted: false,
       origin: "assigned",
+      assignedByName: "Carla Gestora",
+      href: "/jornada/atual/competencias/0",
     };
 
     render(
@@ -117,8 +121,32 @@ describe("PendingJourneyCard Component", () => {
 
     expect(screen.getByText("LGPD Corporativa")).toBeDefined();
     expect(screen.getByText("Atribuída")).toBeDefined();
-    expect(screen.getByRole("link", { name: /Iniciar jornada/i })).toBeDefined();
+    expect(screen.getByRole("link", { name: /Iniciar jornada/i }).getAttribute("href")).toBe(
+      "/jornada/atual/competencias/0"
+    );
     expect(screen.queryByRole("button", { name: /Cancelar jornada/i })).toBeNull();
+    expect(screen.getByText("Atribuída por Carla Gestora")).toBeDefined();
+    expect(screen.getByText("Apenas quem atribuiu pode cancelar.")).toBeDefined();
+  });
+
+  it("não mostra quem atribuiu nem o aviso de cancelamento na jornada iniciada pelo usuário", () => {
+    render(
+      <PendingJourneyCard
+        journey={{
+          id: "j-self",
+          title: "Controlador",
+          description: "",
+          status: "in_progress",
+          origin: "self_started",
+          isSelfStarted: true,
+        }}
+        labels={mockLabels}
+        onCancelJourney={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText(/Atribuída por/)).toBeNull();
+    expect(screen.queryByText("Apenas quem atribuiu pode cancelar.")).toBeNull();
   });
 });
 
