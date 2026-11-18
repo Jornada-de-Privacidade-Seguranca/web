@@ -114,7 +114,7 @@ export function AuthView() {
                 variant="link"
                 className="h-auto px-0 text-sm font-medium text-primary hover:no-underline"
               >
-                <Link href="/cadastro">{labels.signUpLink}</Link>
+                <Link href="/signup">{labels.signUpLink}</Link>
               </Button>
             </p>
 

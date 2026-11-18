@@ -128,15 +128,14 @@
       "employeeCodePlaceholder": "Ex.: 00123456",
       "departmentLabel": "DEPARTMENT",
       "departmentPlaceholder": "Ex.: Technology",
-      "companyLabel": "COMPANY",
-      "companyPlaceholder": "Ex.: ACME Corp",
+      "companyLabel": "ORGANIZATION/COMPANY",
+      "companyPlaceholder": "Ex.: City of Recife or Example Company",
       "emailLabel": "INSTITUTIONAL EMAIL",
       "emailPlaceholder": "you@company.com",
       "passwordLabel": "PASSWORD",
       "passwordPlaceholder": "Minimum 8 characters",
       "confirmPasswordLabel": "CONFIRM PASSWORD",
       "confirmPasswordPlaceholder": "Repeat your password",
-      "termsCheckbox": "I accept the terms of use and privacy policy",
       "submit": "Create account",
       "hasAccountText": "Already have an account?",
       "loginLink": "Sign in",
@@ -148,8 +147,8 @@
         "employeeCodeMaxLength": "Employee code must be at most 50 characters long.",
         "departmentRequired": "Department is required.",
         "departmentMaxLength": "Department must be at most 100 characters long.",
-        "companyRequired": "Company is required.",
-        "companyMaxLength": "Company must be at most 100 characters long.",
+        "companyRequired": "Organization or company is required.",
+        "companyMaxLength": "Organization or company must be at most 100 characters long.",
         "emailRequired": "Institutional email is required.",
         "emailInvalid": "Please provide a valid institutional email.",
         "emailMaxLength": "Email must be at most 100 characters long.",
@@ -158,7 +157,7 @@
         "passwordMaxLength": "Password must be at most 100 characters long.",
         "confirmPasswordRequired": "Password confirmation is required.",
         "passwordsDoNotMatch": "Passwords do not match.",
-        "termsRequired": "You must accept the terms of use and privacy policy."
+        "termsRequired": "You need to accept the privacy terms."
       },
       "serverError": {
         "invalidFieldsTitle": "Invalid field",
@@ -170,6 +169,12 @@
       "serverSuccess": {
         "title": "Account created successfully!",
         "description": "Your account was created and must be activated by an administrator before you can sign in."
+      },
+      "terms": {
+        "prefix": "I have read and accept the",
+        "link": "privacy terms",
+        "suffix": ".",
+        "newTab": "(opens in a new tab)"
       }
     },
     "initialPassword": {

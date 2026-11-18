@@ -68,7 +68,7 @@ describe("AuthView Component", () => {
     };
   }
 
-  it("deve renderizar o link de cadastro apontando para /cadastro", () => {
+  it("deve renderizar o link de cadastro apontando para /signup", () => {
     vi.spyOn(viewModelModule, "useAuthVM").mockReturnValue(
       createMockVMReturn()
     );
@@ -76,7 +76,7 @@ describe("AuthView Component", () => {
     render(<AuthView />);
 
     const link = screen.getByRole("link", { name: "Cadastre-se" });
-    expect(link.getAttribute("href")).toBe("/cadastro");
+    expect(link.getAttribute("href")).toBe("/signup");
   });
 
   it("deve levar ao termo de privacidade pelo link do aviso, acessível pelo teclado", () => {
