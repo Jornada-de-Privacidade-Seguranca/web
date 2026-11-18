@@ -1,481 +1,310 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import * as httpClient from "@services/httpClient";
-import { ApiRequestError } from "@services/httpClient";
+import { AxiosError, type AxiosResponse } from "axios";
+import { axiosInstance } from "../httpClient";
 import {
+  buildAdminResultsFilterParams,
   getAdminResults,
+  getAdminResultsCatalogOptions,
+  getAdminResultsFilterOptions,
   getAdminResultsMetrics,
   getDepartments,
   getUsersWithResults,
-  getJourneyProfileFilterOptions,
-  getAdminResultsFilterOptions,
   mapAdminResultItem,
   mapAdminResultMetrics,
-  mapUsersWithResults,
-  type AdminResultItemApi,
-  type AdminResultMetricsDataApi,
-  type UserWithResultsItemApi,
 } from "../adminResultsService";
+import type {
+  AdminResultItemApi,
+  AdminResultMetricsDataApi,
+} from "@features/admin-results/adminResults.types";
+
+function mockResponse<T>(data: T): AxiosResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  };
+}
+
+function mockAxiosError(status: number, data: unknown): AxiosError {
+  return new AxiosError("Request failed", "ERR_BAD_REQUEST", undefined, undefined, {
+    data,
+    status,
+    statusText: "",
+    headers: {},
+    config: {} as AxiosResponse["config"],
+  } as AxiosResponse);
+}
+
+const API_ITEM: AdminResultItemApi = {
+  id: 99,
+  user: { id: 2, name: "Carlos Eduardo", email: "carlos@empresa.com", department: "TI" },
+  journey_profile: { id: 6, name_pt: "Auditor de Conformidade", name_en: "Compliance Auditor" },
+  knowledge_domain: { id: 3, name_pt: "Conjunta", name_en: "Joint" },
+  finished_at: "2026-05-10 14:00:00",
+  score: 84.6,
+};
+
+const METRICS: AdminResultMetricsDataApi = {
+  total_completed_journeys: 4,
+  distinct_users_count: 3,
+  domains: [
+    { domain_id: 1, domain_name_pt: "Privacidade", domain_name_en: "Privacy", completed_journeys: 2, average_score: 71.5 },
+    { domain_id: 2, domain_name_pt: "Segurança da Informação", domain_name_en: "Information Security", completed_journeys: 0, average_score: null },
+    { domain_id: 3, domain_name_pt: "Conjunta", domain_name_en: "Joint", completed_journeys: 2, average_score: 90 },
+  ],
+};
+
+const FORBIDDEN_BODY = {
+  success: false,
+  message: "Voce nao possui permissao para executar esta acao.",
+  errors: [],
+  code: "PERMISSION_DENIED",
+};
+
+function journeyProfile(id: number, namePt: string, domainId: number, domainNamePt: string, domainNameEn: string) {
+  return {
+    id,
+    name_pt: namePt,
+    name_en: `${namePt} (en)`,
+    description_pt: null,
+    description_en: null,
+    type: domainId,
+    knowledge_domain: { id: domainId, name_pt: domainNamePt, name_en: domainNameEn },
+  };
+}
 
 describe("adminResultsService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    // Por padrão, simula indisponibilidade de backend para exercitar os fallbacks de mock de forma isolada
-    vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
-      new ApiRequestError("Network error")
-    );
-    vi.spyOn(httpClient, "apiRequest").mockRejectedValue(
-      new ApiRequestError("Network error")
-    );
   });
 
-  describe("Integração com API (Backend #158 / PR 83)", () => {
-    it("deve enviar parâmetros mapeados e normalizados no GET /admin/results", async () => {
-      const apiItem: AdminResultItemApi = {
-        id: 99,
-        user: {
-          id: 2,
-          name: "Carlos Eduardo",
-          email: "carlos@empresa.com",
+  describe("buildAdminResultsFilterParams", () => {
+    it("converte os filtros da tela nos parâmetros da API", () => {
+      expect(
+        buildAdminResultsFilterParams({
+          search: "  carlos  ",
+          userId: "2",
           department: "TI",
-        },
-        journey_profile: {
-          id: 6,
-          name_pt: "Auditor",
-          name_en: "Auditor",
-        },
-        knowledge_domain: {
-          id: 1,
-          name_pt: "Privacidade",
-          name_en: "Privacy",
-        },
-        finished_at: "2026-05-10 14:00:00",
-        score: 95,
-      };
-
-      const spy = vi.spyOn(httpClient, "apiRequestWithMeta").mockResolvedValue({
-        data: [apiItem],
-        meta: {
-          pagination: {
-            total: 25,
-            count: 1,
-            per_page: 10,
-            current_page: 2,
-            total_pages: 3,
-          },
-        },
-      });
-
-      const response = await getAdminResults({
-        search: "   Carlos   ",
-        userId: "2",
+          domains: ["privacy", "joint"],
+          journeyProfileId: "6",
+          dateFrom: "2026-05-01",
+          dateTo: "2026-05-31",
+        })
+      ).toEqual({
+        search: "carlos",
+        user_id: 2,
         department: "TI",
-        domains: ["privacy", "joint"],
-        journeyProfileId: "6",
-        dateFrom: "2026-05-01",
-        dateTo: "2026-05-31",
-        page: 2,
-        perPage: 10,
+        "domains[]": [1, 3],
+        journey_profile_id: 6,
+        ended_from: "2026-05-01",
+        ended_to: "2026-05-31",
       });
-
-      expect(spy).toHaveBeenCalledWith(
-        "/admin/results",
-        {
-          params: {
-            search: "Carlos",
-            user_id: 2,
-            department: "TI",
-            "domains[]": [1, 3],
-            journey_profile_id: 6,
-            ended_from: "2026-05-01",
-            ended_to: "2026-05-31",
-            page: 2,
-            per_page: 10,
-          },
-        },
-        "Não foi possível carregar os resultados dos usuários."
-      );
-
-      expect(response.total).toBe(25);
-      expect(response.filteredTotal).toBe(25);
-      expect(response.page).toBe(2);
-      expect(response.limit).toBe(10);
-      expect(response.totalPages).toBe(3);
-      expect(response.items).toHaveLength(1);
-      expect(response.items[0].id).toBe("99");
-      expect(response.items[0].user.name).toBe("Carlos Eduardo");
-      expect(response.items[0].domain).toBe("privacy");
     });
 
-    it("deve enviar parâmetros mapeados no GET /admin/results/metrics", async () => {
-      const metricsDataApi: AdminResultMetricsDataApi = {
-        total_completed_journeys: 12,
-        distinct_users_count: 5,
-        domains: [
-          {
-            domain_id: 1,
-            domain_name_pt: "Privacidade",
-            domain_name_en: "Privacy",
-            completed_journeys: 6,
-            average_score: 88,
-          },
-          {
-            domain_id: 2,
-            domain_name_pt: "Segurança da Informação",
-            domain_name_en: "Information Security",
-            completed_journeys: 6,
-            average_score: 82,
-          },
-        ],
-      };
-
-      const spy = vi.spyOn(httpClient, "apiRequest").mockResolvedValue(metricsDataApi);
-
-      const metrics = await getAdminResultsMetrics({
-        search: "  segurança  ",
-        userId: "3",
-        department: "Compliance",
-        domains: ["security"],
-        journeyProfileId: "4",
-        dateFrom: "2026-01-01",
-        dateTo: "2026-06-30",
-      });
-
-      expect(spy).toHaveBeenCalledWith(
-        "/admin/results/metrics",
-        {
-          params: {
-            search: "segurança",
-            user_id: 3,
-            department: "Compliance",
-            "domains[]": [2],
-            journey_profile_id: 4,
-            ended_from: "2026-01-01",
-            ended_to: "2026-06-30",
-          },
-        },
-        "Não foi possível carregar as métricas dos resultados."
-      );
-
-      expect(metrics.totalCompletedJourneys).toBe(12);
-      expect(metrics.totalEvaluatedUsers).toBe(5);
-      expect(metrics.domainAverages).toHaveLength(2);
-      expect(metrics.domainAverages[0].averageScore).toBe(88);
-    });
-
-    it("deve consumir GET /users/departments via apiRequest", async () => {
-      vi.spyOn(httpClient, "apiRequest").mockResolvedValue(["RH", "Financeiro"]);
-      const departments = await getDepartments();
-      expect(departments).toEqual(["RH", "Financeiro"]);
-    });
-
-    it("deve consumir GET /users/with-results via apiRequest e mapear os usuários", async () => {
-      vi.spyOn(httpClient, "apiRequest").mockResolvedValue([
-        { id: 10, name: "Maria", email: "maria@empresa.com" },
-      ]);
-      const users = await getUsersWithResults();
-      expect(users).toEqual([{ id: "10", name: "Maria", email: "maria@empresa.com" }]);
-    });
-
-    it("deve acionar fallback para mock quando backend responder 404 (rota inexistente)", async () => {
-      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
-        new ApiRequestError("Route not found", 404)
-      );
-
-      const response = await getAdminResults({ page: 1, perPage: 5 });
-      expect(response.items).toHaveLength(5);
-      expect(response.total).toBe(14);
-    });
-
-    it("deve acionar fallback para mock quando backend responder 401 (não autenticado como admin)", async () => {
-      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
-        new ApiRequestError("Unauthorized", 401)
-      );
-
-      const response = await getAdminResults({ page: 1, perPage: 5 });
-      expect(response.items).toHaveLength(5);
-      expect(response.total).toBe(14);
-    });
-
-    it("deve relançar erro quando status for de erro interno (500) e não elegível para fallback", async () => {
-      vi.spyOn(httpClient, "apiRequestWithMeta").mockRejectedValue(
-        new ApiRequestError("Internal Server Error", 500)
-      );
-
-      await expect(getAdminResults()).rejects.toThrow("Internal Server Error");
+    it("não envia a busca vazia ou só com espaços, nem filtros vazios", () => {
+      expect(buildAdminResultsFilterParams({ search: "   ", domains: [], userId: "" })).toEqual({});
     });
   });
 
-  describe("getAdminResults (GET /admin/results)", () => {
-    it("deve retornar lista paginada mapeada para a tela", async () => {
-      const response = await getAdminResults({ page: 1, perPage: 6 });
+  describe("getAdminResults", () => {
+    it("chama GET /admin/results com os filtros e a paginação, e mapeia a resposta", async () => {
+      const controller = new AbortController();
+      const requestSpy = vi.spyOn(axiosInstance, "request").mockResolvedValueOnce(
+        mockResponse({
+          success: true,
+          data: [API_ITEM],
+          meta: {
+            pagination: { current_page: 2, per_page: 6, total: 13, last_page: 3, has_next_page: true },
+          },
+        })
+      );
 
-      expect(response.items).toHaveLength(6);
-      expect(response.total).toBe(14);
-      expect(response.filteredTotal).toBe(14);
-      expect(response.page).toBe(1);
-      expect(response.totalPages).toBe(3);
+      const page = await getAdminResults(
+        { search: " carlos ", domains: ["joint"], page: 2, perPage: 6 },
+        controller.signal
+      );
 
-      const firstItem = response.items[0];
-      expect(firstItem.id).toBe("101");
-      expect(firstItem.user.name).toBe("Ana Beatriz Silva");
-      expect(firstItem.user.initials).toBe("AS");
-      expect(firstItem.domain).toBe("joint");
-      expect(firstItem.scoreBand).toBe("strong");
-    });
-
-    it("deve filtrar por busca textual (nome, e-mail e perfil em PT ou EN)", async () => {
-      const byName = await getAdminResults({ search: "carlos" });
-      expect(byName.filteredTotal).toBe(2);
-      expect(byName.items.every((item) => item.user.id === "2")).toBe(true);
-
-      const byEmail = await getAdminResults({ search: "mariana.oliveira@empresa.com" });
-      expect(byEmail.filteredTotal).toBe(2);
-
-      const byProfileEn = await getAdminResults({ search: "Data Controller" });
-      expect(byProfileEn.filteredTotal).toBe(1);
-      expect(byProfileEn.items[0].profileNamePt).toBe("Controlador");
-    });
-
-    it("deve filtrar por usuário, setor, múltiplos domínios e perfil de jornada", async () => {
-      const byUser = await getAdminResults({ userId: "2" });
-      expect(byUser.filteredTotal).toBe(2);
-      expect(byUser.items.every((item) => item.user.id === "2")).toBe(true);
-
-      const byDepartment = await getAdminResults({ department: "Tecnologia da Informação" });
-      expect(byDepartment.filteredTotal).toBe(7);
-
-      const byDomains = await getAdminResults({ domains: ["privacy", "joint"], perPage: 20 });
-      expect(byDomains.filteredTotal).toBe(8);
-      expect(
-        byDomains.items.every((item) => item.domain === "privacy" || item.domain === "joint")
-      ).toBe(true);
-
-      const byProfile = await getAdminResults({ journeyProfileId: "6" });
-      expect(byProfile.filteredTotal).toBe(3);
-    });
-
-    it("deve filtrar por período de conclusão", async () => {
-      const byPeriod = await getAdminResults({
-        dateFrom: "2026-05-01",
-        dateTo: "2026-05-31",
-        perPage: 20,
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/admin/results",
+          params: { search: "carlos", "domains[]": [3], page: 2, per_page: 6 },
+          signal: controller.signal,
+        })
+      );
+      expect(page).toMatchObject({ total: 13, page: 2, limit: 6, totalPages: 3 });
+      expect(page.items[0]).toMatchObject({
+        id: "99",
+        journeyId: "99",
+        user: { id: "2", name: "Carlos Eduardo", initials: "CE", department: "TI" },
+        profileId: "6",
+        domain: "joint",
+        completedAt: "2026-05-10T14:00:00Z",
+        score: 85,
       });
-      expect(byPeriod.filteredTotal).toBe(7);
-      expect(
-        byPeriod.items.every(
-          (item) =>
-            item.completedAt.slice(0, 10) >= "2026-05-01" &&
-            item.completedAt.slice(0, 10) <= "2026-05-31"
+    });
+
+    it("propaga o 403 da API", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(mockAxiosError(403, FORBIDDEN_BODY));
+
+      await expect(getAdminResults()).rejects.toMatchObject({ status: 403, code: "PERMISSION_DENIED" });
+    });
+
+    it("propaga o erro do servidor, sem resultados de exemplo", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(
+        mockAxiosError(500, { success: false, message: "Erro interno" })
+      );
+
+      await expect(getAdminResults()).rejects.toMatchObject({ status: 500 });
+    });
+  });
+
+  describe("getAdminResultsMetrics", () => {
+    it("chama GET /admin/results/metrics com os mesmos filtros da listagem", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: METRICS }));
+
+      const summary = await getAdminResultsMetrics({ userId: "2", dateTo: "2026-05-31" });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/admin/results/metrics",
+          params: { user_id: 2, ended_to: "2026-05-31" },
+        })
+      );
+      expect(summary.totalCompletedJourneys).toBe(4);
+      expect(summary.totalEvaluatedUsers).toBe(3);
+      expect(summary.domainAverages.map((domain) => [domain.domain, domain.averageScore])).toEqual([
+        ["privacy", 72],
+        ["security", null],
+        ["joint", 90],
+      ]);
+    });
+
+    it("propaga o 403 da API", async () => {
+      vi.spyOn(axiosInstance, "request").mockRejectedValueOnce(mockAxiosError(403, FORBIDDEN_BODY));
+
+      await expect(getAdminResultsMetrics()).rejects.toMatchObject({ status: 403 });
+    });
+  });
+
+  describe("opções dos filtros", () => {
+    it("busca setores e usuários com resultados", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(mockResponse({ success: true, data: ["Jurídico", "TI"] }))
+        .mockResolvedValueOnce(
+          mockResponse({ success: true, data: [{ id: 2, name: "Carlos Eduardo", email: "carlos@empresa.com" }] })
+        );
+
+      await expect(getDepartments()).resolves.toEqual(["Jurídico", "TI"]);
+      await expect(getUsersWithResults()).resolves.toEqual([
+        { id: "2", name: "Carlos Eduardo", email: "carlos@empresa.com" },
+      ]);
+      expect(requestSpy.mock.calls.map(([config]) => config.url)).toEqual([
+        "/users/departments",
+        "/users/with-results",
+      ]);
+    });
+
+    it("monta os perfis e os domínios a partir do catálogo, percorrendo todas as páginas", async () => {
+      const requestSpy = vi
+        .spyOn(axiosInstance, "request")
+        .mockResolvedValueOnce(
+          mockResponse({
+            success: true,
+            data: [
+              journeyProfile(4, "Operador", 1, "Privacidade", "Privacy"),
+              journeyProfile(6, "Auditor", 3, "Conjunta", "Joint"),
+            ],
+            meta: { pagination: { current_page: 1, per_page: 100, total: 3, last_page: 2, has_next_page: true } },
+          })
         )
-      ).toBe(true);
-    });
+        .mockResolvedValueOnce(
+          mockResponse({
+            success: true,
+            data: [journeyProfile(2, "Gestor de Segurança", 2, "Segurança da Informação", "Information Security")],
+            meta: { pagination: { current_page: 2, per_page: 100, total: 3, last_page: 2, has_next_page: false } },
+          })
+        );
 
-    it("deve paginar corretamente e retornar lista vazia quando nenhum resultado corresponder", async () => {
-      const page2 = await getAdminResults({ page: 2, perPage: 6 });
-      expect(page2.page).toBe(2);
-      expect(page2.items).toHaveLength(6);
+      const catalog = await getAdminResultsCatalogOptions();
 
-      const page3 = await getAdminResults({ page: 3, perPage: 6 });
-      expect(page3.page).toBe(3);
-      expect(page3.items).toHaveLength(2);
-
-      const empty = await getAdminResults({ search: "inexistente-xyz" });
-      expect(empty.items).toHaveLength(0);
-      expect(empty.filteredTotal).toBe(0);
-      expect(empty.total).toBe(14);
-      expect(empty.totalPages).toBe(1);
-    });
-  });
-
-  describe("getAdminResultsMetrics (GET /admin/results/metrics)", () => {
-    it("deve retornar métricas agregadas por domínio sem média geral", async () => {
-      const metrics = await getAdminResultsMetrics();
-
-      expect(metrics.totalCompletedJourneys).toBe(14);
-      expect(metrics.totalEvaluatedUsers).toBe(6);
-      expect(metrics.domainAverages).toHaveLength(3);
-      expect("averageScore" in metrics).toBe(false);
-
-      const privacy = metrics.domainAverages.find((d) => d.domain === "privacy");
-      const security = metrics.domainAverages.find((d) => d.domain === "security");
-      const joint = metrics.domainAverages.find((d) => d.domain === "joint");
-
-      expect(privacy?.averageScore).toBe(82);
-      expect(security?.averageScore).toBe(79);
-      expect(joint?.averageScore).toBe(77);
-    });
-
-    it("deve atualizar métricas respeitando filtros e retornar null em domínios sem jornadas", async () => {
-      // Usuário 2 possui 2 jornadas de Privacidade e nenhuma nos demais domínios
-      const metrics = await getAdminResultsMetrics({ userId: "2" });
-
-      expect(metrics.totalCompletedJourneys).toBe(2);
-      expect(metrics.totalEvaluatedUsers).toBe(1);
-
-      const privacy = metrics.domainAverages.find((d) => d.domain === "privacy");
-      const security = metrics.domainAverages.find((d) => d.domain === "security");
-      const joint = metrics.domainAverages.find((d) => d.domain === "joint");
-
-      expect(privacy?.averageScore).toBe(92);
-      expect(security?.averageScore).toBeNull();
-      expect(joint?.averageScore).toBeNull();
-    });
-  });
-
-  describe("Endpoints auxiliares de filtros", () => {
-    it("getDepartments deve retornar setores cadastrados", async () => {
-      const departments = await getDepartments();
-      expect(departments).toContain("Tecnologia da Informação");
-      expect(departments).toContain("Compliance");
-      expect(departments).toContain("Jurídico");
-    });
-
-    it("getUsersWithResults deve retornar usuários avaliados", async () => {
-      const users = await getUsersWithResults();
-      expect(users.length).toBeGreaterThan(0);
-      expect(users.some((u) => u.name === "Ana Beatriz Silva")).toBe(true);
-    });
-
-    it("getJourneyProfileFilterOptions e getAdminResultsFilterOptions devem compor opções dos filtros", async () => {
-      const profiles = await getJourneyProfileFilterOptions();
-      expect(profiles.length).toBeGreaterThan(0);
-
-      const filterOptions = await getAdminResultsFilterOptions();
-      expect(filterOptions.users.length).toBeGreaterThan(0);
-      expect(filterOptions.departments.length).toBeGreaterThan(0);
-      expect(filterOptions.domains.map((d) => d.id)).toEqual(["privacy", "security", "joint"]);
-      expect(filterOptions.journeyProfiles.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe("Mappers (resposta da API → tela)", () => {
-    it("mapAdminResultItem deve mapear campos da API backend #158 corretamente", () => {
-      const apiItem: AdminResultItemApi = {
-        id: 42,
-        user: {
-          id: 5,
-          name: "João da Silva",
-          email: "joao.silva@empresa.com",
-          department: "Segurança Cibernética",
-        },
-        journey_profile: {
-          id: 4,
-          name_pt: "Gestor de Segurança",
-          name_en: "Security Manager",
-        },
-        knowledge_domain: {
-          id: 2,
-          name_pt: "Segurança da Informação",
-          name_en: "Information Security",
-        },
-        finished_at: "2026-07-15 10:30:00",
-        score: 87.4,
-      };
-
-      const mapped = mapAdminResultItem(apiItem);
-
-      expect(mapped.id).toBe("42");
-      expect(mapped.journeyId).toBe("42");
-      expect(mapped.user.id).toBe("5");
-      expect(mapped.user.name).toBe("João da Silva");
-      expect(mapped.user.initials).toBe("JS");
-      expect(mapped.user.department).toBe("Segurança Cibernética");
-      expect(mapped.profileId).toBe("4");
-      expect(mapped.profileNamePt).toBe("Gestor de Segurança");
-      expect(mapped.profileNameEn).toBe("Security Manager");
-      expect(mapped.domain).toBe("security");
-      expect(mapped.domainNamePt).toBe("Segurança da Informação");
-      expect(mapped.completedAt).toBe("2026-07-15 10:30:00");
-      expect(mapped.score).toBe(87);
-      expect(mapped.scoreBand).toBe("strong");
-    });
-
-    it("mapAdminResultItem deve lidar com campos nulos e faixas de nota", () => {
-      const weakItem: AdminResultItemApi = {
-        id: 43,
-        user: {
-          id: null,
-          name: null,
-          email: null,
-          department: null,
-        },
-        journey_profile: {
-          id: null,
-          name_pt: null,
-          name_en: null,
-        },
-        knowledge_domain: {
-          id: null,
-          name_pt: null,
-          name_en: null,
-        },
-        finished_at: null,
-        score: 45,
-      };
-
-      const mappedWeak = mapAdminResultItem(weakItem);
-      expect(mappedWeak.user.name).toBe("");
-      expect(mappedWeak.user.initials).toBe("");
-      expect(mappedWeak.domain).toBe("joint");
-      expect(mappedWeak.score).toBe(45);
-      expect(mappedWeak.scoreBand).toBe("weak");
-
-      const mediumItem: AdminResultItemApi = {
-        ...weakItem,
-        score: 65,
-      };
-      expect(mapAdminResultItem(mediumItem).scoreBand).toBe("medium");
-    });
-
-    it("mapAdminResultMetrics deve mapear métricas e manter averageScore como null para domínio sem jornadas", () => {
-      const apiMetrics: AdminResultMetricsDataApi = {
-        total_completed_journeys: 10,
-        distinct_users_count: 7,
-        domains: [
-          {
-            domain_id: 1,
-            domain_name_pt: "Privacidade",
-            domain_name_en: "Privacy",
-            completed_journeys: 10,
-            average_score: 85.3,
-          },
-          {
-            domain_id: 2,
-            domain_name_pt: "Segurança da Informação",
-            domain_name_en: "Information Security",
-            completed_journeys: 0,
-            average_score: null,
-          },
-        ],
-      };
-
-      const mapped = mapAdminResultMetrics(apiMetrics);
-
-      expect(mapped.totalCompletedJourneys).toBe(10);
-      expect(mapped.totalEvaluatedUsers).toBe(7);
-      expect(mapped.domainAverages).toHaveLength(2);
-
-      const privacy = mapped.domainAverages.find((d) => d.domain === "privacy");
-      expect(privacy?.averageScore).toBe(85);
-      expect(privacy?.completedCount).toBe(10);
-
-      const security = mapped.domainAverages.find((d) => d.domain === "security");
-      expect(security?.averageScore).toBeNull();
-      expect(security?.completedCount).toBe(0);
-    });
-
-    it("mapUsersWithResults deve mapear a lista de usuários da API para opções de filtro", () => {
-      const apiUsers: UserWithResultsItemApi[] = [
-        { id: 1, name: "Carlos", email: "carlos@example.com" },
-        { id: 2, name: null, email: null },
-      ];
-
-      const mapped = mapUsersWithResults(apiUsers);
-
-      expect(mapped).toEqual([
-        { id: "1", name: "Carlos", email: "carlos@example.com" },
-        { id: "2", name: "", email: "" },
+      expect(requestSpy.mock.calls.map(([config]) => config.params)).toEqual([
+        { page: 1, per_page: 100 },
+        { page: 2, per_page: 100 },
       ]);
+      expect(catalog.journeyProfiles.map((profile) => profile.namePt)).toEqual([
+        "Auditor",
+        "Gestor de Segurança",
+        "Operador",
+      ]);
+      expect(catalog.domains).toEqual([
+        { id: "privacy", namePt: "Privacidade", nameEn: "Privacy", label: "Privacidade" },
+        {
+          id: "security",
+          namePt: "Segurança da Informação",
+          nameEn: "Information Security",
+          label: "Segurança da Informação",
+        },
+        { id: "joint", namePt: "Conjunta", nameEn: "Joint", label: "Conjunta" },
+      ]);
+    });
+
+    it("falha as opções inteiras quando um dos endpoints falha", async () => {
+      vi.spyOn(axiosInstance, "request").mockImplementation(async (config) => {
+        if (config.url === "/users/departments") {
+          throw mockAxiosError(500, { success: false, message: "Erro interno" });
+        }
+        if (config.url === "/journey-profiles") {
+          return mockResponse({
+            success: true,
+            data: [],
+            meta: { pagination: { current_page: 1, per_page: 100, total: 0, last_page: 1, has_next_page: false } },
+          });
+        }
+        return mockResponse({ success: true, data: [] });
+      });
+
+      await expect(getAdminResultsFilterOptions()).rejects.toMatchObject({ status: 500 });
+    });
+  });
+
+  describe("mappers", () => {
+    it("mapAdminResultItem lida com campos nulos", () => {
+      const item = mapAdminResultItem({
+        id: 7,
+        user: null,
+        journey_profile: null,
+        knowledge_domain: null,
+        finished_at: null,
+        score: null,
+      });
+
+      expect(item).toMatchObject({
+        id: "7",
+        user: { id: "", name: "", email: "", department: "" },
+        profileId: "",
+        profileTitle: "",
+        domain: "joint",
+        completedAt: "",
+        score: 0,
+      });
+    });
+
+    it("mapAdminResultMetrics ignora domínios desconhecidos e mantém null sem jornada", () => {
+      const summary = mapAdminResultMetrics({
+        ...METRICS,
+        domains: [
+          ...METRICS.domains,
+          { domain_id: 9, domain_name_pt: "Outro", domain_name_en: "Other", completed_journeys: 1, average_score: 50 },
+        ],
+      });
+
+      expect(summary.domainAverages).toHaveLength(3);
+      expect(summary.domainAverages[1]).toMatchObject({ domain: "security", averageScore: null, completedCount: 0 });
     });
   });
 });

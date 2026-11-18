@@ -80,7 +80,8 @@ export interface AdminResultsFilters {
   dateTo: string;
 }
 
-export interface GetAdminResultsParams {
+/** Filtros enviados à listagem e ao resumo (os mesmos nas duas consultas). */
+export interface AdminResultsFilterParams {
   search?: string;
   userId?: string;
   department?: string;
@@ -88,22 +89,72 @@ export interface GetAdminResultsParams {
   journeyProfileId?: string;
   dateFrom?: string;
   dateTo?: string;
+}
+
+export interface GetAdminResultsParams extends AdminResultsFilterParams {
   page?: number;
   perPage?: number;
 }
 
 export interface AdminResultsPage {
   items: AdminResultItem[];
+  /** Total de resultados com os filtros aplicados (`meta.pagination.total`) */
   total: number;
-  filteredTotal: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
-export interface AdminResultsResponse extends AdminResultsPage {
-  summary: AdminResultsSummary;
-  filterOptions: AdminResultsFilterOptions;
+/** Opções dos filtros que vêm do catálogo (GET /journey-profiles). */
+export interface AdminResultsCatalogOptions {
+  journeyProfiles: AdminResultProfileOption[];
+  domains: AdminResultDomainOption[];
+}
+
+/** Item de GET /admin/results. */
+export interface AdminResultItemApi {
+  id: number;
+  user: {
+    id: number | null;
+    name: string | null;
+    email: string | null;
+    department: string | null;
+  } | null;
+  journey_profile: {
+    id: number | null;
+    name_pt: string | null;
+    name_en: string | null;
+  } | null;
+  knowledge_domain: {
+    id: number | null;
+    name_pt: string | null;
+    name_en: string | null;
+  } | null;
+  finished_at: string | null;
+  score: number | null;
+}
+
+/** Média de um domínio em GET /admin/results/metrics. */
+export interface AdminResultDomainMetricApi {
+  domain_id: number;
+  domain_name_pt: string | null;
+  domain_name_en: string | null;
+  completed_journeys: number;
+  average_score: number | null;
+}
+
+/** `data` de GET /admin/results/metrics. */
+export interface AdminResultMetricsDataApi {
+  total_completed_journeys: number;
+  distinct_users_count: number;
+  domains: AdminResultDomainMetricApi[];
+}
+
+/** Item de GET /users/with-results. */
+export interface UserWithResultsItemApi {
+  id: number;
+  name: string | null;
+  email: string | null;
 }
 
 export interface AdminResultsLabels {
@@ -150,6 +201,8 @@ export interface AdminResultsLabels {
   paginationPageOf: (current: number, total: number) => string;
   errorTitle: string;
   errorMessage: string;
+  summaryErrorMessage: string;
+  filterOptionsErrorMessage: string;
   retryButton: string;
   loadingAriaLabel: string;
 }
@@ -159,13 +212,18 @@ export interface AdminResultsViewModelReturn {
   results: AdminResultItem[];
   /** Query string atual (filtros e página), levada ao resultado de cada linha */
   listQuery: string;
+  /** Total de resultados sem filtros, o "y" do contador "x de y resultados" */
   totalResults: number;
+  /** Total de resultados com os filtros aplicados */
   filteredTotal: number;
   page: number;
   totalPages: number;
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage: string | null;
+  isResultsLoading: boolean;
+  isResultsError: boolean;
+  isSummaryLoading: boolean;
+  isSummaryError: boolean;
+  isFilterOptionsLoading: boolean;
+  isFilterOptionsError: boolean;
   hasActiveFilters: boolean;
   filters: AdminResultsFilters;
   filterOptions: AdminResultsFilterOptions;
@@ -178,7 +236,9 @@ export interface AdminResultsViewModelReturn {
   handleDateToChange: (dateTo: string) => void;
   handleClearFilters: () => void;
   handlePageChange: (newPage: number) => void;
-  handleRetry: () => void;
+  handleRetryResults: () => void;
+  handleRetrySummary: () => void;
+  handleRetryFilterOptions: () => void;
   labels: AdminResultsLabels;
 }
 

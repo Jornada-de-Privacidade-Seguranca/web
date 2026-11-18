@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "@shared/i18n/navigation";
+import { ApiRequestError } from "@services/httpClient";
 import {
   getAdminResults,
   getAdminResultsFilterOptions,
@@ -19,6 +20,7 @@ import {
 } from "./adminResults.utils";
 import type {
   AdminResultsFilterOptions,
+  AdminResultsFilterParams,
   AdminResultsFilters,
   AdminResultsLabels,
   AdminResultsSummary,
@@ -29,6 +31,7 @@ import type {
 
 const DEFAULT_PAGE_SIZE = 6;
 const SEARCH_DEBOUNCE_MS = 400;
+const ACCESS_DENIED_ROUTE = "/painel?error=access_denied";
 
 const EMPTY_SUMMARY: AdminResultsSummary = {
   totalCompletedJourneys: 0,
@@ -210,70 +213,86 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     [debouncedSearch, syncUrl]
   );
 
-  // 1. Consulta dos resultados paginados (GET /admin/results)
+  // Filtros que vão para a API: a busca só entra depois do debounce, sem os espaços das pontas
+  const appliedFilters: AdminResultsFilterParams = useMemo(
+    () => ({
+      search: debouncedSearch.trim(),
+      userId: filters.userId,
+      department: filters.department,
+      domains: filters.domains,
+      journeyProfileId: filters.journeyProfileId,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+    }),
+    [
+      debouncedSearch,
+      filters.userId,
+      filters.department,
+      filters.domains,
+      filters.journeyProfileId,
+      filters.dateFrom,
+      filters.dateTo,
+    ]
+  );
+  const appliedFiltersKey = [
+    appliedFilters.search,
+    appliedFilters.userId,
+    appliedFilters.department,
+    (appliedFilters.domains ?? []).join(","),
+    appliedFilters.journeyProfileId,
+    appliedFilters.dateFrom,
+    appliedFilters.dateTo,
+  ];
+  const hasAppliedFilters = hasActiveAdminResultsFilters({
+    ...filters,
+    search: appliedFilters.search ?? "",
+  });
+
+  // Cada mudança de filtro gera uma chave nova. O React Query cancela a consulta
+  // anterior pelo `signal`, e uma resposta atrasada não substitui a mais recente.
   const resultsQuery = useQuery({
-    queryKey: [
-      "admin",
-      "results",
-      page,
-      debouncedSearch,
-      filters.userId,
-      filters.department,
-      filters.domains.join(","),
-      filters.journeyProfileId,
-      filters.dateFrom,
-      filters.dateTo,
-    ],
-    queryFn: () =>
-      getAdminResults({
-        page,
-        perPage: DEFAULT_PAGE_SIZE,
-        search: debouncedSearch,
-        userId: filters.userId,
-        department: filters.department,
-        domains: filters.domains,
-        journeyProfileId: filters.journeyProfileId,
-        dateFrom: filters.dateFrom,
-        dateTo: filters.dateTo,
-      }),
+    queryKey: ["admin", "results", "list", page, ...appliedFiltersKey],
+    queryFn: ({ signal }) =>
+      getAdminResults({ ...appliedFilters, page, perPage: DEFAULT_PAGE_SIZE }, signal),
     placeholderData: keepPreviousData,
     retry: false,
   });
 
-  // 2. Consulta das métricas agregadas por domínio (GET /admin/results/metrics)
   const metricsQuery = useQuery({
-    queryKey: [
-      "admin",
-      "results-metrics",
-      debouncedSearch,
-      filters.userId,
-      filters.department,
-      filters.domains.join(","),
-      filters.journeyProfileId,
-      filters.dateFrom,
-      filters.dateTo,
-    ],
-    queryFn: () =>
-      getAdminResultsMetrics({
-        search: debouncedSearch,
-        userId: filters.userId,
-        department: filters.department,
-        domains: filters.domains,
-        journeyProfileId: filters.journeyProfileId,
-        dateFrom: filters.dateFrom,
-        dateTo: filters.dateTo,
-      }),
+    queryKey: ["admin", "results", "metrics", ...appliedFiltersKey],
+    queryFn: ({ signal }) => getAdminResultsMetrics(appliedFilters, signal),
     placeholderData: keepPreviousData,
     retry: false,
   });
 
-  // 3. Consulta das opções dos filtros (GET /users/with-results, GET /users/departments, GET /journey-profiles)
+  // Total sem filtros, para o "y" do contador. Sem filtros, é o próprio total da listagem.
+  const unfilteredTotalQuery = useQuery({
+    queryKey: ["admin", "results", "metrics", "unfiltered"],
+    queryFn: ({ signal }) => getAdminResultsMetrics({}, signal),
+    enabled: hasAppliedFilters,
+    retry: false,
+  });
+
   const filterOptionsQuery = useQuery({
-    queryKey: ["admin", "results-filter-options"],
-    queryFn: getAdminResultsFilterOptions,
+    queryKey: ["admin", "results", "filter-options"],
+    queryFn: ({ signal }) => getAdminResultsFilterOptions(signal),
     staleTime: Infinity,
     retry: false,
   });
+
+  // Sem a permissão results.view_all a API responde 403: leva à página de acesso negado
+  const isForbidden = [
+    resultsQuery.error,
+    metricsQuery.error,
+    unfilteredTotalQuery.error,
+    filterOptionsQuery.error,
+  ].some((error) => error instanceof ApiRequestError && error.status === 403);
+
+  useEffect(() => {
+    if (isForbidden) {
+      router.replace(ACCESS_DENIED_ROUTE);
+    }
+  }, [isForbidden, router]);
 
   const summary: AdminResultsSummary = useMemo(() => {
     const raw = metricsQuery.data ?? EMPTY_SUMMARY;
@@ -316,17 +335,29 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     }));
   }, [isEnglish, resultsQuery.data?.items]);
 
-  const handleRetry = useCallback(() => {
-    void resultsQuery.refetch();
-    void metricsQuery.refetch();
-    void filterOptionsQuery.refetch();
-  }, [resultsQuery, metricsQuery, filterOptionsQuery]);
+  const { refetch: refetchResults } = resultsQuery;
+  const { refetch: refetchMetrics } = metricsQuery;
+  const { refetch: refetchUnfilteredTotal } = unfilteredTotalQuery;
+  const { refetch: refetchFilterOptions } = filterOptionsQuery;
+
+  const handleRetryResults = useCallback(() => {
+    void refetchResults();
+  }, [refetchResults]);
+
+  const handleRetrySummary = useCallback(() => {
+    void refetchMetrics();
+    if (hasAppliedFilters) void refetchUnfilteredTotal();
+  }, [hasAppliedFilters, refetchMetrics, refetchUnfilteredTotal]);
+
+  const handleRetryFilterOptions = useCallback(() => {
+    void refetchFilterOptions();
+  }, [refetchFilterOptions]);
 
   const hasActiveFilters = hasActiveAdminResultsFilters(filters);
-  const isLoading =
-    resultsQuery.isLoading || metricsQuery.isLoading || filterOptionsQuery.isLoading;
-  const isError =
-    resultsQuery.isError || metricsQuery.isError || filterOptionsQuery.isError;
+  const filteredTotal = resultsQuery.data?.total ?? 0;
+  const totalResults = hasAppliedFilters
+    ? (unfilteredTotalQuery.data?.totalCompletedJourneys ?? filteredTotal)
+    : filteredTotal;
 
   const labels: AdminResultsLabels = {
     title: t("title"),
@@ -375,6 +406,8 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
       t("pagination.pageOf", { current, total }),
     errorTitle: t("error.title"),
     errorMessage: t("error.message"),
+    summaryErrorMessage: t("error.summaryMessage"),
+    filterOptionsErrorMessage: t("error.filterOptionsMessage"),
     retryButton: t("error.retry"),
     loadingAriaLabel: t("loadingAriaLabel"),
   };
@@ -383,13 +416,16 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     summary,
     results,
     listQuery: currentSearchParamsString,
-    totalResults: resultsQuery.data?.total ?? 0,
-    filteredTotal: resultsQuery.data?.filteredTotal ?? 0,
+    totalResults,
+    filteredTotal,
     page: resultsQuery.data?.page ?? page,
     totalPages: resultsQuery.data?.totalPages ?? 1,
-    isLoading,
-    isError,
-    errorMessage: isError ? t("error.message") : null,
+    isResultsLoading: resultsQuery.isLoading,
+    isResultsError: resultsQuery.isError && !isForbidden,
+    isSummaryLoading: metricsQuery.isLoading,
+    isSummaryError: metricsQuery.isError && !isForbidden,
+    isFilterOptionsLoading: filterOptionsQuery.isLoading,
+    isFilterOptionsError: filterOptionsQuery.isError && !isForbidden,
     hasActiveFilters,
     filters,
     filterOptions,
@@ -402,7 +438,9 @@ export function useAdminResultsVM(): AdminResultsViewModelReturn {
     handleDateToChange,
     handleClearFilters,
     handlePageChange,
-    handleRetry,
+    handleRetryResults,
+    handleRetrySummary,
+    handleRetryFilterOptions,
     labels,
   };
 }

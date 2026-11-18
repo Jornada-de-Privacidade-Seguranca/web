@@ -16,6 +16,11 @@ export interface JourneyProfileApi {
   description_en: string | null;
   /** Id do domínio de conhecimento (1 = privacidade, 2 = segurança, 3 = conjunta) */
   type: number | null;
+  knowledge_domain?: {
+    id: number | null;
+    name_pt: string | null;
+    name_en: string | null;
+  } | null;
   /** Situação do perfil para o usuário autenticado, na listagem (#147) */
   user_status?: JourneyProfileUserStatusApi | null;
   last_score?: number | null;

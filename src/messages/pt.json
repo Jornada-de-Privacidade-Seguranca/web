@@ -966,7 +966,9 @@
     "error": {
       "title": "Erro ao carregar resultados",
       "message": "Não foi possível carregar os resultados dos usuários.",
-      "retry": "Tentar novamente"
+      "retry": "Tentar novamente",
+      "summaryMessage": "Não foi possível carregar o resumo dos resultados.",
+      "filterOptionsMessage": "Não foi possível carregar as opções dos filtros."
     }
   }
 }

@@ -31,6 +31,7 @@ describe("useAdminResultsFiltersVM", () => {
       filteredTotal: 3,
       totalResults: 14,
       hasActiveFilters: true,
+      isOptionsLoading: false,
       onSearchChange: vi.fn(),
       onUserChange: vi.fn(),
       onDepartmentChange: vi.fn(),
@@ -41,6 +42,7 @@ describe("useAdminResultsFiltersVM", () => {
       onClearFilters: vi.fn(),
       labels: {
         filtersAriaLabel: "Filtros",
+        loadingAriaLabel: "Carregando",
         searchPlaceholder: "Buscar...",
         filterUser: "Usuário",
         filterAllUsers: "Todos",
