@@ -2,8 +2,10 @@ import { getInitials } from "@/shared/utils/initials";
 import { apiRequest, apiRequestWithMeta } from "@services/httpClient";
 import {
   mapKnowledgeDomain,
+  mapKnowledgeDomainId,
   type JourneyKnowledgeDomainApi,
 } from "@services/journeyService";
+import { getJourneyProfiles } from "@services/journeyProfileService";
 import type {
   AdminUserListItem,
   AccessProfile,
@@ -19,7 +21,6 @@ import type {
   AssignableJourneyProfile,
   AssignJourneyPayload,
   JourneyAssignedBy,
-  JourneyDomain,
   JourneyOrigin,
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
@@ -401,101 +402,57 @@ export async function inviteUser(payload: InviteUserPayload): Promise<InviteUser
   };
 }
 
-// ---------------------------------------------------------------------------
-// Mocks que continuam até a integração própria: atribuição/cancelamento de
-// jornada (#170).
-// ---------------------------------------------------------------------------
+/** Maior `per_page` aceito por GET /journey-profiles. */
+const JOURNEY_PROFILES_PAGE_SIZE = 100;
 
-export interface JourneyProfileApiItem {
-  id: number;
-  name_pt: string;
-  name_en: string;
-  knowledge_domain: JourneyDomain;
-}
+/**
+ * Perfis de jornada que podem ser atribuídos, de GET /journey-profiles,
+ * percorrendo todas as páginas do catálogo.
+ */
+export async function getAssignableJourneyProfiles(): Promise<AssignableJourneyProfile[]> {
+  const first = await getJourneyProfiles(1, JOURNEY_PROFILES_PAGE_SIZE);
+  const remainingPages = Array.from({ length: Math.max(0, first.totalPages - 1) }, (_, index) =>
+    getJourneyProfiles(index + 2, JOURNEY_PROFILES_PAGE_SIZE)
+  );
+  const profiles = [first, ...(await Promise.all(remainingPages))].flatMap((page) => page.items);
 
-export const MOCK_ASSIGNABLE_PROFILES: JourneyProfileApiItem[] = [
-  {
-    id: 1,
-    name_pt: "Encarregado pelo Tratamento de Dados Pessoais",
-    name_en: "Data Protection Officer (DPO)",
-    knowledge_domain: "privacy",
-  },
-  {
-    id: 2,
-    name_pt: "Gestor de Segurança da Informação",
-    name_en: "Information Security Manager",
-    knowledge_domain: "security",
-  },
-  {
-    id: 3,
-    name_pt: "Controlador",
-    name_en: "Data Controller",
-    knowledge_domain: "privacy",
-  },
-  {
-    id: 4,
-    name_pt: "Operador",
-    name_en: "Data Operator",
-    knowledge_domain: "privacy",
-  },
-  {
-    id: 5,
-    name_pt: "Auditor de Segurança e Privacidade",
-    name_en: "Security and Privacy Auditor",
-    knowledge_domain: "joint",
-  },
-];
-
-const DOMAIN_LABELS: Record<JourneyDomain, string> = {
-  privacy: "Privacidade",
-  security: "Segurança da Informação",
-  joint: "Conjunta",
-};
-
-export async function getAssignableJourneyProfiles(): Promise<
-  AssignableJourneyProfile[]
-> {
-  return MOCK_ASSIGNABLE_PROFILES.map((profile) => ({
+  return profiles.map((profile) => ({
     id: profile.id,
     namePt: profile.name_pt,
     nameEn: profile.name_en,
-    domain: profile.knowledge_domain,
+    domain: mapKnowledgeDomainId(profile.type) ?? "joint",
   }));
 }
 
-/** Mock da atribuição de jornada (#170): devolve o usuário com a jornada em andamento. */
+/**
+ * POST /users/{user}/journeys: atribui a jornada do perfil escolhido. Erros
+ * chegam como `ApiRequestError`: 409 `JOURNEY_IN_PROGRESS` e 422
+ * `JOURNEY_PROFILE_SELECTION_REQUIRED` ou `JOURNEY_PROFILE_MISMATCH`.
+ */
 export async function assignJourneyToUser(
-  user: AdminUserDetails,
+  userId: string,
   payload: AssignJourneyPayload
-): Promise<AdminUserDetails> {
-  const profile = MOCK_ASSIGNABLE_PROFILES.find((p) => p.id === payload.profileId);
-  if (!profile) {
-    throw new Error("Perfil de jornada não encontrado");
-  }
-
-  const assignedBy: JourneyAssignedBy = payload.assignedBy ?? {
-    id: 1,
-    name: "Administrador",
-  };
-
-  const activeJourney: ActiveJourney = {
-    id: `aj-${user.id}-${Date.now()}`,
-    profileId: profile.id,
-    title: profile.name_pt,
-    domain: profile.knowledge_domain,
-    domainLabel: DOMAIN_LABELS[profile.knowledge_domain],
-    startedAt: new Date().toISOString(),
-    origin: "assigned",
-    assignedBy,
-    assigned_by: assignedBy,
-  };
-
-  return { ...user, activeJourney };
+): Promise<void> {
+  await apiRequest<unknown>(
+    `/users/${userId}/journeys`,
+    {
+      method: "post",
+      data: { journey_profile_id: payload.profileId },
+      withCsrf: true,
+    },
+    "Não foi possível atribuir a jornada."
+  );
 }
 
-/** Mock do cancelamento da atribuição (#170): devolve o usuário sem jornada em andamento. */
-export async function cancelAssignedJourney(
-  user: AdminUserDetails
-): Promise<AdminUserDetails> {
-  return { ...user, activeJourney: null };
+/**
+ * POST /journeys/{journey}/cancel: cancela a jornada atribuída. Só quem a
+ * atribuiu pode cancelar (403), e uma jornada que não está mais em andamento
+ * responde 409.
+ */
+export async function cancelAssignedJourney(journeyId: string): Promise<void> {
+  await apiRequest<unknown>(
+    `/journeys/${journeyId}/cancel`,
+    { method: "post", withCsrf: true },
+    "Não foi possível cancelar a atribuição da jornada."
+  );
 }

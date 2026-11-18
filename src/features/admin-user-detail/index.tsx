@@ -53,6 +53,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
     activeJourney,
     assignableOptions,
     isFirstJourney,
+    isInitialProfileRequired,
     selectedProfileId,
     isAssignModalOpen,
     isAssigningJourney,
@@ -266,6 +267,7 @@ export function AdminUserDetailView({ userId }: AdminUserDetailViewProps) {
             isOpen={isAssignModalOpen}
             options={assignableOptions}
             isFirstJourney={isFirstJourney}
+            isInitialProfileRequired={isInitialProfileRequired}
             selectedProfileId={selectedProfileId}
             isSubmitting={isAssigningJourney}
             errorMessage={assignErrorMessage}

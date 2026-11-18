@@ -18,8 +18,11 @@ export interface Journey {
   status: JourneyStatus;
   score?: number;
   href?: string;
-  origin?: JourneyOrigin;
+  /** null quando a API não conhece a origem (jornadas antigas) */
+  origin?: JourneyOrigin | null;
   isSelfStarted?: boolean;
+  /** Nome de quem atribuiu a jornada (`assigned_by.name`), quando ela foi atribuída */
+  assignedByName?: string;
 }
 
 export interface JourneyFilters {
@@ -40,11 +43,14 @@ export type UserJourneyApiStatus = "ongoing" | "completed";
 
 export interface UserJourneyProfileSummaryApi {
   id: number | null;
-  name?: string | null;
-  description: string | null;
+  name_pt: string | null;
+  name_en: string | null;
+  description_pt: string | null;
+  description_en: string | null;
   knowledge_domain: {
     id: number | null;
-    name: string | null;
+    name_pt: string | null;
+    name_en: string | null;
   };
 }
 
@@ -58,6 +64,8 @@ export interface UserJourneyListItemApi {
   finished_at: string | null;
   status: UserJourneyApiStatus;
   is_completed: boolean;
+  origin: JourneyOrigin | null;
+  assigned_by: { id: number; name: string | null } | null;
   summary: {
     acquired_knowledges_count: number;
     professional_certifications_count: number;
@@ -95,6 +103,8 @@ export interface AssessmentsLabels {
   actionCancel: string;
   assignedBadge: string;
   inProgressBadge: string;
+  assignedBy: (name: string) => string;
+  onlyAssignerCanCancel: string;
   completedScoreBadge: (score: number) => string;
   competenciesCount: (count: number) => string;
   questionsCount: (count: number) => string;
@@ -115,6 +125,12 @@ export interface AssessmentsLabels {
   cancelModalDescription: string;
   cancelModalKeep: string;
   cancelModalConfirm: string;
+  cancelModalConfirming: string;
+  cancelSuccess: string;
+  cancelError: string;
+  cancelNotAllowed: string;
+  cancelUnavailable: string;
+  closeMessage: string;
   paginationPrevious: string;
   paginationNext: string;
   paginationPageOf: (current: number, total: number) => string;
@@ -134,9 +150,14 @@ export interface AssessmentsViewModelReturn {
 
   /** Modal de confirmação de cancelamento */
   isCancelModalOpen: boolean;
+  /** POST /journeys/{journey}/cancel em andamento: a confirmação fica travada */
+  isCancellingJourney: boolean;
+  cancelErrorMessage: string | null;
+  cancelSuccessMessage: string | null;
   handleOpenCancelModal: () => void;
   handleCloseCancelModal: () => void;
-  handleConfirmCancelJourney: () => void;
+  handleConfirmCancelJourney: () => Promise<void>;
+  handleDismissCancelSuccess: () => void;
 
   /** Catálogo de jornadas filtrado e paginado */
   catalogJourneys: Journey[];

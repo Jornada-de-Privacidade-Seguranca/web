@@ -6,10 +6,11 @@ import { AreaScoreSection } from "./components/AreaScoreSection";
 import { CompetencyAnswerBox } from "./components/CompetencyAnswerBox";
 import { JourneyResultErrorState } from "./components/JourneyResultErrorState";
 import { JourneyResultSkeleton } from "./components/JourneyResultSkeleton";
+import { ResultPersonCard } from "./components/ResultPersonCard";
 import { ScoreSummaryCard } from "./components/ScoreSummaryCard";
 import type { JourneyResultViewProps } from "./journeyResult.types";
 
-export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
+export function JourneyResultView({ journeyId, variant, listQuery }: JourneyResultViewProps) {
   const {
     journeyTitle,
     score,
@@ -19,6 +20,7 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
     undeclaredCompetencies,
     retakeUrl,
     resultsUrl,
+    person,
     recommendedAreaScore,
     isLoading,
     error,
@@ -28,7 +30,7 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
     isDownloadingPdf,
     pdfError,
     handleDownloadPdf,
-  } = useJourneyResultVM(journeyId);
+  } = useJourneyResultVM(journeyId, { variant, listQuery });
 
   return (
     <PageShell title={labels.pageTitle} subtitle={error ? undefined : journeyTitle || undefined}>
@@ -52,6 +54,8 @@ export function JourneyResultView({ journeyId }: JourneyResultViewProps) {
             <JourneyResultSkeleton />
           ) : (
             <div className="space-y-6">
+              {person && <ResultPersonCard {...person} />}
+
               <ScoreSummaryCard
                 journeyTitle={journeyTitle}
                 score={score}

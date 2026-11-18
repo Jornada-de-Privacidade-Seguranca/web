@@ -98,18 +98,8 @@ export function AuthView() {
               </div>
             </div>
 
-            <div className="mt-3 flex justify-end">
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto px-0 text-xs font-medium text-primary"
-              >
-                {labels.forgotPassword}
-              </Button>
-            </div>
-
             <Button
-              className="mt-4 h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="mt-6 h-11 w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
               type="submit"
               disabled={formState.isSubmitting}
             >
@@ -124,12 +114,20 @@ export function AuthView() {
                 variant="link"
                 className="h-auto px-0 text-sm font-medium text-primary hover:no-underline"
               >
-                <Link href="/cadastro">{labels.signUpLink}</Link>
+                <Link href="/signup">{labels.signUpLink}</Link>
               </Button>
             </p>
 
             <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
-              {labels.privacyNotice}
+              {labels.privacyNoticePrefix}{" "}
+              <Link
+                href="/privacy-terms"
+                aria-label={labels.privacyNoticeLinkAriaLabel}
+                className="rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {labels.privacyNoticeLink}
+              </Link>
+              {labels.privacyNoticeSuffix}
             </p>
           </form>
         </section>

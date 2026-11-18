@@ -6,7 +6,8 @@ export interface ScoreSummaryCardProps {
   overallLabel: string;
   scoreAriaLabel: string;
   declaredCountText: string;
-  retakeHref: string;
+  /** Sem link, o botão de refazer não aparece */
+  retakeHref: string | null;
   retakeLabel: string;
   backHref: string;
   backLabel: string;

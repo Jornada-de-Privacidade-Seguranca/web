@@ -18,6 +18,8 @@ describe("legacyRouteRedirect & proxy", () => {
       ["/en/avaliacoes/", "?search=lgpd", "/en/jornadas?search=lgpd"],
       ["/pt/results", "?page=2", "/pt/resultados?page=2"],
       ["/en/results", "?page=2&domains=1", "/en/resultados?page=2&domains=1"],
+      ["/pt/cadastro", "?from=landing", "/pt/signup?from=landing"],
+      ["/en/cadastro/", "", "/en/signup"],
     ])(
       "deve redirecionar %s (%s) preservando idioma e query string para %s",
       (pathname, search, expected) => {
@@ -31,12 +33,15 @@ describe("legacyRouteRedirect & proxy", () => {
         "/en/resultados?page=2"
       );
       expect(resolveLegacyRouteRedirect("/assessments", "", "en")).toBe("/en/jornadas");
+      expect(resolveLegacyRouteRedirect("/cadastro", "?a=1", "en")).toBe("/en/signup?a=1");
+      expect(resolveLegacyRouteRedirect("/cadastro")).toBe("/pt/signup");
     });
 
     it("deve retornar null para rotas atuais ou válidas", () => {
       expect(resolveLegacyRouteRedirect("/pt/jornadas", "?page=1")).toBeNull();
       expect(resolveLegacyRouteRedirect("/en/resultados", "?page=2")).toBeNull();
       expect(resolveLegacyRouteRedirect("/pt/admin/resultados", "?userId=1")).toBeNull();
+      expect(resolveLegacyRouteRedirect("/pt/signup")).toBeNull();
     });
   });
 
@@ -65,6 +70,18 @@ describe("legacyRouteRedirect & proxy", () => {
       expect(resAvaliacoes.headers.get("location")).toBe(
         "http://localhost:3000/en/jornadas?tab=all"
       );
+    });
+
+    it("deve redirecionar permanentemente (308) /cadastro para /signup mantendo idioma e parâmetros", () => {
+      const response = proxy(new NextRequest("http://localhost:3000/en/cadastro?ref=login"));
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("http://localhost:3000/en/signup?ref=login");
+
+      const noLocale = proxy(
+        new NextRequest("http://localhost:3000/cadastro", { headers: { cookie: "NEXT_LOCALE=en" } })
+      );
+      expect(noLocale.status).toBe(308);
+      expect(noLocale.headers.get("location")).toBe("http://localhost:3000/en/signup");
     });
 
     it("deve preservar cookie NEXT_LOCALE ao redirecionar rota antiga sem prefixo", () => {
@@ -102,6 +119,12 @@ describe("legacyRouteRedirect & proxy", () => {
             permanent: true,
           },
           { source: "/results", destination: "/resultados", permanent: true },
+          {
+            source: "/:locale(pt|en)/cadastro",
+            destination: "/:locale/signup",
+            permanent: true,
+          },
+          { source: "/cadastro", destination: "/signup", permanent: true },
         ])
       );
     });

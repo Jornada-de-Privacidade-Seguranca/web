@@ -4,6 +4,7 @@ export const LEGACY_ROUTE_REDIRECTS: Record<string, string> = {
   "/assessments": "/jornadas",
   "/avaliacoes": "/jornadas",
   "/results": "/resultados",
+  "/cadastro": "/signup",
 };
 
 function isSupportedLocale(value: string | undefined): value is Locale {
@@ -18,7 +19,7 @@ function normalizePath(pathname: string): string {
 }
 
 /**
- * Resolve o destino permanente de rotas legadas (`/assessments`, `/avaliacoes`, `/results`),
+ * Resolve o destino permanente de rotas legadas (`/assessments`, `/avaliacoes`, `/results`, `/cadastro`),
  * preservando o idioma (prefixo de rota, cookie ou idioma padrão) e os parâmetros de busca.
  */
 export function resolveLegacyRouteRedirect(

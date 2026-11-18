@@ -2,14 +2,16 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useJourneyContext } from "@hooks/useJourneyContext";
-import { getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { CURRENT_JOURNEY_QUERY_KEY, useJourneyContext } from "@hooks/useJourneyContext";
+import { getCompetenciesAreaUrl, getJourneySummaryUrl } from "@shared/utils/journeyRoutes";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@hooks/useAuth";
 import {
+  cancelPendingJourney,
   getPendingAssessments,
   getCatalogAssessments,
 } from "@services/assessmentsService";
+import { ApiRequestError } from "@services/httpClient";
 import type {
   AssessmentsViewModelReturn,
   AssessmentsLabels,
@@ -20,21 +22,13 @@ import type {
 
 const CATALOG_PAGE_SIZE = 9;
 
-/** Normaliza para busca: sem acentos, em minúsculas e sem espaços nas pontas. */
-function normalizeSearch(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
 export function useAssessmentsVM(): AssessmentsViewModelReturn {
   const t = useTranslations("assessments");
   const locale = useLocale() === "en" ? "en" : "pt";
   const currentJourney = useJourneyContext();
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const queryClient = useQueryClient();
 
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -48,9 +42,12 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
   // Pagination State for Catalog
   const [catalogPage, setCatalogPage] = useState<number>(1);
 
-  // Cancellation Modal State (simulação local para #148; integração real com backend na issue #121)
+  // Cancelamento da jornada pendente (POST /journeys/{journey}/cancel)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
-  const [isCancelledLocally, setIsCancelledLocally] = useState<boolean>(false);
+  const [isCancellingJourney, setIsCancellingJourney] = useState<boolean>(false);
+  const [cancelErrorMessage, setCancelErrorMessage] = useState<string | null>(null);
+  const [cancelSuccessMessage, setCancelSuccessMessage] = useState<string | null>(null);
+  const isCancellingRef = useRef<boolean>(false);
 
   // Debounce for search term (300ms)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -76,44 +73,63 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // TanStack Query - Pending Journey (at most 1)
   const pendingQuery = useQuery({
-    queryKey: ["assessments", "pending", userId],
+    queryKey: ["assessments", "pending", userId, locale],
     queryFn: () =>
-      getPendingAssessments({ userId: userId as number, page: 1, perPage: 1 }),
+      getPendingAssessments({
+        userId: userId as number,
+        page: 1,
+        perPage: 1,
+        locale,
+      }),
     enabled: Boolean(userId),
     retry: false,
     placeholderData: keepPreviousData,
   });
 
-  // TanStack Query - Catalog Profiles / Journeys
+  // Busca, filtros e paginação vão para a API. A chave da consulta muda a cada
+  // combinação, então uma resposta antiga nunca substitui a mais recente.
+  const catalogSearch = debouncedSearchTerm.trim();
   const catalogQuery = useQuery({
-    queryKey: ["assessments", "catalog", locale],
+    queryKey: [
+      "assessments",
+      "catalog",
+      locale,
+      catalogPage,
+      catalogSearch,
+      filters.domains.join(","),
+      filters.statuses.join(","),
+    ],
     queryFn: () =>
       getCatalogAssessments({
-        page: 1,
-        // Limite máximo suportado pela API (100) para busca, filtros e paginação no cliente.
-        // A issue #98 moverá a paginação, busca e filtros diretamente para os parâmetros da API.
-        limit: 100,
+        page: catalogPage,
+        limit: CATALOG_PAGE_SIZE,
         locale,
+        search: catalogSearch,
+        domains: filters.domains,
+        statuses: filters.statuses,
       }),
     placeholderData: keepPreviousData,
     retry: false,
   });
 
-  // Derived pending journey
-  const rawPendingJourney =
-    !isCancelledLocally && pendingQuery.data?.items && pendingQuery.data.items.length > 0
+  // Derived pending journey. "Continuar jornada" retoma na primeira área com
+  // competências sem resposta, como no resumo da jornada.
+  const pendingItem =
+    pendingQuery.data?.items && pendingQuery.data.items.length > 0
       ? pendingQuery.data.items[0]
       : null;
+  const rawPendingJourney = useMemo(() => {
+    if (!pendingItem) return null;
+    if (currentJourney.journeyId !== pendingItem.id) return pendingItem;
+    return { ...pendingItem, href: getCompetenciesAreaUrl(currentJourney.resumeAreaIndex) };
+  }, [pendingItem, currentJourney.journeyId, currentJourney.resumeAreaIndex]);
 
   const isPendingLoading = pendingQuery.isLoading || (!userId && isAuthLoading);
   const pendingError = pendingQuery.isError ? t("errorMessage") : null;
 
   const hasPendingJourney = rawPendingJourney !== null;
 
-  // Filter and Search logic on catalog items
-  const normalizedSearch = normalizeSearch(debouncedSearchTerm);
-
-  const allCatalogItems = useMemo(() => {
+  const catalogJourneys = useMemo(() => {
     return (catalogQuery.data?.items ?? []).map((journey) => {
       if (currentJourney.journeyId && journey.id === currentJourney.profileId) {
         return {
@@ -126,40 +142,8 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     });
   }, [catalogQuery.data?.items, currentJourney.journeyId, currentJourney.profileId]);
 
-  const filteredCatalogItems = useMemo(() => {
-    return allCatalogItems.filter((journey) => {
-      // Filtro de busca textual
-      if (normalizedSearch) {
-        const targetText = normalizeSearch(`${journey.title} ${journey.description}`);
-        if (!targetText.includes(normalizedSearch)) return false;
-      }
-
-      // Filtro por domínio
-      if (filters.domains.length > 0) {
-        if (!journey.domain || !filters.domains.includes(journey.domain)) {
-          return false;
-        }
-      }
-
-      // Filtro por situação
-      if (filters.statuses.length > 0) {
-        if (!filters.statuses.includes(journey.status)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [allCatalogItems, normalizedSearch, filters]);
-
-  // Pagination calculation on filtered results
-  const catalogTotalItems = filteredCatalogItems.length;
-  const catalogTotalPages = Math.max(1, Math.ceil(catalogTotalItems / CATALOG_PAGE_SIZE));
-
-  const paginatedCatalogJourneys = useMemo(() => {
-    const startIndex = (catalogPage - 1) * CATALOG_PAGE_SIZE;
-    return filteredCatalogItems.slice(startIndex, startIndex + CATALOG_PAGE_SIZE);
-  }, [filteredCatalogItems, catalogPage]);
+  const catalogTotalItems = catalogQuery.data?.total ?? 0;
+  const catalogTotalPages = Math.max(1, catalogQuery.data?.totalPages ?? 1);
 
   const isCatalogLoading = catalogQuery.isLoading;
   const catalogError = catalogQuery.isError ? t("errorMessage") : null;
@@ -200,16 +184,60 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
 
   // Handlers for cancel modal
   const handleOpenCancelModal = useCallback(() => {
+    setCancelErrorMessage(null);
+    setCancelSuccessMessage(null);
     setIsCancelModalOpen(true);
   }, []);
 
   const handleCloseCancelModal = useCallback(() => {
+    // Durante a chamada a confirmação não fecha
+    if (isCancellingRef.current) return;
     setIsCancelModalOpen(false);
+    setCancelErrorMessage(null);
   }, []);
 
-  const handleConfirmCancelJourney = useCallback(() => {
-    setIsCancelledLocally(true);
-    setIsCancelModalOpen(false);
+  /** Recarrega o que depende da jornada pendente: listagem, catálogo, Painel e jornada atual. */
+  const refreshAfterCancellation = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["assessments"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: CURRENT_JOURNEY_QUERY_KEY }),
+    ]);
+  }, [queryClient]);
+
+  const handleConfirmCancelJourney = useCallback(async () => {
+    const journeyId = pendingItem?.id;
+    // Um segundo clique durante a chamada não dispara outro cancelamento
+    if (!journeyId || isCancellingRef.current) return;
+
+    isCancellingRef.current = true;
+    setIsCancellingJourney(true);
+    setCancelErrorMessage(null);
+    try {
+      await cancelPendingJourney(journeyId);
+      setIsCancelModalOpen(false);
+      setCancelSuccessMessage(t("cancelSuccess"));
+      await refreshAfterCancellation();
+    } catch (error) {
+      const status = error instanceof ApiRequestError ? error.status : undefined;
+      if (status === 409) {
+        setCancelErrorMessage(t("cancelNotAllowed"));
+        await queryClient.invalidateQueries({ queryKey: ["assessments", "pending"] });
+      } else if (status === 403 || status === 404) {
+        setCancelErrorMessage(t("cancelUnavailable"));
+        await queryClient.invalidateQueries({ queryKey: ["assessments", "pending"] });
+      } else {
+        // Rede ou 5xx: a confirmação continua aberta para tentar de novo
+        setCancelErrorMessage(t("cancelError"));
+      }
+    } finally {
+      isCancellingRef.current = false;
+      setIsCancellingJourney(false);
+    }
+  }, [pendingItem?.id, queryClient, refreshAfterCancellation, t]);
+
+  const handleDismissCancelSuccess = useCallback(() => {
+    setCancelSuccessMessage(null);
   }, []);
 
   // Handlers for pagination and retry
@@ -245,6 +273,8 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     actionCancel: t("actionCancel"),
     assignedBadge: t("assignedBadge"),
     inProgressBadge: t("inProgressBadge"),
+    assignedBy: (name: string) => t("assignedBy", { name }),
+    onlyAssignerCanCancel: t("onlyAssignerCanCancel"),
     completedScoreBadge: (score: number) => t("completedScoreBadge", { score }),
     competenciesCount: (count: number) => t("competenciesCount", { count }),
     questionsCount: (count: number) => t("questionsCount", { count }),
@@ -265,6 +295,12 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     cancelModalDescription: t("cancelModalDescription"),
     cancelModalKeep: t("cancelModalKeep"),
     cancelModalConfirm: t("cancelModalConfirm"),
+    cancelModalConfirming: t("cancelModalConfirming"),
+    cancelSuccess: t("cancelSuccess"),
+    cancelError: t("cancelError"),
+    cancelNotAllowed: t("cancelNotAllowed"),
+    cancelUnavailable: t("cancelUnavailable"),
+    closeMessage: t("closeMessage"),
     paginationPrevious: t("pagination.previous"),
     paginationNext: t("pagination.next"),
     paginationPageOf: (current: number, total: number) =>
@@ -283,11 +319,15 @@ export function useAssessmentsVM(): AssessmentsViewModelReturn {
     handleRetryPending,
 
     isCancelModalOpen,
+    isCancellingJourney,
+    cancelErrorMessage,
+    cancelSuccessMessage,
     handleOpenCancelModal,
     handleCloseCancelModal,
     handleConfirmCancelJourney,
+    handleDismissCancelSuccess,
 
-    catalogJourneys: paginatedCatalogJourneys,
+    catalogJourneys,
     catalogPage,
     catalogTotalPages,
     catalogTotalItems,

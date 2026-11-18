@@ -56,6 +56,7 @@ const weak = { value: 50, band: "weak", bandLabel: "A desenvolver" } as const;
 
 function buildVM(overrides: Partial<JourneyResultViewModelReturn> = {}): JourneyResultViewModelReturn {
   return {
+    person: null,
     journeyTitle: "Encarregado de Dados",
     score: { value: 76, band: "strong", bandLabel: "Forte" },
     declaredCount: 2,
@@ -326,5 +327,51 @@ describe("JourneyResultView", () => {
     render(<JourneyResultView journeyId="10" />);
 
     expect(screen.queryByRole("button", { name: "Baixar PDF" })).toBeNull();
+  });
+
+  it("deve identificar a pessoa e esconder o refazer na visão do admin", () => {
+    mockVM({
+      retakeUrl: null,
+      resultsUrl: "/admin/resultados?department=TI",
+      person: {
+        ariaLabel: "Dados do usuário avaliado",
+        initials: "AS",
+        name: "Ana Beatriz Silva",
+        email: "ana@empresa.gov.br",
+        fields: [
+          { id: "organization", label: "Órgão/Empresa", value: "Ministério X" },
+          { id: "sector", label: "Setor", value: "Jurídico" },
+          { id: "registration", label: "Matrícula", value: "Não informado" },
+        ],
+      },
+    });
+    render(<JourneyResultView journeyId="10" variant="admin" listQuery="department=TI" />);
+
+    expect(viewModelModule.useJourneyResultVM).toHaveBeenCalledWith("10", {
+      variant: "admin",
+      listQuery: "department=TI",
+    });
+    const person = screen.getByRole("region", { name: "Dados do usuário avaliado" });
+    expect(within(person).getByText("AS")).toBeTruthy();
+    expect(within(person).getByText("Ana Beatriz Silva")).toBeTruthy();
+    expect(within(person).getByText("ana@empresa.gov.br")).toBeTruthy();
+    expect(within(person).getByText("Órgão/Empresa").nextElementSibling?.textContent).toBe("Ministério X");
+    expect(within(person).getByText("Setor").nextElementSibling?.textContent).toBe("Jurídico");
+    expect(within(person).getByText("Matrícula").nextElementSibling?.textContent).toBe("Não informado");
+
+    const card = screen.getByTestId("score-summary-card");
+    expect(within(card).queryByText("Refazer questionário")).toBeNull();
+    expect(within(card).getByText("Voltar").closest("a")?.getAttribute("href")).toBe(
+      "/admin/resultados?department=TI"
+    );
+    // O bloco da pessoa vem antes da nota geral
+    expect(person.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("não deve exibir o bloco da pessoa no resultado da própria pessoa", () => {
+    mockVM();
+    render(<JourneyResultView journeyId="10" />);
+
+    expect(screen.queryByTestId("result-person-card")).toBeNull();
   });
 });

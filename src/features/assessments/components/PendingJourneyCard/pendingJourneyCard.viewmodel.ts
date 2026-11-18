@@ -1,4 +1,4 @@
-import { getCompetenciesAreaUrl, getProfileSummaryUrl } from "@/shared/utils/journeyRoutes";
+import { getCompetenciesAreaUrl } from "@/shared/utils/journeyRoutes";
 import type {
   PendingJourneyCardProps,
   PendingJourneyCardViewModelReturn,
@@ -9,19 +9,23 @@ export function usePendingJourneyCardVM(
 ): PendingJourneyCardViewModelReturn {
   const { journey, labels, onCancelJourney } = props;
 
-  const isAssigned = journey.origin === "assigned" || journey.isSelfStarted === false;
+  const isAssigned = journey.origin === "assigned";
 
   const badgeText = isAssigned ? labels.assignedBadge : labels.inProgressBadge;
   const badgeVariant = isAssigned ? "assigned" : "in_progress";
 
   const buttonText = isAssigned ? labels.actionStart : labels.actionContinue;
 
-  const actionHref = isAssigned
-    ? getProfileSummaryUrl(journey.id)
-    : journey.href ?? getCompetenciesAreaUrl(0);
+  // A jornada atribuída já existe na API: o botão leva às competências, como a iniciada pelo usuário
+  const actionHref = journey.href ?? getCompetenciesAreaUrl(0);
 
-  // Jornada iniciada pelo usuário pode ser cancelada; atribuída por admin/gestor NÃO pode
-  const canCancel = !isAssigned && Boolean(onCancelJourney);
+  const assignedByText =
+    isAssigned && journey.assignedByName ? labels.assignedBy(journey.assignedByName) : null;
+  const cancelNoticeText = isAssigned ? labels.onlyAssignerCanCancel : null;
+
+  // Só a jornada iniciada pelo próprio usuário pode ser cancelada por ele; a
+  // atribuída e a de origem desconhecida (null) não mostram o botão
+  const canCancel = journey.origin === "self_started" && Boolean(onCancelJourney);
 
   const domainLabelsMap: Record<string, string> = {
     privacy: labels.filterDomainPrivacy,
@@ -54,6 +58,8 @@ export function usePendingJourneyCardVM(
     buttonText,
     actionHref,
     canCancel,
+    assignedByText,
+    cancelNoticeText,
     cancelButtonText: labels.actionCancel,
     competenciesText,
     timeText,

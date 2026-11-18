@@ -19,6 +19,11 @@ vi.mock("next-intl", () => ({
     params ? `${key} ${JSON.stringify(params)}` : key,
 }));
 
+const mockReplace = vi.fn();
+vi.mock("@shared/i18n/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -33,9 +38,16 @@ function renderVM(journeyId = "10") {
   return renderHook(() => useJourneyResultVM(journeyId), { wrapper: createWrapper() });
 }
 
+function renderAdminVM(listQuery = "department=TI&page=2", journeyId = "10") {
+  return renderHook(() => useJourneyResultVM(journeyId, { variant: "admin", listQuery }), {
+    wrapper: createWrapper(),
+  });
+}
+
 describe("useJourneyResultVM", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockReplace.mockClear();
     mockLocale = "pt";
   });
 
@@ -265,6 +277,101 @@ describe("useJourneyResultVM", () => {
 
       await waitFor(() => expect(result.current.isDownloadingPdf).toBe(false));
       expect(result.current.pdfError).toBeNull();
+    });
+  });
+
+  describe("visão do admin (/admin/resultados/[id])", () => {
+    it("deve identificar a pessoa, sem refazer, e voltar à listagem com os filtros", async () => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockResolvedValue(buildJourney());
+
+      const { result } = renderAdminVM("department=TI&page=2");
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.labels.pageTitle).toBe("admin.pageTitle");
+      expect(result.current.retakeUrl).toBeNull();
+      expect(result.current.resultsUrl).toBe("/admin/resultados?department=TI&page=2");
+      expect(result.current.person).toEqual({
+        ariaLabel: "admin.person.ariaLabel",
+        initials: "AS",
+        name: "Ana Beatriz Silva",
+        email: "ana@empresa.gov.br",
+        fields: [
+          { id: "organization", label: "admin.person.organization", value: "Ministério X" },
+          { id: "sector", label: "admin.person.sector", value: "Jurídico" },
+          { id: "registration", label: "admin.person.registration", value: "admin.person.notInformed" },
+        ],
+      });
+      expect(result.current.canDownloadPdf).toBe(true);
+    });
+
+    it("deve voltar para a listagem sem filtros quando não há query string", async () => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockResolvedValue(buildJourney());
+
+      const { result } = renderAdminVM("");
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.resultsUrl).toBe("/admin/resultados");
+    });
+
+    it.each([
+      ["not_found", "errors.notFoundTitle", null],
+      ["incomplete", "errors.incompleteTitle", null],
+      ["server_error", "errors.serverErrorTitle", "errors.retryButton"],
+    ] as const)("deve tratar o erro %s com link para a listagem do admin", async (type, title, retry) => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockRejectedValue(
+        new JourneyResultRequestError(type, "Erro")
+      );
+
+      const { result } = renderAdminVM("search=ana");
+      await waitFor(() => expect(result.current.error).toBe(type));
+
+      expect(result.current.labels.errors).toEqual(
+        expect.objectContaining({
+          title,
+          linkText: "errors.backToAdminResultsLink",
+          linkHref: "/admin/resultados?search=ana",
+          retryButton: retry,
+        })
+      );
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("deve voltar para a listagem, e não ao resumo do perfil, se a jornada não foi concluída", async () => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockResolvedValue(
+        buildJourney({ status: "ongoing" })
+      );
+
+      const { result } = renderAdminVM("page=3");
+      await waitFor(() => expect(result.current.error).toBe("not_completed"));
+
+      expect(result.current.labels.errors).toMatchObject({
+        title: "errors.notCompletedTitle",
+        linkText: "errors.backToAdminResultsLink",
+        linkHref: "/admin/resultados?page=3",
+      });
+      expect(result.current.person).toBeNull();
+    });
+
+    it("deve levar à página de acesso negado quando a API responde 403", async () => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockRejectedValue(
+        new JourneyResultRequestError("forbidden", "Erro")
+      );
+
+      const { result } = renderAdminVM();
+
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/painel?error=access_denied"));
+      expect(result.current.labels.errors).toBeNull();
+      expect(result.current.isLoading).toBe(true);
+    });
+
+    it("não deve identificar a pessoa no resultado da própria pessoa", async () => {
+      vi.spyOn(journeyResultService, "getJourneyResult").mockResolvedValue(buildJourney());
+
+      const { result } = renderVM();
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.person).toBeNull();
+      expect(result.current.labels.pageTitle).toBe("pageTitle");
     });
   });
 });

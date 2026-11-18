@@ -12,6 +12,7 @@ export function AssignJourneyModal(props: AssignJourneyModalProps) {
     isOpen,
     options,
     isFirstJourney,
+    isInitialProfileRequired,
     selectedProfileId,
     isSubmitting,
     errorMessage,
@@ -83,7 +84,11 @@ export function AssignJourneyModal(props: AssignJourneyModalProps) {
               size={18}
               className="mt-0.5 shrink-0 text-primary"
             />
-            <p className="leading-relaxed">{labels.firstJourneyNotice}</p>
+            <p className="leading-relaxed">
+              {isInitialProfileRequired
+                ? labels.selectionRequiredNotice
+                : labels.firstJourneyNotice}
+            </p>
           </div>
         )}
 
@@ -101,7 +106,7 @@ export function AssignJourneyModal(props: AssignJourneyModalProps) {
           aria-labelledby="assign-journey-modal-title"
           className="max-h-72 space-y-2.5 overflow-y-auto pr-1"
         >
-          {options.length === 0 ? (
+          {isInitialProfileRequired ? null : options.length === 0 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
               {labels.emptyOptions}
             </p>

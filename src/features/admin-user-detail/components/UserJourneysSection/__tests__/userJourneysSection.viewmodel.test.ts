@@ -28,7 +28,7 @@ describe("useUserJourneysSectionVM", () => {
     const vm = useUserJourneysSectionVM(props);
 
     expect(vm.hasJourneys).toBe(true);
-    expect(vm.allResultsHref).toBe("/resultados?userId=123");
+    expect(vm.allResultsHref).toBe("/admin/resultados?userId=123");
   });
 
   it("deve identificar hasJourneys como falso quando a lista for vazia", () => {

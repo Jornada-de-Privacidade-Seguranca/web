@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import React from "react";
 import * as usersService from "@services/usersService";
+import * as authService from "@services/authService";
 import { useAuthStore } from "@features/auth/auth.store";
 import { useAdminUsersStore } from "@features/admin-users/adminUsers.store";
 import { ApiRequestError } from "@services/httpClient";
@@ -78,6 +79,8 @@ describe("useAdminUserDetailVM", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    // O useAuth confere a sessão em GET /me: sem isso o teste depende de haver API local
+    vi.spyOn(authService, "getAuthenticatedUser").mockReturnValue(new Promise(() => {}));
     pushMock.mockClear();
     window.localStorage.clear();
     useAdminUsersStore.getState().setListQuery("");
@@ -358,7 +361,38 @@ describe("useAdminUserDetailVM", () => {
     expect(result.current.canAssignJourney).toBe(false);
   });
 
-  it("restringe primeira jornada ao perfil escolhido pelo usuário e atribui jornada com sucesso", async () => {
+  const PROFILES: usersService.AssignableJourneyProfile[] = [
+    { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
+    { id: 2, namePt: "Gestor SI", nameEn: "InfoSec Manager", domain: "security" },
+  ];
+
+  const myAssignment: NonNullable<usersService.AdminUserDetails["activeJourney"]> = {
+    id: "90",
+    profileId: 1,
+    title: "Encarregado pelo Tratamento de Dados Pessoais",
+    domain: "privacy",
+    domainLabel: "Privacidade",
+    startedAt: "2026-06-01T10:00:00Z",
+    origin: "assigned",
+    assignedBy: { id: 1, name: "Admin Logado" },
+    assigned_by: { id: 1, name: "Admin Logado" },
+  };
+
+  function apiError(status: number, code?: string) {
+    return new ApiRequestError("Erro", status, code);
+  }
+
+  async function renderWithOpenAssignModal() {
+    const hook = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
+      wrapper: createWrapper(),
+    });
+    await waitFor(() => expect(hook.result.current.assignableOptions.length).toBeGreaterThan(0));
+    act(() => hook.result.current.handleOpenAssignModal());
+    expect(hook.result.current.selectedProfileId).not.toBeNull();
+    return hook;
+  }
+
+  it("restringe a primeira jornada ao perfil escolhido, atribui pela API e recarrega o usuário e a listagem", async () => {
     const firstJourneyUser: usersService.AdminUserDetails = {
       ...mockUser,
       status: "active",
@@ -367,118 +401,168 @@ describe("useAdminUserDetailVM", () => {
       activeJourney: null,
       initialJourneyProfileId: 2,
     };
+    const getUserSpy = vi
+      .spyOn(usersService, "getUserById")
+      .mockResolvedValueOnce(firstJourneyUser)
+      .mockResolvedValue({
+        ...firstJourneyUser,
+        activeJourney: { ...myAssignment, profileId: 2, title: "Gestor SI" },
+      });
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue(PROFILES);
+    const assignSpy = vi.spyOn(usersService, "assignJourneyToUser").mockResolvedValue();
 
-    const assignedResult: usersService.AdminUserDetails = {
-      ...firstJourneyUser,
-      activeJourney: {
-        id: "aj-new",
-        profileId: 2,
-        title: "Gestor SI",
-        domain: "security",
-        domainLabel: "Segurança da Informação",
-        startedAt: "2026-06-05T10:00:00Z",
-        origin: "assigned",
-        assignedBy: { id: 1, name: "Admin Logado" },
-        assigned_by: { id: 1, name: "Admin Logado" },
-      },
-    };
-
-    vi.spyOn(usersService, "getUserById").mockResolvedValue(firstJourneyUser);
-    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue([
-      { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
-      { id: 2, namePt: "Gestor SI", nameEn: "InfoSec Manager", domain: "security" },
-    ]);
-    const assignSpy = vi
-      .spyOn(usersService, "assignJourneyToUser")
-      .mockResolvedValue(assignedResult);
-
-    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() =>
-      expect(result.current.assignableOptions).toHaveLength(1)
-    );
+    const { result } = await renderWithOpenAssignModal();
 
     expect(result.current.isFirstJourney).toBe(true);
-    expect(result.current.assignableOptions[0].id).toBe(2);
-
-    act(() => {
-      result.current.handleOpenAssignModal();
-    });
-
-    expect(result.current.isAssignModalOpen).toBe(true);
+    expect(result.current.isInitialProfileRequired).toBe(false);
+    expect(result.current.assignableOptions.map((option) => option.id)).toEqual([2]);
     expect(result.current.selectedProfileId).toBe(2);
 
     await act(async () => {
       await result.current.handleConfirmAssignJourney();
     });
 
-    expect(assignSpy).toHaveBeenCalledWith(expect.objectContaining({ id: "2" }), {
-      profileId: 2,
-      assignedBy: { id: 1, name: "Admin Logado" },
-    });
+    expect(assignSpy).toHaveBeenCalledWith("2", { profileId: 2 });
     expect(result.current.isAssignModalOpen).toBe(false);
-    expect(result.current.activeJourney?.origin).toBe("assigned");
     expect(result.current.journeySuccessMessage).toBe("assignJourney.success");
+    await waitFor(() => expect(result.current.activeJourney?.title).toBe("Gestor SI"));
+    expect(getUserSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("permite manter ou confirmar o cancelamento de atribuição feita pelo próprio usuário", async () => {
-    const userWithMyAssignment: usersService.AdminUserDetails = {
+  it("sem o perfil inicial escolhido, avisa e não deixa atribuir a primeira jornada", async () => {
+    const noInitialUser: usersService.AdminUserDetails = {
       ...mockUser,
       status: "active",
-      activeJourney: {
-        id: "aj-mine",
-        profileId: 1,
-        title: "Encarregado pelo Tratamento de Dados Pessoais",
-        domain: "privacy",
-        domainLabel: "Privacidade",
-        startedAt: "2026-06-01T10:00:00Z",
-        origin: "assigned",
-        assignedBy: { id: 1, name: "Admin Logado" },
-        assigned_by: { id: 1, name: "Admin Logado" },
-      },
+      journeys: [],
+      journeysCount: 0,
+      activeJourney: null,
+      initialJourneyProfileId: null,
     };
-
-    vi.spyOn(usersService, "getUserById").mockResolvedValue(userWithMyAssignment);
-    const cancelSpy = vi
-      .spyOn(usersService, "cancelAssignedJourney")
-      .mockResolvedValue({ ...userWithMyAssignment, activeJourney: null });
+    vi.spyOn(usersService, "getUserById").mockResolvedValue(noInitialUser);
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue(PROFILES);
+    const assignSpy = vi.spyOn(usersService, "assignJourneyToUser").mockResolvedValue();
 
     const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
       wrapper: createWrapper(),
     });
-
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
+    expect(result.current.isInitialProfileRequired).toBe(true);
+    expect(result.current.assignableOptions).toEqual([]);
+
+    act(() => result.current.handleOpenAssignModal());
+    expect(result.current.selectedProfileId).toBeNull();
+
+    await act(async () => {
+      await result.current.handleConfirmAssignJourney();
+    });
+    expect(assignSpy).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [apiError(409, "JOURNEY_IN_PROGRESS"), "activeJourney.alreadyActiveHint"],
+    [apiError(422, "JOURNEY_PROFILE_SELECTION_REQUIRED"), "assignJourney.selectionRequiredNotice"],
+    [apiError(422, "JOURNEY_PROFILE_MISMATCH"), "assignJourney.firstJourneyNotice"],
+  ])("ao atribuir, mostra a mensagem do erro %# e recarrega o usuário", async (error, message) => {
+    const user: usersService.AdminUserDetails = { ...mockUser, status: "active", activeJourney: null };
+    const getUserSpy = vi.spyOn(usersService, "getUserById").mockResolvedValue(user);
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue(PROFILES);
+    vi.spyOn(usersService, "assignJourneyToUser").mockRejectedValue(error);
+
+    const { result } = await renderWithOpenAssignModal();
+    await act(async () => {
+      await result.current.handleConfirmAssignJourney();
+    });
+
+    expect(result.current.assignErrorMessage).toBe(message);
+    expect(getUserSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("em erro de rede ou 5xx ao atribuir, mantém o modal aberto para tentar de novo", async () => {
+    const user: usersService.AdminUserDetails = { ...mockUser, status: "active", activeJourney: null };
+    const getUserSpy = vi.spyOn(usersService, "getUserById").mockResolvedValue(user);
+    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue(PROFILES);
+    const assignSpy = vi
+      .spyOn(usersService, "assignJourneyToUser")
+      .mockRejectedValueOnce(apiError(500))
+      .mockResolvedValueOnce();
+
+    const { result } = await renderWithOpenAssignModal();
+    await act(async () => {
+      await result.current.handleConfirmAssignJourney();
+    });
+
+    expect(result.current.isAssignModalOpen).toBe(true);
+    expect(result.current.assignErrorMessage).toBe("assignJourney.error");
+    expect(getUserSpy).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await result.current.handleConfirmAssignJourney();
+    });
+
+    expect(assignSpy).toHaveBeenCalledTimes(2);
+    expect(result.current.isAssignModalOpen).toBe(false);
+  });
+
+  it("permite manter a jornada ou cancelar a atribuição pela API, recarregando a caixa", async () => {
+    const userWithMyAssignment: usersService.AdminUserDetails = {
+      ...mockUser,
+      status: "active",
+      activeJourney: myAssignment,
+    };
+    vi.spyOn(usersService, "getUserById")
+      .mockResolvedValueOnce(userWithMyAssignment)
+      .mockResolvedValue({ ...userWithMyAssignment, activeJourney: null });
+    const cancelSpy = vi.spyOn(usersService, "cancelAssignedJourney").mockResolvedValue();
+
+    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
+      wrapper: createWrapper(),
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.canCancelAssignment).toBe(true);
 
-    // Abre confirmação e escolhe "Manter jornada" (fechar)
-    act(() => {
-      result.current.handleOpenCancelAssignModal();
-    });
-    expect(result.current.isCancelAssignModalOpen).toBe(true);
-
-    act(() => {
-      result.current.handleCloseCancelAssignModal();
-    });
+    act(() => result.current.handleOpenCancelAssignModal());
+    act(() => result.current.handleCloseCancelAssignModal());
     expect(result.current.isCancelAssignModalOpen).toBe(false);
     expect(cancelSpy).not.toHaveBeenCalled();
 
-    // Abre confirmação e confirma o cancelamento
-    act(() => {
-      result.current.handleOpenCancelAssignModal();
-    });
+    act(() => result.current.handleOpenCancelAssignModal());
     await act(async () => {
       await result.current.handleConfirmCancelAssignment();
     });
 
-    expect(cancelSpy).toHaveBeenCalledWith(expect.objectContaining({ id: "2" }));
-    expect(result.current.activeJourney).toBeNull();
+    expect(cancelSpy).toHaveBeenCalledWith("90");
     expect(result.current.isCancelAssignModalOpen).toBe(false);
-    expect(result.current.journeySuccessMessage).toBe(
-      "activeJourney.cancelSuccess"
-    );
+    expect(result.current.journeySuccessMessage).toBe("activeJourney.cancelSuccess");
+    await waitFor(() => expect(result.current.activeJourney).toBeNull());
+  });
+
+  it.each([
+    [apiError(403, "PERMISSION_DENIED"), "activeJourney.cancelForbidden", 2],
+    [apiError(409, "JOURNEY_CANCELLATION_NOT_ALLOWED"), "activeJourney.cancelNotAllowed", 2],
+    [apiError(500), "activeJourney.cancelError", 1],
+  ])("ao cancelar, mostra a mensagem do erro %# e recarrega quando a tela pode estar desatualizada", async (error, message, userCalls) => {
+    const userWithMyAssignment: usersService.AdminUserDetails = {
+      ...mockUser,
+      status: "active",
+      activeJourney: myAssignment,
+    };
+    const getUserSpy = vi.spyOn(usersService, "getUserById").mockResolvedValue(userWithMyAssignment);
+    vi.spyOn(usersService, "cancelAssignedJourney").mockRejectedValue(error);
+
+    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
+      wrapper: createWrapper(),
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.handleOpenCancelAssignModal());
+    await act(async () => {
+      await result.current.handleConfirmCancelAssignment();
+    });
+
+    expect(result.current.isCancelAssignModalOpen).toBe(true);
+    expect(result.current.cancelErrorMessage).toBe(message);
+    expect(getUserSpy).toHaveBeenCalledTimes(userCalls);
   });
 
   it("não exibe cancelar atribuição para jornada atribuída por outro usuário ou iniciada pelo usuário", async () => {
@@ -524,113 +608,6 @@ describe("useAdminUserDetailVM", () => {
     );
     await waitFor(() => expect(selfResult.current.isLoading).toBe(false));
     expect(selfResult.current.canCancelAssignment).toBe(false);
-  });
-
-  it("retorna lista vazia e não atribui quando usuário é de primeira jornada mas initialJourneyProfileId é nulo", async () => {
-    const noInitialUser: usersService.AdminUserDetails = {
-      ...mockUser,
-      status: "active",
-      journeys: [],
-      journeysCount: 0,
-      activeJourney: null,
-      initialJourneyProfileId: undefined,
-    };
-
-    vi.spyOn(usersService, "getUserById").mockResolvedValue(noInitialUser);
-    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue([
-      { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
-    ]);
-
-    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.isFirstJourney).toBe(true);
-    expect(result.current.assignableOptions).toEqual([]);
-
-    act(() => {
-      result.current.handleOpenAssignModal();
-    });
-
-    expect(result.current.selectedProfileId).toBeNull();
-  });
-
-  it("trata erro na atribuição e no cancelamento exibindo mensagens de erro no modal", async () => {
-    const firstJourneyUser: usersService.AdminUserDetails = {
-      ...mockUser,
-      status: "active",
-      journeys: [],
-      journeysCount: 0,
-      activeJourney: null,
-      initialJourneyProfileId: 1,
-    };
-
-    vi.spyOn(usersService, "getUserById").mockResolvedValue(firstJourneyUser);
-    vi.spyOn(usersService, "getAssignableJourneyProfiles").mockResolvedValue([
-      { id: 1, namePt: "DPO", nameEn: "DPO", domain: "privacy" },
-    ]);
-    vi.spyOn(usersService, "assignJourneyToUser").mockRejectedValue(
-      new Error("Erro ao atribuir")
-    );
-
-    const { result } = renderHook(() => useAdminUserDetailVM({ userId: "2" }), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    act(() => {
-      result.current.handleOpenAssignModal();
-    });
-
-    await act(async () => {
-      await result.current.handleConfirmAssignJourney();
-    });
-
-    expect(result.current.isAssignModalOpen).toBe(true);
-    expect(result.current.assignErrorMessage).toBe("assignJourney.error");
-
-    // Testar erro de cancelamento
-    const userWithAssignment: usersService.AdminUserDetails = {
-      ...mockUser,
-      activeJourney: {
-        id: "aj-test",
-        profileId: 1,
-        title: "DPO",
-        domain: "privacy",
-        domainLabel: "Privacidade",
-        startedAt: "2026-06-01T10:00:00Z",
-        origin: "assigned",
-        assignedBy: { id: 1, name: "Admin Logado" },
-      },
-    };
-
-    vi.spyOn(usersService, "getUserById").mockResolvedValue(userWithAssignment);
-    vi.spyOn(usersService, "cancelAssignedJourney").mockRejectedValue(
-      new Error("Erro ao cancelar")
-    );
-
-    const { result: cancelResult } = renderHook(
-      () => useAdminUserDetailVM({ userId: "2" }),
-      { wrapper: createWrapper() }
-    );
-
-    await waitFor(() => expect(cancelResult.current.isLoading).toBe(false));
-
-    act(() => {
-      cancelResult.current.handleOpenCancelAssignModal();
-    });
-
-    await act(async () => {
-      await cancelResult.current.handleConfirmCancelAssignment();
-    });
-
-    expect(cancelResult.current.isCancelAssignModalOpen).toBe(true);
-    expect(cancelResult.current.cancelErrorMessage).toBe(
-      "activeJourney.cancelError"
-    );
   });
 
   async function renderLoaded(user: usersService.AdminUserDetails = mockUser) {

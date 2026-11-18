@@ -94,11 +94,15 @@
       "emailPlaceholder": "your.email@company.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Type your password",
-      "forgotPassword": "Forgot your password?",
       "submit": "Sign in",
       "signUpPrefix": "Don't have an account?",
       "signUpLink": "Sign up",
-      "privacyNotice": "By continuing you accept our privacy terms.",
+      "privacyNotice": {
+        "prefix": "By continuing you accept our",
+        "link": "privacy terms",
+        "suffix": ".",
+        "linkAriaLabel": "Read the privacy terms"
+      },
       "validation": {
         "emailRequired": "Email is required.",
         "emailInvalid": "Enter a valid email address.",
@@ -124,15 +128,14 @@
       "employeeCodePlaceholder": "Ex.: 00123456",
       "departmentLabel": "DEPARTMENT",
       "departmentPlaceholder": "Ex.: Technology",
-      "companyLabel": "COMPANY",
-      "companyPlaceholder": "Ex.: ACME Corp",
+      "companyLabel": "ORGANIZATION/COMPANY",
+      "companyPlaceholder": "Ex.: City of Recife or Example Company",
       "emailLabel": "INSTITUTIONAL EMAIL",
       "emailPlaceholder": "you@company.com",
       "passwordLabel": "PASSWORD",
       "passwordPlaceholder": "Minimum 8 characters",
       "confirmPasswordLabel": "CONFIRM PASSWORD",
       "confirmPasswordPlaceholder": "Repeat your password",
-      "termsCheckbox": "I accept the terms of use and privacy policy",
       "submit": "Create account",
       "hasAccountText": "Already have an account?",
       "loginLink": "Sign in",
@@ -144,8 +147,8 @@
         "employeeCodeMaxLength": "Employee code must be at most 50 characters long.",
         "departmentRequired": "Department is required.",
         "departmentMaxLength": "Department must be at most 100 characters long.",
-        "companyRequired": "Company is required.",
-        "companyMaxLength": "Company must be at most 100 characters long.",
+        "companyRequired": "Organization or company is required.",
+        "companyMaxLength": "Organization or company must be at most 100 characters long.",
         "emailRequired": "Institutional email is required.",
         "emailInvalid": "Please provide a valid institutional email.",
         "emailMaxLength": "Email must be at most 100 characters long.",
@@ -154,7 +157,7 @@
         "passwordMaxLength": "Password must be at most 100 characters long.",
         "confirmPasswordRequired": "Password confirmation is required.",
         "passwordsDoNotMatch": "Passwords do not match.",
-        "termsRequired": "You must accept the terms of use and privacy policy."
+        "termsRequired": "You need to accept the privacy terms."
       },
       "serverError": {
         "invalidFieldsTitle": "Invalid field",
@@ -166,6 +169,12 @@
       "serverSuccess": {
         "title": "Account created successfully!",
         "description": "Your account was created and must be activated by an administrator before you can sign in."
+      },
+      "terms": {
+        "prefix": "I have read and accept the",
+        "link": "privacy terms",
+        "suffix": ".",
+        "newTab": "(opens in a new tab)"
       }
     },
     "initialPassword": {
@@ -285,6 +294,8 @@
     "actionCancel": "Cancel journey",
     "assignedBadge": "Assigned",
     "inProgressBadge": "In progress",
+    "assignedBy": "Assigned by {name}",
+    "onlyAssignerCanCancel": "Only the person who assigned it can cancel.",
     "completedScoreBadge": "Completed · {score}/100",
     "competenciesCount": "{count} competencies",
     "questionsCount": "{count} questions",
@@ -305,6 +316,12 @@
     "cancelModalDescription": "Are you sure you want to cancel this journey? Your responses so far will not be saved.",
     "cancelModalKeep": "Keep journey",
     "cancelModalConfirm": "Cancel journey",
+    "cancelModalConfirming": "Cancelling...",
+    "cancelSuccess": "Journey cancelled. You can now start another one.",
+    "cancelError": "Unable to cancel the journey. Please try again.",
+    "cancelNotAllowed": "This journey can no longer be cancelled. The list has been updated.",
+    "cancelUnavailable": "This journey is no longer available. The list has been updated.",
+    "closeMessage": "Close message",
     "pagination": {
       "previous": "Previous",
       "next": "Next",
@@ -378,6 +395,8 @@
     "loadErrorTitle": "Unable to load profile",
     "loadErrorDescription": "There was a problem loading your information. Try again.",
     "retry": "Try again",
+    "activityLoadError": "Unable to load system activity",
+    "notAvailable": "—",
     "successTitle": "Profile updated",
     "successDescription": "Your information was saved successfully.",
     "errorTitle": "Unable to save profile",
@@ -396,7 +415,8 @@
       "emailMaxLength": "Email must have at most 100 characters.",
       "departmentRequired": "Department is required.",
       "departmentMaxLength": "Department must have at most 100 characters.",
-      "employeeCodeImmutable": "The employee code cannot be changed."
+      "employeeCodeImmutable": "The employee code cannot be changed.",
+      "emailInUse": "An account with this email already exists."
     },
     "preferencesTitle": "Preferences",
     "language": "Language",
@@ -583,12 +603,23 @@
       "serverErrorMessage": "We couldn't load the journey result. Please try again.",
       "backToResultsLink": "Back to Results",
       "goToSummaryLink": "Go to the journey overview",
-      "retryButton": "Try again"
+      "retryButton": "Try again",
+      "backToAdminResultsLink": "Back to Users' Results"
     },
     "pdf": {
       "downloadButton": "Download PDF",
       "generatingLabel": "Generating PDF…",
       "error": "We couldn't generate the PDF. Please try again."
+    },
+    "admin": {
+      "pageTitle": "User result",
+      "person": {
+        "ariaLabel": "Evaluated user details",
+        "organization": "Organization/Company",
+        "sector": "Department",
+        "registration": "Employee ID",
+        "notInformed": "Not provided"
+      }
     }
   },
   "adminUsers": {
@@ -750,7 +781,9 @@
       "cancelModalConfirm": "Cancel assignment",
       "cancellingButton": "Cancelling...",
       "cancelError": "Could not cancel journey assignment. Please try again.",
-      "closeMessage": "Close notice"
+      "closeMessage": "Close notice",
+      "cancelForbidden": "Only the person who assigned the journey can cancel the assignment.",
+      "cancelNotAllowed": "This journey can no longer be cancelled."
     },
     "assignJourney": {
       "modalTitle": "Assign journey",
@@ -766,7 +799,8 @@
         "privacy": "Privacy",
         "security": "Information Security",
         "joint": "Joint"
-      }
+      },
+      "selectionRequiredNotice": "This user has not chosen an initial journey profile yet. They must choose it before their first journey."
     },
     "loadError": "Unable to load the user data.",
     "retry": "Try again",
@@ -888,6 +922,70 @@
       "permissionDenied": "You do not have permission to perform this action.",
       "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
       "validation": "Review the invitation details."
+    }
+  },
+  "adminResults": {
+    "title": "All User Results",
+    "subtitle": "Track completed journeys and domain averages across the organization.",
+    "loadingAriaLabel": "Loading user results",
+    "summary": {
+      "ariaLabel": "Results summary",
+      "totalCompleted": "Completed journeys",
+      "totalUsers": "Evaluated users",
+      "domainScore": "{score}/100",
+      "emptyScore": "—"
+    },
+    "filters": {
+      "ariaLabel": "Advanced filters",
+      "searchPlaceholder": "Search by user, email, or profile...",
+      "user": "User",
+      "allUsers": "All users",
+      "department": "Department",
+      "allDepartments": "All departments",
+      "profile": "Journey profile",
+      "allProfiles": "All journey profiles",
+      "domains": "Domains",
+      "dateFrom": "Completed from",
+      "dateTo": "Completed until",
+      "clear": "Clear filters",
+      "counter": "{filtered} of {total, plural, one {# result} other {# results}}"
+    },
+    "table": {
+      "user": "User",
+      "department": "Department",
+      "profile": "Journey profile",
+      "domain": "Domain",
+      "completedAt": "Completion date",
+      "score": "Score",
+      "actions": "Actions",
+      "view": "View",
+      "emptyDepartment": "—",
+      "scoreValue": "{score}/100",
+      "scoreAriaLabel": "Score {score} out of 100, {band} level"
+    },
+    "bands": {
+      "strong": "Strong",
+      "medium": "Medium",
+      "weak": "Needs development"
+    },
+    "empty": {
+      "title": "No results found",
+      "description": "No results match the applied filters. Try adjusting the criteria or clearing filters.",
+      "noDataTitle": "No completed results yet",
+      "noDataDescription": "Once employees finish their journeys, their results will appear here.",
+      "clearButton": "Clear filters"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {current} of {total}"
+    },
+    "error": {
+      "title": "Error loading results",
+      "message": "Unable to load user results.",
+      "retry": "Try again",
+      "summaryMessage": "Unable to load the results summary.",
+      "filterOptionsMessage": "Unable to load the filter options."
     }
   }
 }

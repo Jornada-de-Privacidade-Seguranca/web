@@ -94,11 +94,15 @@
       "emailPlaceholder": "seu.email@empresa.com",
       "passwordLabel": "Senha",
       "passwordPlaceholder": "Digite sua senha",
-      "forgotPassword": "Esqueceu sua senha?",
       "submit": "Entrar",
       "signUpPrefix": "Não tem uma conta?",
       "signUpLink": "Cadastre-se",
-      "privacyNotice": "Ao continuar você aceita nossos termos de privacidade.",
+      "privacyNotice": {
+        "prefix": "Ao continuar você aceita nosso",
+        "link": "termo de privacidade",
+        "suffix": ".",
+        "linkAriaLabel": "Ler o termo de privacidade"
+      },
       "validation": {
         "emailRequired": "O e-mail é obrigatório.",
         "emailInvalid": "Informe um e-mail válido.",
@@ -122,17 +126,16 @@
       "fullNamePlaceholder": "Ex.: Maria Silva",
       "employeeCodeLabel": "CÓDIGO DE FUNCIONÁRIO",
       "employeeCodePlaceholder": "Ex.: 00123456",
-      "departmentLabel": "DEPARTAMENTO",
+      "departmentLabel": "SETOR",
       "departmentPlaceholder": "Ex.: Tecnologia",
-      "companyLabel": "EMPRESA",
-      "companyPlaceholder": "Ex.: ACME Corp",
+      "companyLabel": "ÓRGÃO/EMPRESA",
+      "companyPlaceholder": "Ex.: Prefeitura de Recife ou Empresa Exemplo",
       "emailLabel": "E-MAIL INSTITUCIONAL",
       "emailPlaceholder": "voce@empresa.com",
       "passwordLabel": "SENHA",
       "passwordPlaceholder": "Mínimo 8 caracteres",
       "confirmPasswordLabel": "CONFIRMAR SENHA",
       "confirmPasswordPlaceholder": "Repita sua senha",
-      "termsCheckbox": "Aceito os termos de uso e a política de privacidade",
       "submit": "Criar conta",
       "hasAccountText": "Já possui uma conta?",
       "loginLink": "Entrar",
@@ -142,10 +145,10 @@
         "fullNameMaxLength": "O nome deve ter no máximo 50 caracteres.",
         "employeeCodeRequired": "O código de funcionário/matrícula é obrigatório.",
         "employeeCodeMaxLength": "O código de funcionário/matrícula deve ter no máximo 50 caracteres.",
-        "departmentRequired": "O departamento é obrigatório.",
-        "departmentMaxLength": "O departamento deve ter no máximo 100 caracteres.",
-        "companyRequired": "A empresa é obrigatória.",
-        "companyMaxLength": "A empresa deve ter no máximo 100 caracteres.",
+        "departmentRequired": "O setor é obrigatório.",
+        "departmentMaxLength": "O setor deve ter no máximo 100 caracteres.",
+        "companyRequired": "O órgão ou empresa é obrigatório.",
+        "companyMaxLength": "O órgão ou empresa deve ter no máximo 100 caracteres.",
         "emailRequired": "O e-mail institucional é obrigatório.",
         "emailInvalid": "Informe um e-mail institucional válido.",
         "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
@@ -154,7 +157,7 @@
         "passwordMaxLength": "A senha deve ter no máximo 100 caracteres.",
         "confirmPasswordRequired": "A confirmação de senha é obrigatória.",
         "passwordsDoNotMatch": "As senhas não coincidem.",
-        "termsRequired": "Você deve aceitar os termos de uso e política de privacidade."
+        "termsRequired": "Você precisa aceitar o termo de privacidade."
       },
       "serverError": {
         "invalidFieldsTitle": "Campo inválido",
@@ -166,6 +169,12 @@
       "serverSuccess": {
         "title": "Conta criada com sucesso!",
         "description": "Sua conta foi criada e precisa ser ativada por um administrador antes do primeiro acesso."
+      },
+      "terms": {
+        "prefix": "Li e aceito o",
+        "link": "termo de privacidade",
+        "suffix": ".",
+        "newTab": "(abre em outra aba)"
       }
     },
     "initialPassword": {
@@ -285,6 +294,8 @@
     "actionCancel": "Cancelar jornada",
     "assignedBadge": "Atribuída",
     "inProgressBadge": "Em andamento",
+    "assignedBy": "Atribuída por {name}",
+    "onlyAssignerCanCancel": "Apenas quem atribuiu pode cancelar.",
     "completedScoreBadge": "Concluída · {score}/100",
     "competenciesCount": "{count} competências",
     "questionsCount": "{count} perguntas",
@@ -305,6 +316,12 @@
     "cancelModalDescription": "Tem certeza de que deseja cancelar esta jornada? Suas respostas até aqui não serão salvas.",
     "cancelModalKeep": "Manter jornada",
     "cancelModalConfirm": "Cancelar jornada",
+    "cancelModalConfirming": "Cancelando...",
+    "cancelSuccess": "Jornada cancelada. Você já pode iniciar outra.",
+    "cancelError": "Não foi possível cancelar a jornada. Tente novamente.",
+    "cancelNotAllowed": "Esta jornada não pode mais ser cancelada. A lista foi atualizada.",
+    "cancelUnavailable": "Esta jornada não está mais disponível. A lista foi atualizada.",
+    "closeMessage": "Fechar aviso",
     "pagination": {
       "previous": "Anterior",
       "next": "Próximo",
@@ -378,6 +395,8 @@
     "loadErrorTitle": "Não foi possível carregar o perfil",
     "loadErrorDescription": "Ocorreu um erro ao carregar seus dados. Tente novamente.",
     "retry": "Tentar novamente",
+    "activityLoadError": "Não foi possível carregar a atividade no sistema",
+    "notAvailable": "—",
     "successTitle": "Perfil atualizado",
     "successDescription": "Seus dados foram salvos com sucesso.",
     "errorTitle": "Não foi possível salvar o perfil",
@@ -396,7 +415,8 @@
       "emailMaxLength": "O e-mail deve ter no máximo 100 caracteres.",
       "departmentRequired": "O setor é obrigatório.",
       "departmentMaxLength": "O setor deve ter no máximo 100 caracteres.",
-      "employeeCodeImmutable": "O código de funcionário não pode ser alterado."
+      "employeeCodeImmutable": "O código de funcionário não pode ser alterado.",
+      "emailInUse": "Já existe uma conta cadastrada com este e-mail."
     },
     "preferencesTitle": "Preferências",
     "language": "Idioma",
@@ -583,12 +603,23 @@
       "serverErrorMessage": "Não foi possível carregar o resultado da jornada. Tente novamente.",
       "backToResultsLink": "Voltar para Resultados",
       "goToSummaryLink": "Ir para o resumo da jornada",
-      "retryButton": "Tentar novamente"
+      "retryButton": "Tentar novamente",
+      "backToAdminResultsLink": "Voltar para Resultados dos Usuários"
     },
     "pdf": {
       "downloadButton": "Baixar PDF",
       "generatingLabel": "Gerando PDF…",
       "error": "Não foi possível gerar o PDF. Tente novamente."
+    },
+    "admin": {
+      "pageTitle": "Resultado do usuário",
+      "person": {
+        "ariaLabel": "Dados do usuário avaliado",
+        "organization": "Órgão/Empresa",
+        "sector": "Setor",
+        "registration": "Matrícula",
+        "notInformed": "Não informado"
+      }
     }
   },
   "adminUsers": {
@@ -750,7 +781,9 @@
       "cancelModalConfirm": "Cancelar atribuição",
       "cancellingButton": "Cancelando...",
       "cancelError": "Não foi possível cancelar a atribuição da jornada. Tente novamente.",
-      "closeMessage": "Fechar aviso"
+      "closeMessage": "Fechar aviso",
+      "cancelForbidden": "Apenas quem atribuiu a jornada pode cancelar a atribuição.",
+      "cancelNotAllowed": "Esta jornada não pode mais ser cancelada."
     },
     "assignJourney": {
       "modalTitle": "Atribuir jornada",
@@ -766,7 +799,8 @@
         "privacy": "Privacidade",
         "security": "Segurança da Informação",
         "joint": "Conjunta"
-      }
+      },
+      "selectionRequiredNotice": "Este usuário ainda não escolheu o perfil de jornada inicial. Ele precisa escolher o perfil antes da primeira jornada."
     },
     "loadError": "Não foi possível carregar os dados do usuário.",
     "retry": "Tentar novamente",
@@ -888,6 +922,70 @@
       "permissionDenied": "Você não tem permissão para realizar esta ação.",
       "tooManyAttempts": "Muitas tentativas. Aguarde um pouco e tente de novo.",
       "validation": "Revise os dados do convite."
+    }
+  },
+  "adminResults": {
+    "title": "Resultados dos Usuários",
+    "subtitle": "Acompanhe as jornadas concluídas e as médias por domínio de toda a organização.",
+    "loadingAriaLabel": "Carregando resultados dos usuários",
+    "summary": {
+      "ariaLabel": "Resumo dos resultados",
+      "totalCompleted": "Jornadas concluídas",
+      "totalUsers": "Usuários avaliados",
+      "domainScore": "{score}/100",
+      "emptyScore": "—"
+    },
+    "filters": {
+      "ariaLabel": "Filtros avançados",
+      "searchPlaceholder": "Buscar por usuário, e-mail ou perfil...",
+      "user": "Usuário",
+      "allUsers": "Todos os usuários",
+      "department": "Setor",
+      "allDepartments": "Todos os setores",
+      "profile": "Perfil de jornada",
+      "allProfiles": "Todos os perfis de jornada",
+      "domains": "Domínios",
+      "dateFrom": "Concluídas a partir de",
+      "dateTo": "Concluídas até",
+      "clear": "Limpar filtros",
+      "counter": "{filtered} de {total, plural, one {# resultado} other {# resultados}}"
+    },
+    "table": {
+      "user": "Usuário",
+      "department": "Setor",
+      "profile": "Perfil de jornada",
+      "domain": "Domínio",
+      "completedAt": "Data de conclusão",
+      "score": "Nota",
+      "actions": "Ações",
+      "view": "Ver",
+      "emptyDepartment": "—",
+      "scoreValue": "{score}/100",
+      "scoreAriaLabel": "Nota {score} de 100, nível {band}"
+    },
+    "bands": {
+      "strong": "Forte",
+      "medium": "Médio",
+      "weak": "A desenvolver"
+    },
+    "empty": {
+      "title": "Nenhum resultado encontrado",
+      "description": "Nenhum resultado corresponde aos filtros aplicados. Tente ajustar os critérios ou limpar os filtros.",
+      "noDataTitle": "Ainda não há resultados concluídos",
+      "noDataDescription": "Quando os colaboradores concluírem suas jornadas, os resultados aparecerão aqui.",
+      "clearButton": "Limpar filtros"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próxima",
+      "pageOf": "Página {current} de {total}"
+    },
+    "error": {
+      "title": "Erro ao carregar resultados",
+      "message": "Não foi possível carregar os resultados dos usuários.",
+      "retry": "Tentar novamente",
+      "summaryMessage": "Não foi possível carregar o resumo dos resultados.",
+      "filterOptionsMessage": "Não foi possível carregar as opções dos filtros."
     }
   }
 }

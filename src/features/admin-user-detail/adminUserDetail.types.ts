@@ -42,7 +42,6 @@ export interface AssignableJourneyOption {
 
 export interface AssignJourneyPayload {
   profileId: number;
-  assignedBy?: JourneyAssignedBy;
 }
 
 export interface AdminUserDetails extends AdminUserListItem {
@@ -165,6 +164,7 @@ export interface AssignJourneyModalLabels {
   modalTitle: string;
   modalDescription: string;
   firstJourneyNotice: string;
+  selectionRequiredNotice: string;
   cancel: string;
   confirm: string;
   submitting: string;
@@ -214,6 +214,8 @@ export interface AdminUserDetailViewModelReturn {
   activeJourney: ActiveJourney | null;
   assignableOptions: AssignableJourneyOption[];
   isFirstJourney: boolean;
+  /** Primeira jornada sem o perfil inicial escolhido: o "Atribuir" fica desabilitado */
+  isInitialProfileRequired: boolean;
   selectedProfileId: number | null;
   isAssignModalOpen: boolean;
   isAssigningJourney: boolean;
