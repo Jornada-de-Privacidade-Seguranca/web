@@ -1,9 +1,5 @@
 import { getInitials } from "@/shared/utils/initials";
-import {
-  ApiRequestError,
-  apiRequest,
-  apiRequestWithMeta,
-} from "@services/httpClient";
+import { apiRequest, apiRequestWithMeta } from "@services/httpClient";
 import {
   mapKnowledgeDomain,
   mapKnowledgeDomainId,
@@ -29,32 +25,27 @@ import type {
   UpdateUserPayload,
 } from "@features/admin-user-detail/adminUserDetail.types";
 
+/** `data` de POST /admin/user-invitations (InvitedUserResource). */
 export interface UserInvitationApiData {
   id: number;
   email: string;
-  user_type_id: number;
+  user_type_id: number | null;
   profile_type_id: number;
   active_status: number;
-  account_status: "pending_initial_password";
-}
-
-export interface UserInvitationApiResponse {
-  message: string;
-  data: UserInvitationApiData;
+  account_status: "pending_initial_password" | "active";
 }
 
 export interface InviteUserPayload {
   email: string;
-  role: UserRole;
+  /** Id do perfil de acesso em TB_TIPO_PERFIL, vindo de GET /access-profiles. */
+  profileTypeId: number;
 }
 
 export interface InviteUserResponse {
   id: string;
   email: string;
-  role: UserRole;
-  roleLabel: string;
+  profileTypeId: number;
   status: UserStatus;
-  expiresAt: string;
 }
 
 export { getInitials };
@@ -387,62 +378,27 @@ export async function getAccessProfiles(locale: Locale = "pt"): Promise<AccessPr
   });
 }
 
-// ---------------------------------------------------------------------------
-// Mocks que continuam até as integrações próprias: convite (#176) e
-// atribuição/cancelamento de jornada (#170).
-// ---------------------------------------------------------------------------
-
-const ROLE_LABEL_MAP: Record<UserRole, string> = {
-  admin: "Administrador",
-  manager: "Gestor",
-  user: "Usuário",
-};
-
-/** E-mails já cadastrados no mock do convite, para simular o 409. */
-const MOCK_REGISTERED_EMAILS = ["ana.silva@empresa.com", "carlos.santos@empresa.com"];
-
-let mockInvitationId = 100;
-
 /**
- * Simula `POST /admin/user-invitations` seguindo a especificação do PR 78 (#122).
- * Retorna 409 (`ACCOUNT_ALREADY_EXISTS`) para e-mails já cadastrados
- * e 201 com os dados do convite gerado e usuário com status pendente.
+ * POST /admin/user-invitations: cria a conta pendente e envia o e-mail com o
+ * link de definir a senha. Erros chegam como ApiRequestError: 409
+ * `ACCOUNT_ALREADY_EXISTS`, 403 `PERMISSION_DENIED`, 422 por campo e 429.
  */
-export async function inviteUser(
-  payload: InviteUserPayload
-): Promise<InviteUserResponse> {
-  const normalizedEmail = payload.email.trim().toLowerCase();
-
-  if (MOCK_REGISTERED_EMAILS.includes(normalizedEmail)) {
-    throw new ApiRequestError(
-      "Já existe uma conta cadastrada com este e-mail.",
-      409,
-      "ACCOUNT_ALREADY_EXISTS"
-    );
-  }
-
-  MOCK_REGISTERED_EMAILS.push(normalizedEmail);
-  mockInvitationId += 1;
-
-  const apiMockResponse: UserInvitationApiResponse = {
-    message: "Convite enviado com sucesso",
-    data: {
-      id: mockInvitationId,
-      email: normalizedEmail,
-      user_type_id: 2,
-      profile_type_id: PROFILE_ID_BY_ROLE[payload.role] ?? 3,
-      active_status: 2,
-      account_status: "pending_initial_password",
+export async function inviteUser(payload: InviteUserPayload): Promise<InviteUserResponse> {
+  const data = await apiRequest<UserInvitationApiData>(
+    "/admin/user-invitations",
+    {
+      method: "POST",
+      data: { email: payload.email.trim().toLowerCase(), profile_type_id: payload.profileTypeId },
+      withCsrf: true,
     },
-  };
+    "Não foi possível enviar o convite."
+  );
 
   return {
-    id: String(apiMockResponse.data.id),
-    email: apiMockResponse.data.email,
-    role: payload.role,
-    roleLabel: ROLE_LABEL_MAP[payload.role] || "Usuário",
-    status: "pending",
-    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    id: String(data.id),
+    email: data.email,
+    profileTypeId: data.profile_type_id,
+    status: data.account_status === "active" ? "active" : "pending",
   };
 }
 

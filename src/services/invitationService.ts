@@ -1,4 +1,4 @@
-import { ApiRequestError } from "@services/httpClient";
+import { ApiRequestError, apiRequest } from "@services/httpClient";
 import { splitCadastroFieldErrors } from "@services/cadastroService";
 import type {
   CompleteInvitationPayload,
@@ -56,6 +56,10 @@ export function toCompleteInvitationPayload(
 export function toInvitationRequestError(err: unknown): InvitationRequestError {
   const message = err instanceof Error ? err.message : "Não foi possível concluir o convite.";
 
+  if (err instanceof ApiRequestError && err.status === 429) {
+    return new InvitationRequestError("too_many_requests", message);
+  }
+
   if (!(err instanceof ApiRequestError) || err.status !== 422) {
     return new InvitationRequestError("server_error", message);
   }
@@ -72,43 +76,21 @@ export function toInvitationRequestError(err: unknown): InvitationRequestError {
   return new InvitationRequestError("validation", message, fieldErrors, otherErrors);
 }
 
-// --- Mocks no formato do PR 78 do backend (#122) ---------------------------
-// Enquanto a integração (#176) não entra, as duas chamadas são simuladas. Com o
-// código `expirado`, o convite é inválido desde a validação; com
-// `expira-no-envio`, ele é válido ao abrir e expira no envio do formulário.
-
-const MOCK_DELAY_MS = 600;
-export const MOCK_EXPIRED_TOKEN = "expirado";
-export const MOCK_EXPIRES_ON_SUBMIT_TOKEN = "expira-no-envio";
-
-function mockInvalidInvitation(): ApiRequestError {
-  return new ApiRequestError(
-    "O convite e invalido, expirou ou ja foi utilizado.",
-    422,
-    INVALID_INVITATION_TOKEN_CODE
-  );
-}
-
-async function mockRequest<T>(respond: () => T): Promise<T> {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-  return respond();
-}
-
 /**
  * Valida o convite do link (POST /auth/invitations/validate). Falhas são
  * lançadas como InvitationRequestError: `invalid_invitation` para convite
- * inválido, expirado ou já usado, e `server_error` para as demais.
+ * inválido, expirado ou já usado, `too_many_requests` no 429 e `server_error`
+ * para as demais.
  */
 export async function validateInvitation(
   credentials: InvitationCredentials
 ): Promise<ValidateInvitationResponse> {
   try {
-    return await mockRequest(() => {
-      if (credentials.token === MOCK_EXPIRED_TOKEN) {
-        throw mockInvalidInvitation();
-      }
-      return { email: credentials.email, is_valid: true };
-    });
+    return await apiRequest<ValidateInvitationResponse>(
+      "/auth/invitations/validate",
+      { method: "post", data: { email: credentials.email, token: credentials.token } },
+      "Não foi possível validar o convite."
+    );
   } catch (err: unknown) {
     throw toInvitationRequestError(err);
   }
@@ -118,7 +100,8 @@ export async function validateInvitation(
  * Ativa a conta convidada com os dados pessoais e a senha (POST
  * /auth/invitations/complete). Falhas são lançadas como InvitationRequestError:
  * `invalid_invitation` se o convite expirou no meio do preenchimento,
- * `validation` com as mensagens por campo e `server_error` para as demais.
+ * `validation` com as mensagens por campo, `too_many_requests` no 429 e
+ * `server_error` para as demais.
  */
 export async function completeInvitation(
   credentials: InvitationCredentials,
@@ -126,18 +109,11 @@ export async function completeInvitation(
 ): Promise<InvitedUserResponse> {
   const payload = toCompleteInvitationPayload(credentials, values);
   try {
-    return await mockRequest(() => {
-      if ([MOCK_EXPIRED_TOKEN, MOCK_EXPIRES_ON_SUBMIT_TOKEN].includes(payload.token)) {
-        throw mockInvalidInvitation();
-      }
-      return {
-        id: 42,
-        email: payload.email,
-        user_type_id: null,
-        active_status: 1,
-        account_status: "active",
-      };
-    });
+    return await apiRequest<InvitedUserResponse>(
+      "/auth/invitations/complete",
+      { method: "post", data: payload },
+      "Não foi possível ativar a conta."
+    );
   } catch (err: unknown) {
     throw toInvitationRequestError(err);
   }

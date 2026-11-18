@@ -35,6 +35,7 @@ export interface InvitedUserResponse {
   email: string;
   user_type_id: number | null;
   active_status: number;
+  profile_type_id: number;
   account_status: "active" | "pending_initial_password";
 }
 
@@ -44,7 +45,11 @@ export interface InvitedUserResponse {
  * - `validation`: 422 com as mensagens por campo;
  * - `server_error`: demais falhas.
  */
-export type InvitationRequestErrorType = "invalid_invitation" | "validation" | "server_error";
+export type InvitationRequestErrorType =
+  | "invalid_invitation"
+  | "validation"
+  | "too_many_requests"
+  | "server_error";
 
 /** Mensagens de erro da API, já com os nomes dos campos do formulário. */
 export type InitialPasswordFieldErrors = Pick<CadastroFieldErrors, keyof InitialPasswordFormValues>;
