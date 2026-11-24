@@ -3,15 +3,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+      args:
+        # Embutida no bundle no build: mudou o valor, rode docker compose up --build
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8030/api}
     ports:
       - "3000:3000"
     restart: unless-stopped
-    environment:
-      NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
-    volumes:
-      - .:/app
-      - /app/node_modules
-    stdin_open: true
-    tty: true
+    networks:
+      - jornada
+
+# Rede criada pelo docker compose da jornada-capacitacao-api: suba o backend antes
+networks:
+  jornada:
+    name: jornada-capacitacao-api_jornada
+    external: true

@@ -9,6 +9,8 @@ const LEGACY_REDIRECT_PAIRS = [
 ] as const;
 
 export const nextConfig: NextConfig = {
+  // Gera .next/standalone, usado pela imagem de producao do Dockerfile
+  output: "standalone",
   async redirects() {
     return LEGACY_REDIRECT_PAIRS.flatMap(([source, destination]) => [
       {
