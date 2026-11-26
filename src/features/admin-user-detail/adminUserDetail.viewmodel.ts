@@ -131,7 +131,11 @@ export function useAdminUserDetailVM({
   const canManageUser = can("users.manage");
   const canDeleteUser = canManageUser && !isOwnAccount;
   const canManageRoles = can("users.change_profile") && !isOwnAccount;
-  const canToggleStatus = can("users.deactivate") && !isOwnAccount;
+  // A API so desativa contas com perfil Usuario; ativar e reativar valem para qualquer perfil
+  const canToggleStatus =
+    can("users.deactivate") &&
+    !isOwnAccount &&
+    (user?.status !== "active" || user?.role === "user");
 
   /** Atualiza o detalhe e a listagem depois de salvar, ativar ou excluir. */
   const invalidateUserQueries = useCallback(async () => {

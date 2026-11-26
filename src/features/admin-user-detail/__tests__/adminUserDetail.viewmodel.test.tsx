@@ -822,8 +822,15 @@ describe("useAdminUserDetailVM", () => {
       .mockRejectedValueOnce(
         new ApiRequestError("Estado invalido", 409, "INVALID_USER_ACCOUNT_STATE")
       );
-    const { result } = await renderLoaded({ ...mockUser, status: "active" });
+    const { result } = await renderLoaded({
+      ...mockUser,
+      role: "user",
+      profileTypeId: 3,
+      roleLabel: "Usuário",
+      status: "active",
+    });
 
+    expect(result.current.canToggleStatus).toBe(true);
     await act(async () => {
       await result.current.handleToggleStatus();
     });
@@ -842,6 +849,21 @@ describe("useAdminUserDetailVM", () => {
       result.current.handleDismissStatusMessage();
     });
     expect(result.current.statusMessage).toBeNull();
+  });
+
+  it("esconde a desativação de gestores e administradores ativos", async () => {
+    for (const role of ["admin", "manager"] as const) {
+      const { result, unmount } = await renderLoaded({ ...mockUser, role, status: "active" });
+      expect(result.current.canToggleStatus).toBe(false);
+      unmount();
+    }
+  });
+
+  it("mantém a reativação de gestores e administradores inativos", async () => {
+    const { result } = await renderLoaded({ ...mockUser, role: "manager", status: "inactive" });
+
+    expect(result.current.canToggleStatus).toBe(true);
+    expect(result.current.showInactiveBanner).toBe(true);
   });
 
   it("ativa uma conta pendente pela mesma rota", async () => {
